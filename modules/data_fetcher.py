@@ -37,7 +37,7 @@ class BISTDataFetcher:
                 return None
             
             # Sütun isimlerini kontrol et ve düzenle
-            print(f"Gelen sütunlar: {list(df.columns)}")
+            # Debug: print(f"Gelen sütunlar: {list(df.columns)}")
             
             # Gerekli sütunları seç ve yeniden adlandır
             required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
@@ -89,7 +89,7 @@ class BISTDataFetcher:
                     df[col] = pd.to_numeric(df[col], errors='coerce')
             
             # Son veriyi kontrol et
-            if len(df) < 50:  # En az 50 gün veri olsun
+            if len(df) < 25:  # En az 25 gün veri olsun
                 print(f"Yetersiz veri: {symbol} - {len(df)} kayıt")
                 return None
             

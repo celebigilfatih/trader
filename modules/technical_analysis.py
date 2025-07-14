@@ -38,6 +38,7 @@ class TechnicalAnalyzer:
             'ema_21': self._calculate_ema,
             'ema_50': self._calculate_ema,
             'ema_121': self._calculate_ema,
+            'ma_200': self._calculate_sma,
             'rsi': self._calculate_rsi,
             'macd': self._calculate_macd,
             'bollinger': self._calculate_bollinger_bands,
@@ -149,8 +150,8 @@ class TechnicalAnalyzer:
         trend = pd.Series(index=self.data.index, dtype=int)
         
         # NaN değerleri temizle
-        upper_band = upper_band.fillna(method='bfill') if hasattr(upper_band, 'fillna') else upper_band.bfill()
-        lower_band = lower_band.fillna(method='bfill') if hasattr(lower_band, 'fillna') else lower_band.bfill()
+        upper_band = upper_band.bfill() if hasattr(upper_band, 'bfill') else upper_band
+        lower_band = lower_band.bfill() if hasattr(lower_band, 'bfill') else lower_band
         
         # İlk geçerli indeksi bul
         first_valid_idx = period
@@ -229,7 +230,7 @@ class TechnicalAnalyzer:
         vwap = cumulative_tp_volume / cumulative_volume
         
         # NaN değerleri temizle
-        vwap = vwap.fillna(method='ffill').fillna(typical_price)
+        vwap = vwap.ffill().fillna(typical_price)
         
         self.indicators['vwap'] = vwap
         

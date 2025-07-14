@@ -16,19 +16,26 @@ class SimpleMLPredictor:
         self.is_trained = False
         self.last_prediction = None
     
+    def safe_divide(self, numerator, denominator, default_value=1.0):
+        """Güvenli bölme işlemi - sıfıra bölme ve infinity durumlarını önler"""
+        with np.errstate(divide='ignore', invalid='ignore'):
+            result = numerator / denominator
+            result = np.where(np.isfinite(result), result, default_value)
+            return result
+    
     def prepare_features(self, data: pd.DataFrame, technical_indicators: Dict) -> pd.DataFrame:
         """Basit özellik matrisi hazırlar"""
         features = pd.DataFrame(index=data.index)
         
-        # Fiyat özellikleri
+        # Fiyat özellikleri - güvenli bölme ile
         features['price_change'] = data['Close'].pct_change()
         features['volume_change'] = data['Volume'].pct_change()
-        features['high_low_ratio'] = data['High'] / data['Low']
+        features['high_low_ratio'] = self.safe_divide(data['High'], data['Low'], 1.0)
         
         # Hareketli ortalamalar
         features['sma_5'] = data['Close'].rolling(5).mean()
         features['sma_20'] = data['Close'].rolling(20).mean()
-        features['price_sma_ratio'] = data['Close'] / features['sma_20']
+        features['price_sma_ratio'] = self.safe_divide(data['Close'], features['sma_20'], 1.0)
         
         # Teknik indikatörler (mevcut olanlardan)
         if 'rsi' in technical_indicators:
@@ -37,13 +44,15 @@ class SimpleMLPredictor:
         for ema_name in ['ema_5', 'ema_8', 'ema_13', 'ema_21']:
             if ema_name in technical_indicators:
                 ema_values = technical_indicators[ema_name]
-                features[f'{ema_name}_ratio'] = data['Close'] / ema_values
+                features[f'{ema_name}_ratio'] = self.safe_divide(data['Close'], ema_values, 1.0)
         
-        # VWAP özellikleri
+        # VWAP özellikleri - güvenli bölme ile
         if 'vwap' in technical_indicators:
             vwap_values = technical_indicators['vwap']
-            features['vwap_ratio'] = data['Close'] / vwap_values
-            features['vwap_distance'] = (data['Close'] - vwap_values) / data['Close']
+            features['vwap_ratio'] = self.safe_divide(data['Close'], vwap_values, 1.0)
+            features['vwap_distance'] = self.safe_divide(
+                (data['Close'] - vwap_values), data['Close'], 0.0
+            )
         
         # Lag features
         features['close_lag_1'] = data['Close'].shift(1)
@@ -53,8 +62,9 @@ class SimpleMLPredictor:
         # Volatilite
         features['volatility'] = data['Close'].rolling(10).std()
         
-        # NaN temizle
-        features = features.fillna(method='ffill').fillna(0)
+        # NaN ve infinity temizle
+        features = features.replace([np.inf, -np.inf], np.nan)
+        features = features.ffill().fillna(0)
         
         return features
     

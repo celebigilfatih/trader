@@ -13,11 +13,11 @@ class StockScreener:
         self.screener_results = {}
     
     def _get_period_for_interval(self, interval: str) -> str:
-        """Zaman dilimine göre uygun period döndürür"""
+        """Zaman dilimine göre uygun period döndürür - Yahoo Finance API limitlerini dikkate alır"""
         period_map = {
-            "5m": "5d",     # 5 dakika için 5 gün
-            "15m": "1mo",   # 15 dakika için 1 ay
-            "30m": "1mo",   # 30 dakika için 1 ay
+            "5m": "7d",     # 5 dakika için 7 gün (Yahoo Finance limiti)
+            "15m": "60d",   # 15 dakika için 60 gün (Yahoo Finance limiti)
+            "30m": "60d",   # 30 dakika için 60 gün
             "1h": "3mo",    # 1 saat için 3 ay
             "4h": "6mo",    # 4 saat için 6 ay
             "1d": "1y"      # 1 gün için 1 yıl

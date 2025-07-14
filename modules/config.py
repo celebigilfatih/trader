@@ -31,7 +31,86 @@ BIST_SYMBOLS = {
     "TAVHL.IS": "TAV Havalimanları",
     "ULKER.IS": "Ülker",
     "SOKM.IS": "Şok Marketler",
-    "TATGD.IS": "TAT Gıda"
+    "TATGD.IS": "TAT Gıda",
+    "DYOBY.IS": "D.Y.O Boya",
+    "GMTAS.IS": "Gümüştaş",
+    "YEOTK.IS": "Yeo Teknoloji",
+    "BEGYO.IS": "Batı Eksen GYO",
+    "FENER.IS": "Fenerbahçe",
+    "METUR.IS": "Metin Tur",
+    "ARDYZ.IS": "Ardemir Yatırım",
+    "MERCN.IS": "Mercan Kimya",
+    "OSMEN.IS": "Osmanlı Menkul",
+    "TRILC.IS": "Tril Gayrimenkul",
+    "MARBL.IS": "Tureks Madencilik",
+    "KTLEV.IS": "Katılımevim Finansman",
+    "MOPAS.IS": "Mopas Marketcilik",
+    "TURSG.IS": "Türkiye Sigorta",
+    "BIENY.IS": "Bien Yapı",
+    "DOBUR.IS": "Doğuş Otomotiv",
+    "KUYAS.IS": "Kuyumcukent",
+    "DMRGD.IS": "Demirağ Gayrimenkul",
+    "SAYAS.IS": "Sayas Yatırım",
+    # BIST 100 Bankalar
+    "YKBNK.IS": "Yapı Kredi Bankası",
+    "ICBCT.IS": "ICBC Turkey Bank",
+    "ALBRK.IS": "Albaraka Türk",
+    "QNBFB.IS": "QNB Finansbank",
+    "TSKB.IS": "Türkiye Sınai Kalkınma Bankası",
+    # BIST 100 Gıda & İçecek
+    "CCOLA.IS": "Coca Cola İçecek",
+    "AEFES.IS": "Anadolu Efes",
+    "KNFRT.IS": "Konfrut Gıda",
+    "BANVT.IS": "Banvit",
+    # BIST 100 Enerji
+    "AKSEN.IS": "Aksa Enerji",
+    "ZOREN.IS": "Zorlu Enerji",
+    "AKENR.IS": "Akenerji",
+    "ODAS.IS": "Odaş Elektrik",
+    # BIST 100 Teknoloji
+    "LOGO.IS": "Logo Yazılım",
+    "ALCTL.IS": "Alcatel Lucent",
+    "PENTA.IS": "Penta Teknoloji",
+    "NETAS.IS": "Netaş Telekomünikasyon",
+    # BIST 100 Holding
+    "AGHOL.IS": "Anadolu Grubu Holding",
+    "GUBRF.IS": "Gübre Fabrikaları",
+    "PARSN.IS": "Parsan Makina",
+    # BIST 100 Perakende
+    "BIZIM.IS": "Bizim Toptan",
+    "DOAS.IS": "Doğaş Otomotiv",
+    "SELEC.IS": "Selçuk Ecza Deposu",
+    # BIST 100 İnşaat & Çimento
+    "EDIP.IS": "Edip Gayrimenkul",
+    "ENJSA.IS": "Enerjisa Enerji",
+    "CEMTS.IS": "Çemtaş Çelik",
+    "KRDMD.IS": "Kardemir",
+    "AKGRT.IS": "Aksigorta",
+    # BIST 100 Otomotiv
+    "OTKAR.IS": "Otokar",
+    "TTRAK.IS": "Türk Traktör",
+    "EGEEN.IS": "Ege Endüstri",
+    # BIST 100 Tekstil
+    "BRSAN.IS": "Borusan Mannesmann",
+    "DMSAS.IS": "Demisaş Döküm",
+    "ISGYO.IS": "İş GYO",
+    # BIST 100 Sağlık
+    "DEVA.IS": "Deva Holding",
+    "ECILC.IS": "Eczacıbaşı İlaç",
+    "LKMNH.IS": "Lokman Hekim",
+    # BIST 100 Turizm
+    "MAALT.IS": "Marmaris Altın Tesisleri",
+    "AYDEM.IS": "Aydem Enerji",
+    # BIST 100 Diğer
+    "SODA.IS": "Soda Sanayii",
+    "CANTE.IS": "Çanakkale Seramik",
+    "KERVT.IS": "Kervan Gıda",
+    "BAGFS.IS": "Bagfaş",
+    "TTKOM.IS": "Türk Telekom",
+    "GLYHO.IS": "Global Yatırım Holding",
+    "IHEVA.IS": "İheva İnşaat",
+    "KLMSN.IS": "Klimasan Klima",
+    "MAVI.IS": "Mavi Giyim"
 }
 
 # Teknik indikatör konfigürasyonu
@@ -71,6 +150,12 @@ INDICATORS_CONFIG = {
         "period": 121,
         "default": False,
         "color": "#a29bfe"
+    },
+    "ma_200": {
+        "name": "MA 200",
+        "period": 200,
+        "default": True,
+        "color": "#e74c3c"
     },
     "rsi": {
         "name": "Göreceli Güç Endeksi (RSI)",
