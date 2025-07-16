@@ -214,6 +214,42 @@ INDICATORS_CONFIG = {
         "period": 20,
         "default": True,
         "color": "#ff9ff3"
+    },
+    # Yeni gelişmiş indikatörler
+    "fvg": {
+        "name": "Fair Value Gap (FVG)",
+        "threshold_percent": 0.2,
+        "default": False,
+        "color_bullish": "#00b894",
+        "color_bearish": "#d63031"
+    },
+    "order_block": {
+        "name": "Order Block",
+        "lookback": 20,
+        "threshold_percent": 0.5,
+        "default": False,
+        "color_bullish": "#0984e3",
+        "color_bearish": "#e84393"
+    },
+    "bos": {
+        "name": "Break of Structure (BOS)",
+        "lookback": 50,
+        "swing_threshold": 0.5,
+        "default": False,
+        "color_bullish": "#00cec9",
+        "color_bearish": "#fd79a8"
+    },
+    "fvg_ob_combo": {
+        "name": "FVG + Order Block Kombosu",
+        "default": False,
+        "color_bullish": "#6c5ce7",
+        "color_bearish": "#e17055"
+    },
+    "fvg_bos_combo": {
+        "name": "FVG + Break of Structure Kombosu",
+        "default": False,
+        "color_bullish": "#00b894",
+        "color_bearish": "#d63031"
     }
 }
 
@@ -251,4 +287,4 @@ TIME_PERIODS = {
     "10y": "10 Yıl",
     "ytd": "Yıl Başından İtibaren",
     "max": "Maksimum"
-} 
+}

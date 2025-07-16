@@ -39,7 +39,7 @@ def create_chart(df, analyzer, selected_indicators):
         shared_xaxes=True,
         vertical_spacing=0.02,
         subplot_titles=['Price & Indicators', 'Volume', 'RSI'],
-        row_width=[0.6, 0.2, 0.2],
+        row_heights=[0.8, 0.12, 0.08],
         specs=[[{"secondary_y": False}],
                [{"secondary_y": False}], 
                [{"secondary_y": False}]]
@@ -196,7 +196,7 @@ def create_chart(df, analyzer, selected_indicators):
             x=1
         ),
         margin=dict(l=0, r=0, t=40, b=0),
-        height=600
+        height=800
     )
     
     # X ekseni ayarları
@@ -280,13 +280,41 @@ def main():
         /* Hide Streamlit elements */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
+        header {visibility: visible; color: hsl(210, 40%, 98%); font-weight: 700; font-size: 1.2rem; padding: 0.5rem 1rem;}
         
         /* Sidebar */
         .css-1d391kg {
             background-color: hsl(220, 100%, 4%);
             border-right: 1px solid hsl(215, 28%, 15%);
             width: 280px !important;
+            display: block;
+            padding-left: 0.5rem;
+        }
+        
+        /* Sidebar Titles */
+        .sidebar-section-title {
+            color: hsl(210, 40%, 98%) !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+            padding: 0.5rem 0 !important;
+            margin-left: 0 !important;
+        }
+        
+        /* Sidebar Buttons */
+        button[role="button"] {
+            text-align: left !important;
+            width: 100% !important;
+            color: hsl(210, 40%, 98%) !important;
+            background-color: transparent !important;
+            border: none !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+        }
+        
+        button[role="button"]:hover {
+            background-color: hsl(215, 28%, 20%) !important;
         }
         
         /* Main content area */
@@ -1102,8 +1130,8 @@ def main():
         
         # General Section
         st.markdown("""
-        <div style="margin-bottom: 1rem;">
-            <div style="color: #8B8B8B; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; padding-left: 0.5rem;">
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">
                 General
             </div>
         </div>
@@ -1123,8 +1151,8 @@ def main():
         
         # Analysis Section
         st.markdown("""
-        <div style="margin: 1.5rem 0 1rem 0;">
-            <div style="color: #8B8B8B; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; padding-left: 0.5rem;">
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">
                 Analysis
             </div>
         </div>
@@ -1194,16 +1222,16 @@ def main():
 def show_technical_analysis():
     """Teknik analiz sayfası - Modern Shadcn stil"""
     
-    # Modern page header with controls
+    # Modern page header with market info on the right
+    # Full width header
     st.markdown("""
-    <div class="page-header">
-        <h1>📈 Teknik Analiz</h1>
-        <p>Gelişmiş teknik indikatörlerle gerçek zamanlı BIST hisse analizi</p>
+    <div class="page-header" style="width: 100%; padding: 1rem; margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0;">📈 Teknik Analiz</h1>
+        <p style="margin: 0; font-size: 0.9rem; color: hsl(215, 20%, 70%);">Gelişmiş teknik indikatörlerle gerçek zamanlı BIST hisse analizi</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Modern header controls
-    st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
     
     # Header kontrolleri - 3 sütunlu layout
     header_col1, header_col2, header_col3 = st.columns([2, 1, 1])
@@ -1271,7 +1299,7 @@ def show_technical_analysis():
             key="header_period"
         )
     
-    st.markdown("---")
+
     
     # Simplified sidebar - only indicators
     with st.sidebar:
@@ -1353,7 +1381,28 @@ def show_technical_analysis():
                         key=f"check_{indicator}"
                     )
         
-        st.markdown("---")
+        # Gelişmiş Formasyonlar
+        st.markdown("""
+        <div style="background: hsl(220, 100%, 5%); padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid hsl(215, 28%, 18%);">
+            <h4 style="color: hsl(210, 40%, 98%); margin: 0; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                🔍 Gelişmiş Formasyonlar
+            </h4>
+            <p style="color: hsl(215, 20%, 70%); margin: 0.25rem 0 0 0; font-size: 0.75rem;">Smart Money Concept (SMC) formasyonları</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        advanced_indicators = ['fvg', 'order_block', 'bos', 'fvg_ob_combo', 'fvg_bos_combo']
+        advanced_cols = st.columns(2)  # 2 sütunlu layout
+        
+        for i, indicator in enumerate(advanced_indicators):
+            if indicator in INDICATORS_CONFIG:
+                config = INDICATORS_CONFIG[indicator]
+                with advanced_cols[i % 2]:
+                    selected_indicators[indicator] = st.checkbox(
+                        config["name"],
+                        value=config["default"],
+                        key=f"check_{indicator}"
+                    )
         
         # Uyarılar
         st.markdown("""
@@ -1380,6 +1429,66 @@ def show_technical_analysis():
             df = fetcher.get_stock_data(selected_symbol, period=time_period, interval=time_interval)
             
             if df is not None and not df.empty:
+                # Piyasa bilgilerini header'da güncelle
+                latest = df.iloc[-1]
+                prev = df.iloc[-2]
+                change = latest['Close'] - prev['Close']
+                change_pct = (change / prev['Close']) * 100
+                volume_change = ((latest['Volume'] - df['Volume'].tail(20).mean()) / df['Volume'].tail(20).mean()) * 100
+                
+                # Haftalık ve aylık performans hesapla
+                weekly_performance = 0
+                monthly_performance = 0
+                
+                try:
+                    # Haftalık performans (7 gün öncesi ile karşılaştır)
+                    if len(df) >= 7:
+                        week_ago_price = df['Close'].iloc[-7]
+                        weekly_performance = ((latest['Close'] - week_ago_price) / week_ago_price) * 100
+                    
+                    # Aylık performans (30 gün öncesi ile karşılaştır)
+                    if len(df) >= 30:
+                        month_ago_price = df['Close'].iloc[-30]
+                        monthly_performance = ((latest['Close'] - month_ago_price) / month_ago_price) * 100
+                except:
+                    pass  # Hata durumunda 0 olarak kalacak
+                
+                # Piyasa bilgilerini header altında tek satır halinde göster
+                st.markdown(f"""
+                <div style='background: hsl(220, 100%, 6%); padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0; border: 1px solid hsl(215, 28%, 20%);'>
+                    <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;'>
+                        <div style='display: flex; align-items: center; gap: 0.5rem;'>
+                            <span style='color: hsl(215, 20%, 70%); font-size: 1.1rem;'>📊 {selected_symbol}</span>
+                            <span style='color: hsl(210, 40%, 98%); font-weight: 600; font-size: 1.3rem;'>₺{latest['Close']:.2f}</span>
+                            <span style='color: {'hsl(142, 76%, 36%)' if change >= 0 else 'hsl(0, 84%, 60%)'}; font-size: 1.1rem;'>{change:+.2f} ({change_pct:+.2f}%)</span>
+                        </div>
+                        <div style='display: flex; gap: 1.5rem; font-size: 1rem;'>
+                            <div>
+                                <span style='color: hsl(215, 20%, 70%);'>Yüksek: </span>
+                                <span style='color: hsl(210, 40%, 98%);'>₺{latest['High']:.2f}</span>
+                            </div>
+                            <div>
+                                <span style='color: hsl(215, 20%, 70%);'>Düşük: </span>
+                                <span style='color: hsl(210, 40%, 98%);'>₺{latest['Low']:.2f}</span>
+                            </div>
+                            <div>
+                                <span style='color: hsl(215, 20%, 70%);'>Hacim: </span>
+                                <span style='color: hsl(210, 40%, 98%);'>{latest['Volume']:,.0f}</span>
+                                <span style='color: {'hsl(142, 76%, 36%)' if volume_change >= 0 else 'hsl(0, 84%, 60%)'}; margin-left: 0.25rem;'>({volume_change:+.1f}%)</span>
+                            </div>
+                            <div>
+                                <span style='color: hsl(215, 20%, 70%);'>Haftalık: </span>
+                                <span style='color: {'hsl(142, 76%, 36%)' if weekly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{weekly_performance:+.1f}%</span>
+                            </div>
+                            <div>
+                                <span style='color: hsl(215, 20%, 70%);'>Aylık: </span>
+                                <span style='color: {'hsl(142, 76%, 36%)' if monthly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{monthly_performance:+.1f}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
                 analyzer = TechnicalAnalyzer(df)
                 
                 # İndikatörleri hesapla
@@ -1854,7 +1963,10 @@ def show_technical_analysis():
                             gap_up_strength = "Orta"
                 
                 # Sinyal kartları - 3 sıra, 4 sütunlu layout
-                st.markdown("### 🚀 Boğa Sinyalleri")
+                st.markdown("""
+                <div style='border: 2px solid hsl(215, 50%, 50%); border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; background: hsl(220, 100%, 6%);'>
+                    <h3 style='color: white; margin: 0; margin-bottom: 1rem;'>🐂 Boğa Sinyalleri</h3>
+                """, unsafe_allow_html=True)
                 
                 # İlk sıra - Ana sinyaller
                 signal_col1, signal_col2, signal_col3, signal_col4 = st.columns(4)
@@ -1876,7 +1988,7 @@ def show_technical_analysis():
                                     • Hacim artışı var
                                 </div>
                             </div>
-                            <div class="signal-icon">🚀</div>
+                            <div class="signal-icon">🐂</div>
                             <div class="signal-text">Güçlü Alış Sinyali</div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -2146,7 +2258,7 @@ def show_technical_analysis():
                                     • Daha yüksek tepe formasyonu<br>• Daha yüksek dip formasyonu<br>• Hacim desteği<br>• RSI trend onayı
                                 </div>
                             </div>
-                            <div class="signal-icon">🚀</div>
+                            <div class="signal-icon">📈</div>
                             <div class="signal-text">Higher High + Higher Low Pattern</div>
                             <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 4px;">{hh_hl_strength}</div>
                         </div>
@@ -2264,7 +2376,7 @@ def show_technical_analysis():
                                     • Yatay direnç kırılımı<br>• 2x hacim patlaması<br>• %1+ kırılım gücü<br>• RSI 50-80 arası
                                 </div>
                             </div>
-                            <div class="signal-icon">🚀</div>
+                            <div class="signal-icon">💥</div>
                             <div class="signal-text">Volume Breakout</div>
                             <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 4px;">{volume_breakout_strength}</div>
                         </div>
@@ -2302,7 +2414,7 @@ def show_technical_analysis():
                                     • %1+ gap açılış<br>• %2+ güçlü kapanış<br>• %50+ hacim artışı<br>• RSI > 60
                                 </div>
                             </div>
-                            <div class="signal-icon">🚀</div>
+                            <div class="signal-icon">⬆️</div>
                             <div class="signal-text">Gap Up</div>
                             <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 4px;">{gap_up_strength}</div>
                         </div>
@@ -2324,6 +2436,147 @@ def show_technical_analysis():
                             <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 4px;">Yükseliş Bekleniyor</div>
                         </div>
                         """, unsafe_allow_html=True)
+
+                st.markdown("""
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Risk Analizi ve Pozisyon Önerileri - Mavi Çerçeve İçinde
+                st.markdown("""
+                <div style='border: 3px solid #4a90e2; border-radius: 0.75rem; padding: 1.5rem; margin: 1.5rem 0; background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(220, 100%, 8%) 100%); box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2);'>
+                    <h3 style='
+                        color: #4a90e2;
+                        margin: 0 0 1.5rem 0;
+                        font-size: 1.5rem;
+                        font-weight: 700;
+                        text-align: center;
+                        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    '>🔍 Risk Analizi & Pozisyon Önerileri</h3>
+                """, unsafe_allow_html=True)
+                
+                # Risk skoru ve seviyesi
+                risk_col1, risk_col2, risk_col3 = st.columns(3)
+                
+                with risk_col1:
+                    st.metric(
+                        label="📊 Risk Skoru",
+                        value=f"{risk_analysis['risk_score']:.1f}/10",
+                        delta=risk_analysis['risk_level']
+                    )
+                
+                with risk_col2:
+                    st.metric(
+                        label="💰 Pozisyon Önerisi",
+                        value=risk_analysis['position_sizing'].split('(')[0],
+                        delta=risk_analysis['position_sizing'].split('(')[1].replace(')', '') if '(' in risk_analysis['position_sizing'] else ""
+                    )
+                
+                with risk_col3:
+                    st.metric(
+                        label="🛡️ Stop-Loss",
+                        value=risk_analysis['stop_loss_suggestion'].split('(')[0],
+                        delta=risk_analysis['stop_loss_suggestion'].split('(')[1].replace(')', '') if '(' in risk_analysis['stop_loss_suggestion'] else ""
+                    )
+                
+                # Ana pozisyon önerisi
+                st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
+                pos_col1, pos_col2, pos_col3 = st.columns(3)
+                
+                with pos_col1:
+                    st.metric(
+                        label="📈 Pozisyon Önerisi",
+                        value=position_recommendation['recommendation'],
+                        delta=f"{position_recommendation['position_strength']} sinyal"
+                    )
+                
+                with pos_col2:
+                    st.metric(
+                        label="🎯 Güven Skoru",
+                        value=f"{position_recommendation['confidence']:.0f}%",
+                        delta=f"Boğa: {position_recommendation['bull_score']:.1f} | Ayı: {position_recommendation['bear_score']:.1f}"
+                    )
+                
+                with pos_col3:
+                    st.metric(
+                        label="💰 Pozisyon Büyüklüğü",
+                        value=position_recommendation['position_size'].split('(')[0] if '(' in position_recommendation['position_size'] else position_recommendation['position_size'],
+                        delta=f"Skor: {position_recommendation['total_score']:+.1f}"
+                    )
+                
+                # Modern çerçeveyi kapat
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                # Mavi Çerçeveli Boş Alan - Streamlit Native Yaklaşım
+                st.markdown("---")
+                
+                # Container with blue styling
+                with st.container():
+                    # CSS for blue border container
+                    st.markdown("""
+                    <style>
+                    .blue-container {
+                        border: 3px solid #4a90e2;
+                        border-radius: 12px;
+                        padding: 2rem;
+                        margin: 1.5rem 0;
+                        background: linear-gradient(135deg, #0a0f1c 0%, #0d1421 100%);
+                        box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2);
+                        min-height: 200px;
+                    }
+                    .blue-title {
+                        color: #4a90e2;
+                        text-align: center;
+                        font-size: 1.8rem;
+                        font-weight: 700;
+                        margin-bottom: 0.5rem;
+                        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    }
+                    .blue-subtitle {
+                        color: #4a90e2;
+                        text-align: center;
+                        font-size: 1rem;
+                        opacity: 0.8;
+                        margin-bottom: 2rem;
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    
+                    # Blue container div
+                    st.markdown('<div class="blue-container">', unsafe_allow_html=True)
+                    
+                    # Title and subtitle
+                    st.markdown('<h2 class="blue-title">🐂 Boğa Sinyalleri & İndikatörler</h2>', unsafe_allow_html=True)
+                    st.markdown('<p class="blue-subtitle">Teknik analiz sinyalleri ve momentum indikatörleri</p>', unsafe_allow_html=True)
+                    
+                    # Grid layout using Streamlit columns
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.markdown("""
+                        <div style='background: rgba(74, 144, 226, 0.1); border: 1px solid rgba(74, 144, 226, 0.3); border-radius: 8px; padding: 1rem; text-align: center; margin: 0.5rem 0;'>
+                            <h4 style='color: #4a90e2; margin: 0 0 0.5rem 0; font-size: 1rem;'>📈 Trend Sinyalleri</h4>
+                            <p style='color: rgba(74, 144, 226, 0.8); margin: 0; font-size: 0.85rem;'>Golden Cross, MACD, SuperTrend</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col2:
+                        st.markdown("""
+                        <div style='background: rgba(74, 144, 226, 0.1); border: 1px solid rgba(74, 144, 226, 0.3); border-radius: 8px; padding: 1rem; text-align: center; margin: 0.5rem 0;'>
+                            <h4 style='color: #4a90e2; margin: 0 0 0.5rem 0; font-size: 1rem;'>⚡ Momentum İndikatörleri</h4>
+                            <p style='color: rgba(74, 144, 226, 0.8); margin: 0; font-size: 0.85rem;'>RSI, Stochastic, Williams %R</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col3:
+                        st.markdown("""
+                        <div style='background: rgba(74, 144, 226, 0.1); border: 1px solid rgba(74, 144, 226, 0.3); border-radius: 8px; padding: 1rem; text-align: center; margin: 0.5rem 0;'>
+                            <h4 style='color: #4a90e2; margin: 0 0 0.5rem 0; font-size: 1rem;'>📊 Hacim Analizi</h4>
+                            <p style='color: rgba(74, 144, 226, 0.8); margin: 0; font-size: 0.85rem;'>VWAP, Volume Spike, OBV</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Close blue container
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Bear Signal Section - Basit Yaklaşım
                 st.markdown("---")
@@ -2362,191 +2615,9 @@ def show_technical_analysis():
                         st.success("✅ Ayı Sinyali Tespit Edilmedi")
                         st.info("Mevcut durumda güçlü düşüş sinyali bulunmuyor.")
                 
-                # Kapsamlı Risk Yönetimi Analizi
-                st.markdown("---")
+
                 
-                # Modern risk analizi başlığı
-                st.markdown("""
-                <div style="background: hsl(220, 100%, 6%); padding: 2rem; border-radius: 12px; margin: 2rem 0; border: 2px solid hsl(215, 28%, 25%); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);">
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        <div style="background: hsl(215, 28%, 15%); width: 50px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid hsl(215, 28%, 25%);">
-                            <span style="font-size: 20px;">🔍</span>
-                        </div>
-                        <div>
-                            <h2 style="color: hsl(210, 40%, 98%); margin: 0; font-size: 1.6rem; font-weight: 700;">
-                                Kapsamlı Risk Analizi
-                            </h2>
-                            <p style="color: hsl(215, 20%, 75%); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
-                                Çok boyutlu risk değerlendirmesi ve pozisyon önerileri
-                            </p>
-                        </div>
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                        <div style="color: hsl(215, 20%, 80%); font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span>📊</span>
-                            <span>Volatilite • Trend • Hacim • Destek/Direnç • RSI • MACD analizi</span>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Risk skoru ve seviyesi
-                risk_col1, risk_col2, risk_col3 = st.columns(3)
-                
-                with risk_col1:
-                    st.metric(
-                        label="📊 Risk Skoru",
-                        value=f"{risk_analysis['risk_score']:.1f}/10",
-                        delta=risk_analysis['risk_level']
-                    )
-                
-                with risk_col2:
-                    st.metric(
-                        label="💰 Pozisyon Önerisi",
-                        value=risk_analysis['position_sizing'].split('(')[0],
-                        delta=risk_analysis['position_sizing'].split('(')[1].replace(')', '') if '(' in risk_analysis['position_sizing'] else ""
-                    )
-                
-                with risk_col3:
-                    st.metric(
-                        label="🛡️ Stop-Loss",
-                        value=risk_analysis['stop_loss_suggestion'].split('(')[0],
-                        delta=risk_analysis['stop_loss_suggestion'].split('(')[1].replace(')', '') if '(' in risk_analysis['stop_loss_suggestion'] else ""
-                    )
-                
-                # Risk faktörleri
-                if risk_analysis['risk_factors']:
-                    st.markdown("#### 📋 Tespit Edilen Risk Faktörleri")
-                    
-                    risk_factor_cols = st.columns(2)
-                    factors_list = list(risk_analysis['risk_factors'].items())
-                    
-                    for i, (factor_key, factor_desc) in enumerate(factors_list):
-                        col_idx = i % 2
-                        with risk_factor_cols[col_idx]:
-                            if 'high' in factor_key or 'strong' in factor_key or 'overbought' in factor_key:
-                                st.warning(f"⚠️ {factor_desc}")
-                            elif 'low' in factor_key or 'oversold' in factor_key or 'support' in factor_key:
-                                st.info(f"ℹ️ {factor_desc}")
-                            else:
-                                st.success(f"✅ {factor_desc}")
-                
-                # Öneriler
-                if risk_analysis['recommendations']:
-                    st.markdown("#### 💡 Risk Yönetimi Önerileri")
-                    for i, recommendation in enumerate(risk_analysis['recommendations']):
-                        st.write(f"{i+1}. {recommendation}")
-                
-                # Take-profit önerisi
-                st.markdown("#### 🎯 Hedef Fiyat")
-                st.success(f"Take-Profit: {risk_analysis['take_profit_suggestion']}")
-                
-                # Yeni Pozisyon Önerisi Sistemi
-                st.markdown("---")
-                st.markdown("### 🎯 Teknik Analiz Pozisyon Önerisi")
-                
-                # Ana pozisyon önerisi
-                pos_col1, pos_col2, pos_col3 = st.columns(3)
-                
-                with pos_col1:
-                    # Renk belirleme
-                    if "GÜÇLÜ AL" in position_recommendation['recommendation']:
-                        delta_color = "normal"
-                    elif "AL" in position_recommendation['recommendation']:
-                        delta_color = "normal"
-                    elif "SAT" in position_recommendation['recommendation']:
-                        delta_color = "inverse"
-                    else:
-                        delta_color = "off"
-                    
-                    st.metric(
-                        label="📈 Pozisyon Önerisi",
-                        value=position_recommendation['recommendation'],
-                        delta=f"{position_recommendation['position_strength']} sinyal"
-                    )
-                
-                with pos_col2:
-                    st.metric(
-                        label="🎯 Güven Skoru",
-                        value=f"{position_recommendation['confidence']:.0f}%",
-                        delta=f"Boğa: {position_recommendation['bull_score']:.1f} | Ayı: {position_recommendation['bear_score']:.1f}"
-                    )
-                
-                with pos_col3:
-                    st.metric(
-                        label="💰 Pozisyon Büyüklüğü",
-                        value=position_recommendation['position_size'].split('(')[0] if '(' in position_recommendation['position_size'] else position_recommendation['position_size'],
-                        delta=f"Skor: {position_recommendation['total_score']:+.1f}"
-                    )
-                
-                # Boğa ve Ayı Sinyalleri
-                if position_recommendation['bull_signals'] or position_recommendation['bear_signals']:
-                    st.markdown("#### 📊 Aktif Sinyaller")
-                    
-                    signal_col1, signal_col2 = st.columns(2)
-                    
-                    with signal_col1:
-                        if position_recommendation['bull_signals']:
-                            st.markdown("**🐂 Boğa Sinyalleri:**")
-                            for signal in position_recommendation['bull_signals']:
-                                st.success(f"✅ {signal}")
-                    
-                    with signal_col2:
-                        if position_recommendation['bear_signals']:
-                            st.markdown("**🐻 Ayı Sinyalleri:**")
-                            for signal in position_recommendation['bear_signals']:
-                                st.error(f"❌ {signal}")
-                
-                # Teknik Detaylar
-                if position_recommendation['technical_details']:
-                    with st.expander("🔍 Teknik Analiz Detayları", expanded=False):
-                        for detail in position_recommendation['technical_details']:
-                            st.write(f"• {detail}")
-                
-                # Risk Uyarıları
-                if position_recommendation['risk_warnings']:
-                    st.markdown("#### ⚠️ Risk Uyarıları")
-                    for warning in position_recommendation['risk_warnings']:
-                        st.warning(warning)
-                
-                # Market Info - Streamlit Native
-                latest = df.iloc[-1]
-                prev = df.iloc[-2]
-                change = latest['Close'] - prev['Close']
-                change_pct = (change / prev['Close']) * 100
-                
-                st.markdown("### 📊 Piyasa Bilgileri")
-                
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric(
-                        label="Mevcut Fiyat",
-                        value=f"₺{latest['Close']:.2f}",
-                        delta=f"{change:+.2f} ({change_pct:+.2f}%)"
-                    )
-                
-                with col2:
-                    st.metric(
-                        label="Günlük Yüksek",
-                        value=f"₺{latest['High']:.2f}",
-                        delta="24s Aralık"
-                    )
-                
-                with col3:
-                    st.metric(
-                        label="Günlük Düşük",
-                        value=f"₺{latest['Low']:.2f}",
-                        delta="Destek Seviyesi"
-                    )
-                
-                with col4:
-                    volume_change = ((latest['Volume'] - df['Volume'].tail(20).mean()) / df['Volume'].tail(20).mean()) * 100
-                    st.metric(
-                        label="Hacim",
-                        value=f"{latest['Volume']:,.0f}",
-                        delta=f"{volume_change:+.1f}% ortalamaya göre"
-                    )
+                # Market Info moved to header
                 
                 # Hareketli Ortalama Uzaklıkları
                 ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200']
@@ -2938,12 +3009,12 @@ def show_modern_dashboard():
         subcol1, subcol2 = st.columns(2)
         
         with subcol1:
-                    selected_symbol = st.selectbox(
-            "📊 Hisse",
+            selected_symbol = st.selectbox(
+                "📊 Hisse",
             options=sorted(list(BIST_SYMBOLS.keys())),
-            format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
-            key="dashboard_stock_select"
-        )
+                format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
+                key="dashboard_stock_select"
+            )
         
         with subcol2:
             time_interval = st.selectbox(
@@ -3554,7 +3625,7 @@ def show_ai_predictions():
                         """, unsafe_allow_html=True)
                     
                     st.markdown('</div>', unsafe_allow_html=True)
-                
+                    
                 # === MODEL COMPARISON ===
                 if model_type == "all_models":
                     st.markdown("### 🏆 Model Karşılaştırması")
@@ -3617,8 +3688,8 @@ def show_ai_predictions():
                         <div class="scenario-price">₺{optimistic:.2f}</div>
                         <div class="scenario-return">{optimistic_return:+.2f}%</div>
                         <div class="scenario-prob">%30 Olasılık</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        </div>
+                        """, unsafe_allow_html=True)
                 
                 with scenario_col2:
                     st.markdown(f"""
@@ -3732,7 +3803,7 @@ def show_ai_predictions():
                     with col2:
                         # Model performance metrics
                         st.markdown("**📊 Model Performansı**")
-                        st.markdown(f"""
+                    st.markdown(f"""
                         <div class="performance-metrics">
                             <div class="metric-row">
                                 <span>Eğitim Skoru:</span>
@@ -3750,7 +3821,7 @@ def show_ai_predictions():
                                 <span>MAE:</span>
                                 <span>{training_results.get('mae', 0):.3f}</span>
                             </div>
-                        </div>
+                    </div>
                         """, unsafe_allow_html=True)
                 
                 # === RISK ASSESSMENT ===
@@ -3853,7 +3924,7 @@ def show_ai_predictions():
         border-bottom: none;
     }
     </style>
-    """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
 def show_stock_screener():
     """Hisse tarayıcı sayfası"""
@@ -4590,4 +4661,4 @@ def show_sentiment_analysis():
             st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main() 
+    main()

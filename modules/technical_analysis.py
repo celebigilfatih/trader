@@ -3,6 +3,7 @@ import numpy as np
 import ta
 from typing import Dict, List, Optional, Tuple
 from .config import INDICATORS_CONFIG
+from .pattern_recognition_advanced import AdvancedPatternRecognition
 
 class TechnicalAnalyzer:
     """Teknik analiz hesaplamaları yapan sınıf"""
@@ -47,7 +48,12 @@ class TechnicalAnalyzer:
             'cci': self._calculate_cci,
             'supertrend': self._calculate_supertrend,
             'ott': self._calculate_ott,
-            'vwap': self._calculate_vwap
+            'vwap': self._calculate_vwap,
+            'fvg': self._calculate_fvg,
+            'order_block': self._calculate_order_block,
+            'bos': self._calculate_bos,
+            'fvg_ob_combo': self._calculate_fvg_ob_combo,
+            'fvg_bos_combo': self._calculate_fvg_bos_combo
         }
         
         if indicator_name in method_map:
@@ -343,6 +349,55 @@ class TechnicalAnalyzer:
         
         return latest_values
     
+    def _calculate_fvg(self, indicator_name: str) -> None:
+        """Fair Value Gap (FVG) hesaplar"""
+        config = INDICATORS_CONFIG[indicator_name]
+        threshold_percent = config['threshold_percent']
+        
+        pattern_analyzer = AdvancedPatternRecognition(self.data)
+        fvg_data = pattern_analyzer.detect_fair_value_gaps(threshold_percent=threshold_percent)
+        
+        self.indicators['fvg_bullish'] = fvg_data['bullish']
+        self.indicators['fvg_bearish'] = fvg_data['bearish']
+    
+    def _calculate_order_block(self, indicator_name: str) -> None:
+        """Order Block hesaplar"""
+        config = INDICATORS_CONFIG[indicator_name]
+        lookback = config['lookback']
+        threshold_percent = config['threshold_percent']
+        
+        pattern_analyzer = AdvancedPatternRecognition(self.data)
+        ob_data = pattern_analyzer.detect_order_blocks(lookback=lookback, threshold_percent=threshold_percent)
+        
+        self.indicators['ob_bullish'] = ob_data['bullish']
+        self.indicators['ob_bearish'] = ob_data['bearish']
+    
+    def _calculate_bos(self, indicator_name: str) -> None:
+        """Break of Structure (BOS) hesaplar"""
+        config = INDICATORS_CONFIG[indicator_name]
+        lookback = config['lookback']
+        swing_threshold = config['swing_threshold']
+        
+        pattern_analyzer = AdvancedPatternRecognition(self.data)
+        bos_data = pattern_analyzer.detect_break_of_structure(lookback=lookback, swing_threshold=swing_threshold)
+        
+        self.indicators['bos_bullish'] = bos_data['bullish']
+        self.indicators['bos_bearish'] = bos_data['bearish']
+    
+    def _calculate_fvg_ob_combo(self, indicator_name: str) -> None:
+        """FVG ve Order Block kombinasyonlarını hesaplar"""
+        pattern_analyzer = AdvancedPatternRecognition(self.data)
+        combo_data = pattern_analyzer.get_fvg_order_block_combo()
+        
+        self.indicators['fvg_ob_combo'] = combo_data
+    
+    def _calculate_fvg_bos_combo(self, indicator_name: str) -> None:
+        """FVG ve Break of Structure kombinasyonlarını hesaplar"""
+        pattern_analyzer = AdvancedPatternRecognition(self.data)
+        combo_data = pattern_analyzer.get_fvg_bos_combo()
+        
+        self.indicators['fvg_bos_combo'] = combo_data
+
     def generate_summary(self) -> Dict[str, any]:
         """
         Analiz özeti oluşturur
@@ -369,4 +424,4 @@ class TechnicalAnalyzer:
             'volume_spike': self.data['Volume'].iloc[-1] > self.data['Volume'].tail(20).mean() * 1.5
         }
         
-        return summary 
+        return summary
