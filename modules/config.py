@@ -51,6 +51,11 @@ BIST_SYMBOLS = {
     "KUYAS.IS": "Kuyumcukent",
     "DMRGD.IS": "Demirağ Gayrimenkul",
     "SAYAS.IS": "Sayas Yatırım",
+    "GLCVY.IS": "Galata Çevre Yatırımları",
+    "EGEPO.IS": "Ege Profil",
+    "KONTR.IS": "Kontrolmatik Teknoloji",
+    "ESEN.IS": "Esen Sistem",
+    "NATEN.IS": "Naturel Yenilenebilir Enerji",
     # BIST 100 Bankalar
     "YKBNK.IS": "Yapı Kredi Bankası",
     "ICBCT.IS": "ICBC Turkey Bank",
