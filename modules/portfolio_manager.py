@@ -15,7 +15,7 @@ class PortfolioManager:
         self.portfolio_history = []
         self.load_portfolio()
     
-    def load_portfolio(self) -> None:
+    def load_portfolio(self) -> Dict:
         """Portföy verilerini dosyadan yükler"""
         if os.path.exists(self.portfolio_file):
             try:
@@ -29,6 +29,8 @@ class PortfolioManager:
                 self.holdings = {}
                 self.transactions = []
                 self.portfolio_history = []
+        
+        return self.holdings
     
     def save_portfolio(self) -> None:
         """Portföy verilerini dosyaya kaydeder"""
@@ -44,59 +46,73 @@ class PortfolioManager:
             print(f"Portföy verisi kaydedilirken hata: {e}")
     
     def add_transaction(self, symbol: str, transaction_type: str, quantity: float, 
-                       price: float, date: str = None, commission: float = 0) -> None:
+                       price: float, date: str = None, commission: float = 0) -> Dict:
         """Yeni işlem ekler (BUY/SELL)"""
         
-        if date is None:
-            date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        transaction = {
-            'symbol': symbol,
-            'type': transaction_type.upper(),
-            'quantity': quantity,
-            'price': price,
-            'date': date,
-            'commission': commission,
-            'total_cost': quantity * price + commission
-        }
-        
-        self.transactions.append(transaction)
-        
-        # Holdings güncelle
-        if symbol not in self.holdings:
-            self.holdings[symbol] = {
-                'quantity': 0,
-                'avg_cost': 0,
-                'total_cost': 0,
-                'first_buy_date': date
+        try:
+            if date is None:
+                date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            transaction = {
+                'symbol': symbol,
+                'type': transaction_type.upper(),
+                'quantity': quantity,
+                'price': price,
+                'date': date,
+                'commission': commission,
+                'total_cost': quantity * price + commission
             }
-        
-        if transaction_type.upper() == 'BUY':
-            # Alım işlemi
-            old_quantity = self.holdings[symbol]['quantity']
-            old_total_cost = self.holdings[symbol]['total_cost']
             
-            new_quantity = old_quantity + quantity
-            new_total_cost = old_total_cost + transaction['total_cost']
+            self.transactions.append(transaction)
             
-            self.holdings[symbol]['quantity'] = new_quantity
-            self.holdings[symbol]['total_cost'] = new_total_cost
-            self.holdings[symbol]['avg_cost'] = new_total_cost / new_quantity if new_quantity > 0 else 0
+            # Holdings güncelle
+            if symbol not in self.holdings:
+                self.holdings[symbol] = {
+                    'quantity': 0,
+                    'avg_cost': 0,
+                    'total_cost': 0,
+                    'first_buy_date': date
+                }
             
-        elif transaction_type.upper() == 'SELL':
-            # Satım işlemi
-            if self.holdings[symbol]['quantity'] >= quantity:
-                # Ortalama maliyet aynı kalır, sadece miktar azalır
-                self.holdings[symbol]['quantity'] -= quantity
+            if transaction_type.upper() == 'BUY':
+                # Alım işlemi
+                old_quantity = self.holdings[symbol]['quantity']
+                old_total_cost = self.holdings[symbol]['total_cost']
                 
-                # Eğer tüm pozisyon kapatıldıysa
-                if self.holdings[symbol]['quantity'] == 0:
-                    self.holdings[symbol]['avg_cost'] = 0
-                    self.holdings[symbol]['total_cost'] = 0
-            else:
-                raise ValueError(f"Yetersiz hisse miktarı. Mevcut: {self.holdings[symbol]['quantity']}, Satış: {quantity}")
-        
-        self.save_portfolio()
+                new_quantity = old_quantity + quantity
+                new_total_cost = old_total_cost + transaction['total_cost']
+                
+                self.holdings[symbol]['quantity'] = new_quantity
+                self.holdings[symbol]['total_cost'] = new_total_cost
+                self.holdings[symbol]['avg_cost'] = new_total_cost / new_quantity if new_quantity > 0 else 0
+                
+            elif transaction_type.upper() == 'SELL':
+                # Satım işlemi
+                if self.holdings[symbol]['quantity'] >= quantity:
+                    # Ortalama maliyet aynı kalır, sadece miktar azalır
+                    self.holdings[symbol]['quantity'] -= quantity
+                    
+                    # Eğer tüm pozisyon kapatıldıysa
+                    if self.holdings[symbol]['quantity'] == 0:
+                        self.holdings[symbol]['avg_cost'] = 0
+                        self.holdings[symbol]['total_cost'] = 0
+                else:
+                    return {
+                        'success': False,
+                        'message': f"Yetersiz hisse miktarı. Mevcut: {self.holdings[symbol]['quantity']}, Satış: {quantity}"
+                    }
+            
+            self.save_portfolio()
+            return {
+                'success': True,
+                'message': f"{transaction_type.upper()} işlemi başarıyla eklendi"
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"İşlem eklenirken hata oluştu: {str(e)}"
+            }
     
     def get_current_portfolio(self, current_prices: Dict[str, float]) -> pd.DataFrame:
         """Mevcut portföy durumunu döner"""
@@ -411,4 +427,72 @@ class PortfolioManager:
         df['date'] = pd.to_datetime(df['date'])
         df = df.sort_values('date')
         
-        return df 
+        return df
+    
+    def get_portfolio_status(self) -> Dict:
+        """Portfolio durumu özeti döner"""
+        # Basit fiyat simülasyonu (gerçek uygulamada API'den alınmalı)
+        current_prices = {}
+        for symbol in self.holdings.keys():
+            if self.holdings[symbol]['quantity'] > 0:
+                # Ortalama fiyat üzerinden %±10 rastgele değişim
+                base_price = self.holdings[symbol]['avg_cost']
+                import random
+                price_change = random.uniform(-0.1, 0.1)
+                current_prices[symbol] = base_price * (1 + price_change)
+        
+        # Portfolio metriklerini hesapla
+        total_value = 0
+        total_cost = 0
+        position_count = 0
+        best_performer = None
+        worst_performer = None
+        best_pnl_pct = float('-inf')
+        worst_pnl_pct = float('inf')
+        
+        for symbol, holding in self.holdings.items():
+            if holding['quantity'] > 0:
+                position_count += 1
+                current_price = current_prices.get(symbol, holding['avg_cost'])
+                current_value = holding['quantity'] * current_price
+                cost = holding['total_cost']
+                
+                total_value += current_value
+                total_cost += cost
+                
+                # Performans hesapla
+                pnl = current_value - cost
+                pnl_pct = (pnl / cost * 100) if cost > 0 else 0
+                
+                # En iyi ve en kötü performansı bul
+                if pnl_pct > best_pnl_pct:
+                    best_pnl_pct = pnl_pct
+                    best_performer = {
+                        'symbol': symbol,
+                        'pnl': pnl,
+                        'pnl_percentage': pnl_pct
+                    }
+                
+                if pnl_pct < worst_pnl_pct:
+                    worst_pnl_pct = pnl_pct
+                    worst_performer = {
+                        'symbol': symbol,
+                        'pnl': pnl,
+                        'pnl_percentage': pnl_pct
+                    }
+        
+        total_pnl = total_value - total_cost
+        total_pnl_percentage = (total_pnl / total_cost * 100) if total_cost > 0 else 0
+        
+        return {
+            'total_value': total_value,
+            'total_pnl': total_pnl,
+            'total_pnl_percentage': total_pnl_percentage,
+            'position_count': position_count,
+             'best_performer': best_performer,
+             'worst_performer': worst_performer
+         }
+    
+    def get_portfolio_history(self) -> List[Dict]:
+        """Portfolio geçmişini döner"""
+        return self.portfolio_history

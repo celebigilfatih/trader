@@ -18,6 +18,7 @@ from modules.sentiment_analyzer import SentimentAnalyzer
 from modules.stock_screener import StockScreener
 from modules.pattern_recognition import PatternRecognition
 from modules.risk_calculator import RiskCalculator
+from modules.portfolio_manager import PortfolioManager
 
 # Navigation için
 from streamlit_option_menu import option_menu
@@ -100,8 +101,9 @@ div[data-testid="stExpander"] input[type="checkbox"] {
 
 /* Left column width adjustment */
 div[data-testid="column"]:first-child {
-    max-width: 280px !important;
-    min-width: 280px !important;
+    max-width: 240px !important;
+    min-width: 240px !important;
+    border-right: 1px solid rgba(46, 134, 171, 0.3) !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -338,6 +340,7 @@ def main():
         /* Streamlit sidebar overrides */
         .css-1d391kg, section[data-testid="stSidebar"] {
             background-color: hsl(220, 40%, 8%) !important;
+            border-right: 1px solid rgba(46, 134, 171, 0.3) !important;
         }
         
         /* Streamlit metric cards */
@@ -361,8 +364,8 @@ def main():
         /* Sidebar */
         .css-1d391kg {
             background-color: hsl(220, 40%, 8%);
-            border-right: 1px solid hsl(215, 35%, 18%);
-            width: 280px !important;
+            border-right: 1px solid rgba(46, 134, 171, 0.3);
+            width: 200px !important;
             display: block;
             padding-left: 0.5rem;
         }
@@ -398,7 +401,7 @@ def main():
         
         /* Main content area */
         .main .block-container {
-            padding: 2rem 2rem 2rem 2rem;
+            padding: 1rem 1rem 1rem 1rem;
             max-width: none;
         }
         
@@ -1274,6 +1277,12 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
+        # Portfolio Management
+        if st.button("💼 Portföy Yönetimi", key="portfolio_btn", use_container_width=True,
+                    type="primary" if current_menu == "portfolio" else "secondary"):
+            st.session_state.selected_menu = "portfolio"
+            st.rerun()
+        
         # Risk Management
         if st.button("⚡ Risk Yönetimi", key="risk_btn", use_container_width=True,
                     type="primary" if current_menu == "risk" else "secondary"):
@@ -1294,6 +1303,8 @@ def main():
         show_stock_screener()
     elif current_menu == "pattern":
         show_pattern_analysis()
+    elif current_menu == "portfolio":
+        show_portfolio_management()
     elif current_menu == "risk":
         show_risk_management()
     elif current_menu == "sentiment":
@@ -1318,7 +1329,7 @@ def show_technical_analysis():
 
     
     # Ana içerik alanını iki sütuna böl: sol tarafta indikatör menüsü, sağ tarafta grafik
-    menu_col, content_col = st.columns([1, 3])
+    menu_col, content_col = st.columns([1, 4])
     
     # Sol sütun - İndikatör Menüsü
     with menu_col:
@@ -4839,6 +4850,213 @@ def show_sentiment_analysis():
                     """, unsafe_allow_html=True)
         else:
             st.markdown("</div>", unsafe_allow_html=True)
+
+def show_portfolio_management():
+    """Portfolio yönetimi sayfası"""
+    st.markdown("""
+    <div class="page-header">
+        <h1>💼 Portfolio Yönetimi</h1>
+        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin: 0;">Portfolio takibi ve yönetimi</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    portfolio_manager = PortfolioManager()
+    
+    # Portfolio özeti
+    portfolio_status = portfolio_manager.get_portfolio_status()
+    
+    st.markdown("""
+    <div class="metric-card">
+        <h2 style="margin-top: 0; color: #4ecdc4;">📊 Portfolio Özeti</h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        total_value_color = "#00ff88" if portfolio_status['total_pnl'] >= 0 else "#ff4757"
+        st.markdown(f"""
+        <div class="metric-card hover-glow">
+            <h4 style="margin: 0; color: white;">💰 Toplam Değer</h4>
+            <h2 style="margin: 0.5rem 0; color: {total_value_color};">₺{portfolio_status['total_value']:,.2f}</h2>
+            <p style="margin: 0; color: rgba(255,255,255,0.7);">Güncel değer</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        pnl_color = "#00ff88" if portfolio_status['total_pnl'] >= 0 else "#ff4757"
+        pnl_symbol = "+" if portfolio_status['total_pnl'] >= 0 else ""
+        st.markdown(f"""
+        <div class="metric-card hover-glow">
+            <h4 style="margin: 0; color: white;">📈 Kar/Zarar</h4>
+            <h2 style="margin: 0.5rem 0; color: {pnl_color};">{pnl_symbol}₺{portfolio_status['total_pnl']:,.2f}</h2>
+            <p style="margin: 0; color: rgba(255,255,255,0.7);">Toplam P&L</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div class="metric-card hover-glow">
+            <h4 style="margin: 0; color: white;">🎯 Pozisyon Sayısı</h4>
+            <h2 style="margin: 0.5rem 0; color: #45b7d1;">{portfolio_status['position_count']}</h2>
+            <p style="margin: 0; color: rgba(255,255,255,0.7);">Aktif pozisyon</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        pnl_pct_color = "#00ff88" if portfolio_status['total_pnl_percentage'] >= 0 else "#ff4757"
+        pnl_pct_symbol = "+" if portfolio_status['total_pnl_percentage'] >= 0 else ""
+        st.markdown(f"""
+        <div class="metric-card hover-glow">
+            <h4 style="margin: 0; color: white;">📊 Getiri %</h4>
+            <h2 style="margin: 0.5rem 0; color: {pnl_pct_color};">{pnl_pct_symbol}{portfolio_status['total_pnl_percentage']:.2f}%</h2>
+            <p style="margin: 0; color: rgba(255,255,255,0.7);">Toplam getiri</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # En iyi ve en kötü performans
+    if portfolio_status['best_performer'] and portfolio_status['worst_performer']:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            best = portfolio_status['best_performer']
+            st.markdown(f"""
+            <div class="metric-card hover-glow">
+                <h3 style="margin-top: 0; color: #00ff88;">🏆 En İyi Performans</h3>
+                <h4 style="margin: 0.5rem 0; color: white;">{best['symbol']}</h4>
+                <p style="margin: 0; color: #00ff88;">+{best['pnl_percentage']:.2f}% (+₺{best['pnl']:.2f})</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            worst = portfolio_status['worst_performer']
+            st.markdown(f"""
+            <div class="metric-card hover-glow">
+                <h3 style="margin-top: 0; color: #ff4757;">📉 En Kötü Performans</h3>
+                <h4 style="margin: 0.5rem 0; color: white;">{worst['symbol']}</h4>
+                <p style="margin: 0; color: #ff4757;">{worst['pnl_percentage']:.2f}% (₺{worst['pnl']:.2f})</p>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # İşlem ekleme bölümü
+    st.markdown("""
+    <div class="metric-card" style="margin-top: 2rem;">
+        <h2 style="margin-top: 0; color: #f9ca24;">➕ Yeni İşlem Ekle</h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        transaction_type = st.selectbox("İşlem Türü", ["BUY", "SELL"], key="transaction_type")
+        symbol = st.selectbox(
+            "Hisse Seçin",
+            options=sorted(list(BIST_SYMBOLS.keys())),
+            format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
+            key="portfolio_stock_select"
+        )
+    
+    with col2:
+        quantity = st.number_input("Adet", min_value=1, value=100, key="quantity")
+        price = st.number_input("Fiyat (₺)", min_value=0.01, value=10.0, step=0.01, key="price")
+    
+    if st.button("💼 İşlem Ekle", type="primary", key="add_transaction"):
+        try:
+            result = portfolio_manager.add_transaction(symbol, transaction_type, quantity, price)
+            if result['success']:
+                st.success(f"✅ {transaction_type} işlemi başarıyla eklendi!")
+                st.rerun()
+            else:
+                st.error(f"❌ Hata: {result['message']}")
+        except Exception as e:
+            st.error(f"❌ İşlem eklenirken hata oluştu: {str(e)}")
+    
+    # Mevcut pozisyonlar
+    portfolio_data = portfolio_manager.load_portfolio()
+    if portfolio_data:
+        st.markdown("""
+        <div class="metric-card" style="margin-top: 2rem;">
+            <h2 style="margin-top: 0; color: #6c5ce7;">📋 Mevcut Pozisyonlar</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        positions_data = []
+        for symbol, data in portfolio_data.items():
+             if data['quantity'] > 0:  # Sadece pozitif pozisyonları göster
+                 current_price = data.get('current_price', data['avg_cost'])
+                 pnl = (current_price - data['avg_cost']) * data['quantity']
+                 pnl_pct = ((current_price - data['avg_cost']) / data['avg_cost']) * 100
+                 
+                 positions_data.append({
+                     'Hisse': symbol,
+                     'Adet': f"{data['quantity']:,}",
+                     'Ortalama Fiyat': f"₺{data['avg_cost']:.2f}",
+                     'Güncel Fiyat': f"₺{current_price:.2f}",
+                     'Toplam Değer': f"₺{current_price * data['quantity']:,.2f}",
+                     'Kar/Zarar': f"₺{pnl:,.2f}",
+                     'Kar/Zarar %': f"{pnl_pct:.2f}%"
+                 })
+        
+        if positions_data:
+            positions_df = pd.DataFrame(positions_data)
+            st.dataframe(positions_df, use_container_width=True)
+        else:
+            st.info("📝 Henüz aktif pozisyon bulunmuyor.")
+    
+    # Portfolio geçmişi
+    st.markdown("""
+    <div class="metric-card" style="margin-top: 2rem;">
+        <h2 style="margin-top: 0; color: #e17055;">📈 Portfolio Performans Geçmişi</h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    history = portfolio_manager.get_portfolio_history()
+    if history:
+        history_df = pd.DataFrame(history)
+        history_df['date'] = pd.to_datetime(history_df['date'])
+        
+        # Performans grafiği
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatter(
+            x=history_df['date'],
+            y=history_df['total_value'],
+            mode='lines+markers',
+            name='Portfolio Değeri',
+            line=dict(color='#4ecdc4', width=3),
+            marker=dict(size=6)
+        ))
+        
+        fig.update_layout(
+            title="Portfolio Değer Geçmişi",
+            xaxis_title="Tarih",
+            yaxis_title="Değer (₺)",
+            template="plotly_dark",
+            height=400,
+            showlegend=True
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Son işlemler tablosu
+        st.markdown("""
+        <div class="metric-card" style="margin-top: 1rem;">
+            <h3 style="margin-top: 0; color: #fdcb6e;">📋 Son İşlemler</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        recent_history = history_df.tail(10).copy()
+        recent_history['date'] = recent_history['date'].dt.strftime('%Y-%m-%d %H:%M')
+        recent_history = recent_history.rename(columns={
+            'date': 'Tarih',
+            'total_value': 'Toplam Değer (₺)',
+            'total_pnl': 'Kar/Zarar (₺)',
+            'position_count': 'Pozisyon Sayısı'
+        })
+        
+        st.dataframe(recent_history[['Tarih', 'Toplam Değer (₺)', 'Kar/Zarar (₺)', 'Pozisyon Sayısı']], use_container_width=True)
+    else:
+        st.info("📝 Henüz portfolio geçmişi bulunmuyor.")
 
 if __name__ == "__main__":
     main()

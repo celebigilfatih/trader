@@ -56,6 +56,12 @@ BIST_SYMBOLS = {
     "KONTR.IS": "Kontrolmatik Teknoloji",
     "ESEN.IS": "Esen Sistem",
     "NATEN.IS": "Naturel Yenilenebilir Enerji",
+    "VAKFN.IS": "Vakıf Finansal Kiralama",
+    "SEKFK.IS": "Şeker Finansal Kiralama",
+    "GARFA.IS": "Garanti Faktoring",
+    "ISFIN.IS": "İş Finansal Kiralama",
+    "ULUFA.IS": "Ulu Faktoring",
+    "LIDFA.IS": "Lider Faktoring",
     # BIST 100 Bankalar
     "YKBNK.IS": "Yapı Kredi Bankası",
     "ICBCT.IS": "ICBC Turkey Bank",

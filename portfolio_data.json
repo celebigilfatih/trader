@@ -1,0 +1,22 @@
+{
+  "holdings": {
+    "AKENR.IS": {
+      "quantity": 100,
+      "avg_cost": 10.0,
+      "total_cost": 1000.0,
+      "first_buy_date": "2025-07-18 17:14:02"
+    }
+  },
+  "transactions": [
+    {
+      "symbol": "AKENR.IS",
+      "type": "BUY",
+      "quantity": 100,
+      "price": 10.0,
+      "date": "2025-07-18 17:14:02",
+      "commission": 0,
+      "total_cost": 1000.0
+    }
+  ],
+  "portfolio_history": []
+}
