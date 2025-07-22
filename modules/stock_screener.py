@@ -706,4 +706,156 @@ class StockScreener:
             'VWAP Reversal': self.screen_vwap_reversal(interval),
             'Volume Breakout': self.screen_volume_breakout(interval),
             'Gap Up Signal': self.screen_gap_up_signal(interval)
-        } 
+        }
+    
+    def screen_weekly_performance(self, top_count: int = 15) -> Dict[str, List[Dict]]:
+        """Haftalık en çok yükselenler ve düşenler - Geçen haftanın performansı"""
+        results = {"gainers": [], "losers": []}
+        
+        print(f"📊 Haftalık performans taranıyor... {len(self.symbols)} hisse")
+        print("📅 Hesaplama: Geçen haftanın performansı (5 gün)")
+        
+        for symbol in self.symbols.keys():
+            try:
+                # 2 ay veri al (haftalık hesaplama için yeterli)
+                data = self.data_fetcher.get_stock_data(symbol, period="2mo", interval="1d")
+                if data is not None and len(data) >= 15:  # En az 15 günlük veri
+                    
+                    # Geçen haftanın başlangıcı (10 gün önce - 2 hafta önceki Pazartesi)
+                    if len(data) >= 11:
+                        week_start_price = data['Close'].iloc[-11]  # Geçen haftanın başı
+                    else:
+                        continue
+                    
+                    # Geçen haftanın sonu (5 gün önce - geçen Cuma)
+                    if len(data) >= 6:
+                        week_end_price = data['Close'].iloc[-6]  # Geçen haftanın sonu
+                    else:
+                        continue
+                    
+                    # Geçen haftanın performansını hesapla
+                    if week_start_price > 0:
+                        weekly_change = ((week_end_price - week_start_price) / week_start_price) * 100
+                    else:
+                        continue  # Geçersiz fiyat
+                    
+                    # Geçen haftanın hacim analizi
+                    week_volume = data['Volume'].iloc[-10:-5].mean()  # Geçen haftanın ortalama hacmi
+                    avg_volume = data['Volume'].tail(20).mean()
+                    volume_ratio = week_volume / avg_volume if avg_volume > 0 else 1
+                    
+                    # Symbol temizle (.IS uzantısını kaldır)
+                    clean_symbol = symbol.replace('.IS', '')
+                    
+                    stock_data = {
+                        'symbol': clean_symbol,
+                        'name': self.symbols[symbol],
+                        'current_price': week_end_price,  # Geçen haftanın kapanış fiyatı
+                        'week_ago_price': week_start_price,  # Geçen haftanın açılış fiyatı
+                        'weekly_change': weekly_change,
+                        'volume_ratio': volume_ratio,
+                        'current_volume': week_volume
+                    }
+                    
+                    # Performansa göre kategorize et
+                    if weekly_change > 0:
+                        results["gainers"].append(stock_data)
+                    elif weekly_change < 0:
+                        results["losers"].append(stock_data)
+                        
+                    print(f"✅ {clean_symbol}: {weekly_change:.2f}% (₺{week_start_price:.2f} → ₺{week_end_price:.2f}) Geçen hafta")
+                        
+            except Exception as e:
+                print(f"❌ Hata {symbol}: {str(e)}")
+                continue
+        
+        # Sırala ve en iyi/en kötü performansları al
+        results["gainers"] = sorted(results["gainers"], key=lambda x: x['weekly_change'], reverse=True)[:top_count]
+        results["losers"] = sorted(results["losers"], key=lambda x: x['weekly_change'])[:top_count]
+        
+        print(f"📈 Bulunan haftalık yükselenler: {len(results['gainers'])}")
+        print(f"📉 Bulunan haftalık düşenler: {len(results['losers'])}")
+        
+        return results
+    
+    def screen_monthly_performance(self, top_count: int = 15) -> Dict[str, List[Dict]]:
+        """Aylık en çok yükselenler ve düşenler - Geçen ayın performansı"""
+        results = {"gainers": [], "losers": []}
+        
+        print(f"📅 Aylık performans taranıyor... {len(self.symbols)} hisse")
+        print("📅 Hesaplama: Geçen ayın performansı (22 gün)")
+        
+        for symbol in self.symbols.keys():
+            try:
+                # 4 ay veri al (aylık hesaplama için yeterli)
+                data = self.data_fetcher.get_stock_data(symbol, period="4mo", interval="1d")
+                if data is not None and len(data) >= 50:  # En az 50 günlük veri
+                    
+                    # Geçen ayın başlangıcı (yaklaşık 44 gün önce)
+                    if len(data) >= 45:
+                        month_start_price = data['Close'].iloc[-45]  # Geçen ayın başı
+                    else:
+                        continue
+                    
+                    # Geçen ayın sonu (yaklaşık 22 gün önce)
+                    if len(data) >= 23:
+                        month_end_price = data['Close'].iloc[-23]  # Geçen ayın sonu
+                    else:
+                        continue
+                    
+                    # Geçen ayın performansını hesapla
+                    if month_start_price > 0:
+                        monthly_change = ((month_end_price - month_start_price) / month_start_price) * 100
+                    else:
+                        continue  # Geçersiz fiyat
+                    
+                    # Geçen ayın hacim analizi
+                    month_volume = data['Volume'].iloc[-45:-23].mean()  # Geçen ayın ortalama hacmi
+                    avg_volume = data['Volume'].tail(60).mean()
+                    volume_ratio = month_volume / avg_volume if avg_volume > 0 else 1
+                    
+                    # Geçen ayın volatilite hesaplama
+                    month_data = data.iloc[-45:-23]  # Geçen ayın verileri
+                    if len(month_data) > 1:
+                        daily_returns = month_data['Close'].pct_change().dropna()
+                        if len(daily_returns) > 1:
+                            volatility = daily_returns.std() * (252 ** 0.5) * 100  # Yıllık volatilite
+                        else:
+                            volatility = 0
+                    else:
+                        volatility = 0
+                    
+                    # Symbol temizle (.IS uzantısını kaldır)
+                    clean_symbol = symbol.replace('.IS', '')
+                    
+                    stock_data = {
+                        'symbol': clean_symbol,
+                        'name': self.symbols[symbol],
+                        'current_price': month_end_price,  # Geçen ayın kapanış fiyatı
+                        'month_ago_price': month_start_price,  # Geçen ayın açılış fiyatı
+                        'monthly_change': monthly_change,
+                        'volume_ratio': volume_ratio,
+                        'volatility': volatility,
+                        'current_volume': month_volume
+                    }
+                    
+                    # Performansa göre kategorize et
+                    if monthly_change > 0:
+                        results["gainers"].append(stock_data)
+                    elif monthly_change < 0:
+                        results["losers"].append(stock_data)
+                        
+                    print(f"✅ {clean_symbol}: {monthly_change:.2f}% (₺{month_start_price:.2f} → ₺{month_end_price:.2f}) Geçen ay")
+                        
+            except Exception as e:
+                print(f"❌ Hata {symbol}: {str(e)}")
+                continue
+        
+        # Sırala ve en iyi/en kötü performansları al
+        results["gainers"] = sorted(results["gainers"], key=lambda x: x['monthly_change'], reverse=True)[:top_count]
+        results["losers"] = sorted(results["losers"], key=lambda x: x['monthly_change'])[:top_count]
+        
+        print(f"📈 Bulunan aylık yükselenler: {len(results['gainers'])}")
+        print(f"📉 Bulunan aylık düşenler: {len(results['losers'])}")
+        
+        return results 

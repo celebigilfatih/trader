@@ -129,31 +129,31 @@ INDICATORS_CONFIG = {
     "ema_5": {
         "name": "EMA 5",
         "period": 5,
-        "default": True,
+        "default": False,
         "color": "#ff6b6b"
     },
     "ema_8": {
         "name": "EMA 8", 
         "period": 8,
-        "default": True,
+        "default": False,
         "color": "#4ecdc4"
     },
     "ema_13": {
         "name": "EMA 13",
         "period": 13,
-        "default": True,
+        "default": False,
         "color": "#45b7d1"
     },
     "ema_21": {
         "name": "EMA 21",
         "period": 21,
-        "default": True,
+        "default": False,
         "color": "#f9ca24"
     },
     "ema_50": {
         "name": "EMA 50",
         "period": 50,
-        "default": True,
+        "default": False,
         "color": "#6c5ce7"
     },
     "ema_121": {
@@ -165,13 +165,13 @@ INDICATORS_CONFIG = {
     "ma_200": {
         "name": "MA 200",
         "period": 200,
-        "default": True,
+        "default": False,
         "color": "#e74c3c"
     },
     "rsi": {
         "name": "Göreceli Güç Endeksi (RSI)",
         "period": 14,
-        "default": True,
+        "default": False,
         "overbought": 70,
         "oversold": 30
     },
@@ -180,13 +180,13 @@ INDICATORS_CONFIG = {
         "fast": 12,
         "slow": 26,
         "signal": 9,
-        "default": True
+        "default": False
     },
     "bollinger": {
         "name": "Bollinger Bantları",
         "period": 20,
         "std": 2,
-        "default": True
+        "default": False
     },
     "stoch": {
         "name": "Stokastik Osilatör",
@@ -208,7 +208,7 @@ INDICATORS_CONFIG = {
         "name": "SuperTrend",
         "period": 10,
         "multiplier": 3.0,
-        "default": True,
+        "default": False,
         "color_up": "#00ff88",
         "color_down": "#ff4757"
     },
@@ -216,7 +216,7 @@ INDICATORS_CONFIG = {
         "name": "OTT (Optimized Trend Tracker)",
         "period": 2,
         "percent": 1.4,
-        "default": True,
+        "default": False,
         "color_up": "#2ed573",
         "color_down": "#ff3838"
     },

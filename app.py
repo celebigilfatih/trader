@@ -337,6 +337,11 @@ def main():
             background-color: hsl(220, 40%, 8%) !important;
         }
         
+        /* stMainBlockContainer padding override */
+        .stMainBlockContainer {
+            padding: 2rem !important;
+        }
+        
         /* Streamlit sidebar overrides */
         .css-1d391kg, section[data-testid="stSidebar"] {
             background-color: hsl(220, 40%, 8%) !important;
@@ -401,7 +406,7 @@ def main():
         
         /* Main content area */
         .main .block-container {
-            padding: 1rem 1rem 1rem 1rem;
+            padding: 0.5rem 2.5rem 0.5rem 5rem;
             max-width: none;
         }
         
@@ -3262,27 +3267,26 @@ def show_modern_dashboard():
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                # Aylık Performans - İlk sıraya taşındı
-                month_trend_icon = "📈" if month_change > 0 else "📉"
-                month_change_class = "positive" if month_change > 0 else "negative"
+                # Mevcut Fiyat - ilk sıraya taşındı
+                price_class = "positive" if change > 0 else "negative"
                 st.markdown(f"""
                 <div class="kpi-card">
                     <div class="kpi-header">
                         <div class="kpi-title">
-                            <span>📅</span> Aylık Performans
+                            <span>💰</span> Fiyat Hareketi (Günlük)
                         </div>
-                        <div class="kpi-trend">{month_trend_icon}</div>
+                        <div class="kpi-trend">{'📈' if change > 0 else '📉'}</div>
                     </div>
-                    <div class="kpi-value">{abs(month_change):.1f}%</div>
-                    <div class="kpi-change {month_change_class}">
-                        <span>{'↗' if month_change > 0 else '↘'}</span>
-                        <span>{'+' if month_change > 0 else ''}{month_change:.2f}% Son aydan beri</span>
+                    <div class="kpi-value">₺{latest['Close']:.2f}</div>
+                    <div class="kpi-change {price_class}">
+                        <span>{'↗' if change > 0 else '↘'}</span>
+                        <span>{'+' if change > 0 else ''}{change_pct:.2f}% son kapanıştan</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
-                # Haftalık Performans - col1'den col2'ye taşındı
+                # Haftalık Performans
                 week_trend_icon = "📈" if week_change > 0 else "📉"
                 week_change_class = "positive" if week_change > 0 else "negative"
                 st.markdown(f"""
@@ -3296,13 +3300,33 @@ def show_modern_dashboard():
                     <div class="kpi-value">{abs(week_change):.1f}%</div>
                     <div class="kpi-change {week_change_class}">
                         <span>{'↗' if week_change > 0 else '↘'}</span>
-                        <span>{'+' if week_change > 0 else ''}{week_change:.2f}% Son haftadan beri</span>
+                        <span>{'+' if week_change > 0 else ''}{week_change:.2f}% son haftadan beri</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col3:
-                # Hacim Aktivitesi - col2'den col3'e taşındı
+                # Aylık Performans - YENİ EKLENEN
+                month_trend_icon = "📈" if month_change > 0 else "📉"
+                month_change_class = "positive" if month_change > 0 else "negative"
+                st.markdown(f"""
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-title">
+                            <span>📅</span> Aylık Performans
+                        </div>
+                        <div class="kpi-trend">{month_trend_icon}</div>
+                    </div>
+                    <div class="kpi-value">{abs(month_change):.1f}%</div>
+                    <div class="kpi-change {month_change_class}">
+                        <span>{'↗' if month_change > 0 else '↘'}</span>
+                        <span>{'+' if month_change > 0 else ''}{month_change:.2f}% son aydan beri</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col4:
+                # Hacim Aktivitesi
                 volume_class = "positive" if volume_change > 0 else "negative"
                 st.markdown(f"""
                 <div class="kpi-card">
@@ -3319,84 +3343,6 @@ def show_modern_dashboard():
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            with col4:
-                # Mevcut Fiyat - aynı yerde kaldı
-                price_class = "positive" if change > 0 else "negative"
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-title">
-                            <span>💰</span> Mevcut Fiyat
-                        </div>
-                        <div class="kpi-trend">{'📈' if change > 0 else '📉'}</div>
-                    </div>
-                    <div class="kpi-value">₺{latest['Close']:.2f}</div>
-                    <div class="kpi-change {price_class}">
-                        <span>{'↗' if change > 0 else '↘'}</span>
-                        <span>{'+' if change > 0 else ''}{change_pct:.2f}% son kapanıştan</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Charts Section
-            st.markdown("""
-            <div class="charts-grid">
-            """, unsafe_allow_html=True)
-            
-            col1, col2 = st.columns([2, 1])
-            
-            with col1:
-                # Dynamic chart title based on interval
-                interval_names = {
-                    "5m": "5 Dakika",
-                    "15m": "15 Dakika", 
-                    "1h": "1 Saat",
-                    "2h": "2 Saat",
-                    "4h": "4 Saat",
-                    "1d": "Günlük"
-                }
-                
-                period_names = {
-                    "1mo": "son ay",
-                    "3mo": "son 3 ay",
-                    "6mo": "son 6 ay", 
-                    "1y": "son yıl"
-                }
-                
-                st.markdown(f"""
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Fiyat Hareketi - {interval_names.get(time_interval, time_interval)}</div>
-                        <div class="chart-subtitle">Fiyat hareketi gösteriliyor: {period_names.get(period, period)}</div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Technical analysis
-                analyzer = TechnicalAnalyzer(df)
-                analyzer.add_indicator('ema_21')
-                analyzer.add_indicator('ema_50')
-                
-                # Create simplified chart
-                fig = create_chart(df, analyzer, {'ema_21': True, 'ema_50': True})
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with col2:
-                st.markdown("""
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Aylık Performans</div>
-                        <div class="chart-subtitle">{:+.1f}% son aydan beri</div>
-                    </div>
-                </div>
-                """.format(month_change), unsafe_allow_html=True)
-                
-                # Volume chart
-                volume_data = df['Volume'].tail(30)
-                st.bar_chart(volume_data)
             
             st.markdown("</div>", unsafe_allow_html=True)
             
@@ -3514,6 +3460,205 @@ def show_modern_dashboard():
             
             else:
                 st.info("🔍 Day trade fırsatlarını görmek için 'Fırsatları Tara' butonuna tıklayın.")
+            
+            # === HAFTALIK VE AYLIK PERFORMANS BÖLÜMÜ ===
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            st.markdown("""
+            <div class="metric-card">
+                <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">📈 Haftalık & Aylık Performans</h2>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">
+                📊 <strong>Haftalık:</strong> Bir önceki haftanın performansı (5 gün)<br>
+                📅 <strong>Aylık:</strong> Bir önceki ayın performansı (22 gün)<br>
+                (Tamamlanmış periyotların kendi performansı - Top 10)
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Yenileme butonu
+            if st.button("🔄 Performans Verilerini Yenile", type="secondary", key="refresh_performance"):
+                st.session_state.performance_data_loaded_v7 = False
+                st.rerun()
+            
+            # Initialize screener and get performance data
+            screener = StockScreener(BIST_SYMBOLS)
+            
+            # Load performance data (cache'de yoksa hesapla)
+            if "performance_data_loaded_v7" not in st.session_state:
+                with st.spinner("�� Performans verileri yükleniyor..."):
+                    weekly_results = screener.screen_weekly_performance(top_count=15)
+                    monthly_results = screener.screen_monthly_performance(top_count=15)
+                    st.session_state.weekly_results = weekly_results
+                    st.session_state.monthly_results = monthly_results
+                    st.session_state.performance_data_loaded_v7 = True
+            
+            # Weekly Performance
+            weekly_data = st.session_state.weekly_results
+            st.markdown("### 📊 Haftalık Performans")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### 🚀 En Çok Yükselenler (Haftalık)")
+                if weekly_data["gainers"]:
+                    # Tablo için veri hazırla
+                    gainers_df = []
+                    for stock in weekly_data["gainers"][:10]:
+                        gainers_df.append({
+                            'Hisse': stock['symbol'],
+                            'Değişim (%)': stock['weekly_change'],
+                            'Fiyat (₺)': stock['current_price'],
+                            'Hacim': stock['volume_ratio']
+                        })
+                    
+                    # DataFrame oluştur ve renkli stil uygula
+                    df_gainers = pd.DataFrame(gainers_df)
+                    
+                    # Stil fonksiyonu - yeşil arkaplan
+                    def style_weekly_gainers(val):
+                        if isinstance(val, (int, float)) and val > 0:
+                            return 'background-color: #1f4e3d; color: #00ff88; font-weight: bold;'
+                        return 'background-color: #1a202c; color: white;'
+                    
+                    styled_df = df_gainers.style.applymap(style_weekly_gainers, subset=['Değişim (%)']) \
+                        .format({
+                            'Değişim (%)': '+{:.2f}%',
+                            'Fiyat (₺)': '₺{:.2f}',
+                            'Hacim': '{:.1f}x'
+                        }) \
+                        .set_table_styles([
+                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                        ])
+                    
+                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("Henüz haftalık yükselen hisse bulunamadı.")
+            
+            with col2:
+                st.markdown("#### 📉 En Çok Düşenler (Haftalık)")
+                if weekly_data["losers"]:
+                    # Tablo için veri hazırla
+                    losers_df = []
+                    for stock in weekly_data["losers"][:10]:
+                        losers_df.append({
+                            'Hisse': stock['symbol'],
+                            'Değişim (%)': stock['weekly_change'],
+                            'Fiyat (₺)': stock['current_price'],
+                            'Hacim': stock['volume_ratio']
+                        })
+                    
+                    # DataFrame oluştur ve renkli stil uygula
+                    df_losers = pd.DataFrame(losers_df)
+                    
+                    # Stil fonksiyonu - kırmızı arkaplan
+                    def style_weekly_losers(val):
+                        if isinstance(val, (int, float)) and val < 0:
+                            return 'background-color: #4a1e1e; color: #ff4757; font-weight: bold;'
+                        return 'background-color: #1a202c; color: white;'
+                    
+                    styled_df = df_losers.style.applymap(style_weekly_losers, subset=['Değişim (%)']) \
+                        .format({
+                            'Değişim (%)': '{:.2f}%',
+                            'Fiyat (₺)': '₺{:.2f}',
+                            'Hacim': '{:.1f}x'
+                        }) \
+                        .set_table_styles([
+                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                        ])
+                    
+                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("Henüz haftalık düşen hisse bulunamadı.")
+            
+            # Monthly Performance
+            monthly_data = st.session_state.monthly_results
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("### 📅 Aylık Performans")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### 🚀 En Çok Yükselenler (Aylık)")
+                if monthly_data["gainers"]:
+                    # Tablo için veri hazırla
+                    gainers_df = []
+                    for stock in monthly_data["gainers"][:10]:
+                        gainers_df.append({
+                            'Hisse': stock['symbol'],
+                            'Değişim (%)': stock['monthly_change'],
+                            'Fiyat (₺)': stock['current_price'],
+                            'Volatilite (%)': stock['volatility'],
+                            'Hacim': stock['volume_ratio']
+                        })
+                    
+                    # DataFrame oluştur ve renkli stil uygula
+                    df_gainers = pd.DataFrame(gainers_df)
+                    
+                    # Stil fonksiyonu - yeşil arkaplan
+                    def style_monthly_gainers(val):
+                        if isinstance(val, (int, float)) and val > 0:
+                            return 'background-color: #1f4e3d; color: #00ff88; font-weight: bold;'
+                        return 'background-color: #1a202c; color: white;'
+                    
+                    styled_df = df_gainers.style.applymap(style_monthly_gainers, subset=['Değişim (%)']) \
+                        .format({
+                            'Değişim (%)': '+{:.2f}%',
+                            'Fiyat (₺)': '₺{:.2f}',
+                            'Volatilite (%)': '{:.1f}%',
+                            'Hacim': '{:.1f}x'
+                        }) \
+                        .set_table_styles([
+                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                        ])
+                    
+                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("Henüz aylık yükselen hisse bulunamadı.")
+            
+            with col2:
+                st.markdown("#### 📉 En Çok Düşenler (Aylık)")
+                if monthly_data["losers"]:
+                    # Tablo için veri hazırla
+                    losers_df = []
+                    for stock in monthly_data["losers"][:10]:
+                        losers_df.append({
+                            'Hisse': stock['symbol'],
+                            'Değişim (%)': stock['monthly_change'],
+                            'Fiyat (₺)': stock['current_price'],
+                            'Volatilite (%)': stock['volatility'],
+                            'Hacim': stock['volume_ratio']
+                        })
+                    
+                    # DataFrame oluştur ve renkli stil uygula
+                    df_losers = pd.DataFrame(losers_df)
+                    
+                    # Stil fonksiyonu - kırmızı arkaplan
+                    def style_monthly_losers(val):
+                        if isinstance(val, (int, float)) and val < 0:
+                            return 'background-color: #4a1e1e; color: #ff4757; font-weight: bold;'
+                        return 'background-color: #1a202c; color: white;'
+                    
+                    styled_df = df_losers.style.applymap(style_monthly_losers, subset=['Değişim (%)']) \
+                        .format({
+                            'Değişim (%)': '{:.2f}%',
+                            'Fiyat (₺)': '₺{:.2f}',
+                            'Volatilite (%)': '{:.1f}%',
+                            'Hacim': '{:.1f}x'
+                        }) \
+                        .set_table_styles([
+                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                        ])
+                    
+                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("Henüz aylık düşen hisse bulunamadı.")
     
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
