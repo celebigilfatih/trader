@@ -1321,12 +1321,10 @@ def main():
 def show_technical_analysis():
     """Teknik analiz sayfası - Modern Shadcn stil"""
     
-    # Modern page header with market info on the right
-    # Full width header
     st.markdown("""
-    <div class="page-header" style="width: 100%; padding: 1rem; margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center;">
-        <h1 style="margin: 0;">📈 Teknik Analiz</h1>
-        <p style="margin: 0; font-size: 0.9rem; color: hsl(215, 20%, 70%);">Gelişmiş teknik indikatörlerle gerçek zamanlı BIST hisse analizi</p>
+    <div class="page-header">
+        <h1 style="display: inline-block; margin-right: 1rem;">📈 Teknik Analiz</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Gelişmiş teknik indikatörlerle gerçek zamanlı BIST hisse analizi</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -3377,90 +3375,7 @@ def show_modern_dashboard():
             
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # === DAY TRADE FIRSATLARI BÖLÜMÜ ===
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            st.markdown("""
-            <div class="metric-card">
-                <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">🚀 Günlük Trade Fırsatları</h2>
-                <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Teknik göstergelerle dikkat çeken day trade fırsatları</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Refresh button for day trade opportunities
-            refresh_daytrading = st.button("🔄 Fırsatları Tara", type="primary", key="refresh_daytrading")
-            
-            if refresh_daytrading or "daytrading_results" not in st.session_state:
-                with st.spinner("🔍 Day trade fırsatları taranıyor..."):
-                    daytrading_opportunities = scan_daytrading_opportunities()
-                    st.session_state.daytrading_results = daytrading_opportunities
-            
-            if "daytrading_results" in st.session_state and st.session_state.daytrading_results:
-                opportunities = st.session_state.daytrading_results
-                
-                # Filter and sort opportunities
-                high_score = [op for op in opportunities if op.get('score', 0) >= 7]
-                medium_score = [op for op in opportunities if 5 <= op.get('score', 0) < 7]
-                
-                # High Score Opportunities
-                if high_score:
-                    st.markdown("### 🔥 Yüksek Potansiyel Fırsatları")
-                    cols = st.columns(min(len(high_score), 3))
-                    for i, opportunity in enumerate(high_score[:3]):
-                        with cols[i]:
-                            score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
-                            signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
-                            
-                            st.markdown(f"""
-                            <div class="metric-card hover-glow">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{opportunity['symbol']}</h4>
-                                    <span style="background: {score_color}; color: black; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{opportunity['score']}/10</span>
-                                </div>
-                                <p style="margin: 0.25rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">{opportunity['name']}</p>
-                                <div style="margin: 0.5rem 0;">
-                                    <span style="color: {signal_color}; font-weight: bold; font-size: 1.1rem;">{opportunity['signal']}</span>
-                                    <span style="color: rgba(255,255,255,0.6); margin-left: 0.5rem;">₺{opportunity['price']:.2f}</span>
-                                </div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
-                                    <div>📊 Volatilite: {opportunity['volatility']:.1f}%</div>
-                                    <div>📈 Hacim: {opportunity['volume_ratio']:.1f}x</div>
-                                    <div>⚡ RSI: {opportunity['rsi']:.0f}</div>
-                                </div>
-                                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
-                                    {opportunity['reason']}
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                
-                # Medium Score Opportunities 
-                if medium_score:
-                    st.markdown("### 💡 Orta Seviye Fırsatlar")
-                    df_medium = pd.DataFrame(medium_score)
-                    df_display = df_medium[['symbol', 'name', 'signal', 'price', 'volatility', 'volume_ratio', 'rsi', 'score']].copy()
-                    df_display.columns = ['Kod', 'Hisse', 'Sinyal', 'Fiyat (₺)', 'Volatilite (%)', 'Hacim Oranı', 'RSI', 'Puan']
-                    st.dataframe(df_display, use_container_width=True)
-                
-                # Summary stats
-                st.markdown("### 📈 Tarama Özeti")
-                col1, col2, col3, col4 = st.columns(4)
-                
-                total_scanned = len(BIST_SYMBOLS)
-                total_opportunities = len(opportunities)
-                high_potential = len(high_score)
-                avg_score = sum(op['score'] for op in opportunities) / len(opportunities) if opportunities else 0
-                
-                with col1:
-                    st.metric("Taranan Hisse", total_scanned)
-                with col2:
-                    st.metric("Toplam Fırsat", total_opportunities)
-                with col3:
-                    st.metric("Yüksek Potansiyel", high_potential)
-                with col4:
-                    st.metric("Ortalama Puan", f"{avg_score:.1f}/10")
-            
-            else:
-                st.info("🔍 Day trade fırsatlarını görmek için 'Fırsatları Tara' butonuna tıklayın.")
-            
+
             # === HAFTALIK VE AYLIK PERFORMANS BÖLÜMÜ ===
             st.markdown("<br><br>", unsafe_allow_html=True)
             st.markdown("""
@@ -3476,20 +3391,20 @@ def show_modern_dashboard():
             
             # Yenileme butonu
             if st.button("🔄 Performans Verilerini Yenile", type="secondary", key="refresh_performance"):
-                st.session_state.performance_data_loaded_v7 = False
+                st.session_state.performance_data_loaded_v8 = False
                 st.rerun()
             
             # Initialize screener and get performance data
             screener = StockScreener(BIST_SYMBOLS)
             
             # Load performance data (cache'de yoksa hesapla)
-            if "performance_data_loaded_v7" not in st.session_state:
+            if "performance_data_loaded_v8" not in st.session_state:
                 with st.spinner("�� Performans verileri yükleniyor..."):
                     weekly_results = screener.screen_weekly_performance(top_count=15)
                     monthly_results = screener.screen_monthly_performance(top_count=15)
                     st.session_state.weekly_results = weekly_results
                     st.session_state.monthly_results = monthly_results
-                    st.session_state.performance_data_loaded_v7 = True
+                    st.session_state.performance_data_loaded_v8 = True
             
             # Weekly Performance
             weekly_data = st.session_state.weekly_results
@@ -3666,9 +3581,9 @@ def show_modern_dashboard():
 def show_ai_predictions():
     """AI tahminleri sayfası - Gelişmiş AI/ML Dashboard"""
     st.markdown("""
-    <div class="page-header-modern">
-        <h1>🤖 Gelişmiş AI Tahminleri</h1>
-        <p>Çok modelli makine öğrenmesi ile gelişmiş fiyat tahmini ve analizi</p>
+    <div class="page-header">
+        <h1 style="display: inline-block; margin-right: 1rem;">🤖 AI Tahminleri</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Çok modelli makine öğrenmesi ile gelişmiş fiyat tahmini ve analizi</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -4266,20 +4181,14 @@ def show_stock_screener():
     """Hisse tarayıcı sayfası"""
     st.markdown("""
     <div class="page-header">
-        <h1>🔍 Hisse Tarayıcı</h1>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin: 0;">Teknik kriterlere göre hisse taraması</p>
+        <h1 style="display: inline-block; margin-right: 1rem;">🔍 Hisse Tarayıcı</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Teknik kriterlere göre hisse taraması</span>
     </div>
     """, unsafe_allow_html=True)
     
     screener = StockScreener(BIST_SYMBOLS)
     
-    # Zaman dilimi seçimi
-    st.markdown("""
-    <div class="metric-card">
-        <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">⏰ Zaman Dilimi</h3>
-        <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Tarama için zaman dilimi seçin</p>
-    </div>
-    """, unsafe_allow_html=True)
+
     
     time_intervals = {
         "1d": "1 Gün",
@@ -4290,25 +4199,19 @@ def show_stock_screener():
         "5m": "5 Dakika"
     }
     
-    col1, col2, col3 = st.columns([1, 1, 2])
+    # Kompakt zaman dilimi seçimi
+    col1, col2 = st.columns([2, 3])
     with col1:
         selected_interval = st.selectbox(
-            "Zaman Dilimi", 
+            "⏰ Zaman Dilimi", 
             list(time_intervals.keys()),
             format_func=lambda x: time_intervals[x],
             index=0,
             key="screener_interval"
         )
     
-    with col2:
-        st.markdown(f"""
-        <div style="margin-top: 1.5rem; padding: 0.5rem; background: rgba(79, 172, 254, 0.1); border-radius: 8px; border: 1px solid rgba(79, 172, 254, 0.3);">
-            <small style="color: #4facfe;">Seçili: {time_intervals[selected_interval]}</small>
-        </div>
-        """, unsafe_allow_html=True)
-    
     # Tarama sekmeli yapısı
-    tab1, tab2, tab3 = st.tabs(["🚀 Boğa Sinyalleri", "⚡ Teknik Taramalar", "📊 Genel Taramalar"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🚀 Boğa Sinyalleri", "⚡ Teknik Taramalar", "📊 Genel Taramalar", "💰 Day Trade Fırsatları"])
     
     with tab1:
         st.markdown("""
@@ -4596,13 +4499,177 @@ def show_stock_screener():
                         """, unsafe_allow_html=True)
             else:
                 st.warning("Lütfen en az bir kriter seçin.")
+    
+    with tab4:
+        st.markdown("""
+        <div class="metric-card">
+            <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">💰 Day Trade Fırsatları</h2>
+            <p style="color: rgba(255,255,255,0.7);">Teknik göstergelerle dikkat çeken günlük işlem fırsatları</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Refresh button for day trade opportunities
+        refresh_daytrading_tab = st.button("🔄 Fırsatları Tara", type="primary", key="refresh_daytrading_tab")
+        
+        if refresh_daytrading_tab or "daytrading_tab_results" not in st.session_state:
+            with st.spinner("🔍 Day trade fırsatları taranıyor..."):
+                daytrading_opportunities = scan_daytrading_opportunities()
+                st.session_state.daytrading_tab_results = daytrading_opportunities
+        
+        if "daytrading_tab_results" in st.session_state and st.session_state.daytrading_tab_results:
+            opportunities = st.session_state.daytrading_tab_results
+            
+            # Filter and sort opportunities
+            high_score = [op for op in opportunities if op.get('score', 0) >= 7]
+            medium_score = [op for op in opportunities if 5 <= op.get('score', 0) < 7]
+            
+            # High Score Opportunities
+            if high_score:
+                st.markdown("### 🔥 Yüksek Potansiyel Fırsatları")
+                cols = st.columns(min(len(high_score), 3))
+                for i, opportunity in enumerate(high_score[:3]):
+                    with cols[i]:
+                        score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
+                        signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
+                        
+                        st.markdown(f"""
+                        <div class="metric-card hover-glow">
+                            <div style="display: flex; justify-content: space-between;">
+                                <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{opportunity['symbol']}</h4>
+                                <span style="background: {score_color}; color: black; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{opportunity['score']}/10</span>
+                            </div>
+                            <p style="margin: 0.25rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">{opportunity['name']}</p>
+                            <div style="margin: 0.5rem 0;">
+                                <span style="color: {signal_color}; font-weight: bold; font-size: 1.1rem;">{opportunity['signal']}</span>
+                                <span style="color: rgba(255,255,255,0.6); margin-left: 0.5rem;">₺{opportunity['price']:.2f}</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
+                                <div>📊 Volatilite: {opportunity['volatility']:.1f}%</div>
+                                <div>📈 Hacim: {opportunity['volume_ratio']:.1f}x</div>
+                                <div>⚡ RSI: {opportunity['rsi']:.0f}</div>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                                {opportunity['reason']}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+            
+            # Medium Score Opportunities 
+            if medium_score:
+                st.markdown("### 💡 Orta Seviye Fırsatlar")
+                df_medium = pd.DataFrame(medium_score)
+                df_display = df_medium[['symbol', 'name', 'signal', 'price', 'volatility', 'volume_ratio', 'rsi', 'score']].copy()
+                df_display.columns = ['Kod', 'Hisse', 'Sinyal', 'Fiyat (₺)', 'Volatilite (%)', 'Hacim Oranı', 'RSI', 'Puan']
+                st.dataframe(df_display, use_container_width=True)
+            
+            # Summary stats
+            st.markdown("### 📈 Tarama Özeti")
+            col1, col2, col3, col4 = st.columns(4)
+            
+            total_scanned = len(BIST_SYMBOLS)
+            total_opportunities = len(opportunities)
+            high_potential = len(high_score)
+            avg_score = sum(op['score'] for op in opportunities) / len(opportunities) if opportunities else 0
+            
+            with col1:
+                st.metric("Taranan Hisse", total_scanned)
+            with col2:
+                st.metric("Toplam Fırsat", total_opportunities)
+            with col3:
+                st.metric("Yüksek Potansiyel", high_potential)
+            with col4:
+                st.metric("Ortalama Puan", f"{avg_score:.1f}/10")
+        
+        else:
+            st.info("🔍 Day trade fırsatlarını görmek için 'Fırsatları Tara' butonuna tıklayın.")
+        st.markdown("""
+        <div class="metric-card">
+            <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">🚀 Day Trade Fırsatları</h2>
+            <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Teknik göstergelerle dikkat çeken day trade fırsatları</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Refresh button for day trade opportunities
+        refresh_daytrading = st.button("🔄 Fırsatları Tara", type="primary", key="refresh_daytrading")
+        
+        if refresh_daytrading or "daytrading_results" not in st.session_state:
+            with st.spinner("🔍 Day trade fırsatları taranıyor..."):
+                daytrading_opportunities = scan_daytrading_opportunities()
+                st.session_state.daytrading_results = daytrading_opportunities
+        
+        if "daytrading_results" in st.session_state and st.session_state.daytrading_results:
+            opportunities = st.session_state.daytrading_results
+            
+            # Filter and sort opportunities
+            high_score = [op for op in opportunities if op.get('score', 0) >= 7]
+            medium_score = [op for op in opportunities if 5 <= op.get('score', 0) < 7]
+            
+            # High Score Opportunities
+            if high_score:
+                st.markdown("### 🔥 Yüksek Potansiyel Fırsatları")
+                cols = st.columns(min(len(high_score), 3))
+                for i, opportunity in enumerate(high_score[:3]):
+                    with cols[i]:
+                        score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
+                        signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
+                        
+                        st.markdown(f"""
+                        <div class="metric-card hover-glow">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{opportunity['symbol']}</h4>
+                                <span style="background: {score_color}; color: black; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{opportunity['score']}/10</span>
+                            </div>
+                            <p style="margin: 0.25rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">{opportunity['name']}</p>
+                            <div style="margin: 0.5rem 0;">
+                                <span style="color: {signal_color}; font-weight: bold; font-size: 1.1rem;">{opportunity['signal']}</span>
+                                <span style="color: rgba(255,255,255,0.6); margin-left: 0.5rem;">₺{opportunity['price']:.2f}</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
+                                <div>📊 Volatilite: {opportunity['volatility']:.1f}%</div>
+                                <div>📈 Hacim: {opportunity['volume_ratio']:.1f}x</div>
+                                <div>⚡ RSI: {opportunity['rsi']:.0f}</div>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                                {opportunity['reason']}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+            
+            # Medium Score Opportunities 
+            if medium_score:
+                st.markdown("### 💡 Orta Seviye Fırsatlar")
+                df_medium = pd.DataFrame(medium_score)
+                df_display = df_medium[['symbol', 'name', 'signal', 'price', 'volatility', 'volume_ratio', 'rsi', 'score']].copy()
+                df_display.columns = ['Kod', 'Hisse', 'Sinyal', 'Fiyat (₺)', 'Volatilite (%)', 'Hacim Oranı', 'RSI', 'Puan']
+                st.dataframe(df_display, use_container_width=True)
+            
+            # Summary stats
+            st.markdown("### 📈 Tarama Özeti")
+            col1, col2, col3, col4 = st.columns(4)
+            
+            total_scanned = len(BIST_SYMBOLS)
+            total_opportunities = len(opportunities)
+            high_potential = len(high_score)
+            avg_score = sum(op['score'] for op in opportunities) / len(opportunities) if opportunities else 0
+            
+            with col1:
+                st.metric("Taranan Hisse", total_scanned)
+            with col2:
+                st.metric("Toplam Fırsat", total_opportunities)
+            with col3:
+                st.metric("Yüksek Potansiyel", high_potential)
+            with col4:
+                st.metric("Ortalama Puan", f"{avg_score:.1f}/10")
+        
+        else:
+            st.info("🔍 Day trade fırsatlarını görmek için 'Fırsatları Tara' butonuna tıklayın.")
 
 def show_pattern_analysis():
     """Pattern analizi sayfası"""
     st.markdown("""
     <div class="page-header">
-        <h1>👁️ Mum Formasyonu Analizi</h1>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin: 0;">Candlestick pattern tespiti ve sinyal analizi</p>
+        <h1 style="display: inline-block; margin-right: 1rem;">🎯 Patern Analizi</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Candlestick pattern tespiti ve sinyal analizi</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -4711,8 +4778,8 @@ def show_risk_management():
     """Risk yönetimi sayfası"""
     st.markdown("""
     <div class="page-header">
-        <h1>🛡️ Risk Yönetimi</h1>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin: 0;">Pozisyon büyüklüğü ve risk hesaplama araçları</p>
+        <h1 style="display: inline-block; margin-right: 1rem;">⚡ Risk Yönetimi</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Pozisyon büyüklüğü ve risk hesaplama araçları</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -4838,8 +4905,8 @@ def show_sentiment_analysis():
     """Sentiment analizi sayfası"""
     st.markdown("""
     <div class="page-header">
-        <h1>💭 Duygu Analizi</h1>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin: 0;">Haber ve sosyal medya sentiment analizi</p>
+        <h1 style="display: inline-block; margin-right: 1rem;">📰 Duygu Analizi</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Haber ve sosyal medya sentiment analizi</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -5000,8 +5067,8 @@ def show_portfolio_management():
     """Portfolio yönetimi sayfası"""
     st.markdown("""
     <div class="page-header">
-        <h1>💼 Portfolio Yönetimi</h1>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin: 0;">Portfolio takibi ve yönetimi</p>
+        <h1 style="display: inline-block; margin-right: 1rem;">💼 Portföy Yönetimi</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Portfolio takibi ve yönetimi</span>
     </div>
     """, unsafe_allow_html=True)
     
