@@ -168,6 +168,18 @@ INDICATORS_CONFIG = {
         "default": False,
         "color": "#e74c3c"
     },
+    "vwma_5": {
+        "name": "VWMA 5",
+        "period": 5,
+        "default": False,
+        "color": "#9b59b6"
+    },
+    "vwema_5": {
+        "name": "VWEMA 5",
+        "period": 5,
+        "default": False,
+        "color": "#e67e22"
+    },
     "rsi": {
         "name": "Göreceli Güç Endeksi (RSI)",
         "period": 14,

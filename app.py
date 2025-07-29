@@ -177,7 +177,7 @@ def create_chart(df, analyzer, selected_indicators):
             indicator_data = analyzer.indicators[indicator]
             config = INDICATORS_CONFIG.get(indicator, {})
             
-            if indicator.startswith('ema') or indicator.startswith('ma_'):
+            if indicator.startswith('ema') or indicator.startswith('ma_') or indicator.startswith('vwma') or indicator.startswith('vwema'):
                 fig.add_trace(
                     go.Scatter(
                         x=df.index,
@@ -1323,189 +1323,184 @@ def show_technical_analysis():
     
     st.markdown("""
     <div class="page-header">
-        <h1 style="display: inline-block; margin-right: 1rem;">📈 Teknik Analiz</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Gelişmiş teknik indikatörlerle gerçek zamanlı BIST hisse analizi</span>
+        <h1 style="margin: 0;">📈 Teknik Analiz</h1>
     </div>
     """, unsafe_allow_html=True)
     
 
 
+    # Hisse seçimi, zaman aralığı ve dönem kontrolleri - Üst bölüm
+    control_col1, control_col2, control_col3 = st.columns([2, 1, 1])
     
-    # Ana içerik alanını iki sütuna böl: sol tarafta indikatör menüsü, sağ tarafta grafik
-    menu_col, content_col = st.columns([1, 4])
-    
-    # Sol sütun - İndikatör Menüsü
-    with menu_col:
+    with control_col1:
         st.markdown("""
-        <div style="background: hsl(220, 100%, 6%); padding: 1.5rem; border-radius: 0.75rem; margin: 1rem 0; border: 1px solid hsl(215, 28%, 20%); position: sticky; top: 0;">
-            <h3 style="color: hsl(210, 40%, 98%); margin: 0; font-size: 1.1rem; font-weight: 700; text-align: center;">📈 Teknik İndikatörler</h3>
-            <p style="color: hsl(215, 20%, 65%); margin: 0.5rem 0 0 0; font-size: 0.8rem; text-align: center;">Grafik analizi için indikatör seçin</p>
+        <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+            <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📊 Hisse Seçimi</div>
+        </div>
+        """, unsafe_allow_html=True)
+        selected_symbol = st.selectbox(
+            "Hisse",
+            options=sorted(list(BIST_SYMBOLS.keys())),
+            format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
+            label_visibility="collapsed",
+            key="content_symbol"
+        )
+    
+    with control_col2:
+        st.markdown("""
+        <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+            <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">⏰ Zaman Aralığı</div>
+        </div>
+        """, unsafe_allow_html=True)
+        time_interval = st.selectbox(
+            "Aralık",
+            ["5m", "15m", "1h", "2h", "4h", "1d"],
+            index=5,
+            format_func=lambda x: {
+                "5m": "5 Dakika", "15m": "15 Dakika", "1h": "1 Saat",
+                "2h": "2 Saat", "4h": "4 Saat", "1d": "1 Gün"
+            }[x],
+            label_visibility="collapsed",
+            key="content_interval"
+        )
+    
+    with control_col3:
+        st.markdown("""
+        <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+            <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📅 Dönem</div>
         </div>
         """, unsafe_allow_html=True)
         
-        selected_indicators = {}
+        if time_interval in ["5m", "15m"]:
+            # Yahoo Finance API limiti: 15m için maksimum 60 gün
+            period_options = ["1d", "7d", "30d", "60d"]
+            default_period = "30d"
+        elif time_interval in ["1h", "2h", "4h"]:
+            period_options = ["7d", "30d", "90d", "6mo", "1y", "2y"] 
+            default_period = "1y"
+        else:
+            period_options = ["1mo", "3mo", "6mo", "1y", "2y", "5y"]
+            default_period = "1y"
         
-        # Hareketli Ortalamalar - Collapse
-        with st.expander("📊 Hareketli Ortalamalar", expanded=True):
-            st.markdown("""
-            <p style="color: hsl(215, 20%, 70%); margin: 0 0 1rem 0; font-size: 0.75rem;">Trend takibi için hareketli ortalamalar</p>
-            """, unsafe_allow_html=True)
-            
-            ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200']
-            
-            for indicator in ema_indicators:
-                if indicator in INDICATORS_CONFIG:
-                    config = INDICATORS_CONFIG[indicator]
-                    selected_indicators[indicator] = st.checkbox(
-                        config["name"], 
-                        value=config["default"],
-                        key=f"check_{indicator}"
-                    )
-        
-        # Ana İndikatörler - Collapse
-        with st.expander("📈 Ana İndikatörler", expanded=True):
-            st.markdown("""
-            <p style="color: hsl(215, 20%, 70%); margin: 0 0 1rem 0; font-size: 0.75rem;">Momentum ve volatilite analizi</p>
-            """, unsafe_allow_html=True)
-            
-            main_indicators = ['ott', 'supertrend', 'vwap', 'rsi', 'macd']
-            
-            for indicator in main_indicators:
-                if indicator in INDICATORS_CONFIG:
-                    config = INDICATORS_CONFIG[indicator]
-                    selected_indicators[indicator] = st.checkbox(
-                        config["name"],
-                        value=config["default"],
-                        key=f"check_{indicator}"
-                    )
-        
-        # Diğer İndikatörler - Collapse
-        with st.expander("📊 Diğer İndikatörler", expanded=False):
-            st.markdown("""
-            <p style="color: hsl(215, 20%, 70%); margin: 0 0 1rem 0; font-size: 0.75rem;">Destek-direnç ve osilatör analizi</p>
-            """, unsafe_allow_html=True)
-            
-            other_indicators = ['bollinger', 'stoch', 'williams_r', 'cci']
-            
-            for indicator in other_indicators:
-                if indicator in INDICATORS_CONFIG:
-                    config = INDICATORS_CONFIG[indicator]
-                    selected_indicators[indicator] = st.checkbox(
-                        config["name"],
-                        value=config["default"],
-                        key=f"check_{indicator}"
-                    )
-        
-        # Gelişmiş Formasyonlar - Collapse
-        with st.expander("🔍 Gelişmiş Formasyonlar", expanded=False):
-            st.markdown("""
-            <p style="color: hsl(215, 20%, 70%); margin: 0 0 1rem 0; font-size: 0.75rem;">Smart Money Concept (SMC) formasyonları</p>
-            """, unsafe_allow_html=True)
-            
-            advanced_indicators = ['fvg', 'order_block', 'bos', 'fvg_ob_combo', 'fvg_bos_combo']
-            
-            for indicator in advanced_indicators:
-                if indicator in INDICATORS_CONFIG:
-                    config = INDICATORS_CONFIG[indicator]
-                    selected_indicators[indicator] = st.checkbox(
-                        config["name"],
-                        value=config["default"],
-                        key=f"check_{indicator}"
-                    )
-        
-        # Uyarı Ayarları - Collapse
-        with st.expander("🚨 Uyarı Ayarları", expanded=False):
-            st.markdown("""
-            <p style="color: hsl(215, 20%, 70%); margin: 0 0 1rem 0; font-size: 0.75rem;">Sinyal bildirimlerini yapılandır</p>
-            """, unsafe_allow_html=True)
-            
-            enable_alerts = st.checkbox("Uyarıları Aktif Et", value=True)
-            
-            if enable_alerts:
-                alert_methods = st.multiselect(
-                    "Uyarı Yöntemi",
-                    ["Email", "Telegram", "Desktop"], 
-                    default=["Desktop"]
-                )
+        time_period = st.selectbox(
+            "Dönem",
+            period_options,
+            index=period_options.index(default_period),
+            format_func=lambda x: {
+                "1d": "1 Gün", "7d": "7 Gün", "30d": "30 Gün", "60d": "60 Gün", "90d": "90 Gün",
+                "1mo": "1 Ay", "3mo": "3 Ay", "6mo": "6 Ay", 
+                "1y": "1 Yıl", "2y": "2 Yıl", "5y": "5 Yıl"
+            }.get(x, x),
+            label_visibility="collapsed",
+            key="content_period"
+        )
     
-    # Sağ sütun - Ana içerik ve grafik alanı
-    with content_col:
-        # Hisse seçimi, zaman aralığı ve dönem kontrolleri
+    st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
+    
+    # İndikatör Seçimi - Kompakt Dropdown'lar
+    indicator_col1, indicator_col2, indicator_col3, indicator_col4, indicator_col5 = st.columns(5)
+    
+    selected_indicators = {}
+    
+    with indicator_col1:
+        # Hareketli Ortalamalar Dropdown
         st.markdown("""
-        <div style="background: hsl(220, 100%, 6%); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid hsl(215, 28%, 20%);">
-            <h3 style="color: hsl(210, 40%, 98%); margin: 0; font-size: 1.1rem; font-weight: 700; text-align: center;">📊 Hisse ve Zaman Ayarları</h3>
-            <p style="color: hsl(215, 20%, 65%); margin: 0.5rem 0 0 0; font-size: 0.8rem; text-align: center;">Analiz edilecek hisse ve zaman parametrelerini seçin</p>
+        <div style="color: #00ff00; font-weight: bold; font-size: 14px; margin-bottom: 8px;">
+        📊 MA/EMA
         </div>
         """, unsafe_allow_html=True)
-        
-        # 3 sütunlu layout
-        control_col1, control_col2, control_col3 = st.columns([2, 1, 1])
-        
-        with control_col1:
-            st.markdown("""
-            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
-                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📊 Hisse Seçimi</div>
-            </div>
-            """, unsafe_allow_html=True)
-            selected_symbol = st.selectbox(
-                "Hisse",
-                options=sorted(list(BIST_SYMBOLS.keys())),
-                format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
-                label_visibility="collapsed",
-                key="content_symbol"
-            )
-        
-        with control_col2:
-            st.markdown("""
-            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
-                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">⏰ Zaman Aralığı</div>
-            </div>
-            """, unsafe_allow_html=True)
-            time_interval = st.selectbox(
-                "Aralık",
-                ["5m", "15m", "1h", "2h", "4h", "1d"],
-                index=5,
-                format_func=lambda x: {
-                    "5m": "5 Dakika", "15m": "15 Dakika", "1h": "1 Saat",
-                    "2h": "2 Saat", "4h": "4 Saat", "1d": "1 Gün"
-                }[x],
-                label_visibility="collapsed",
-                key="content_interval"
-            )
-        
-        with control_col3:
-            st.markdown("""
-            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
-                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📅 Dönem</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if time_interval in ["5m", "15m"]:
-                # Yahoo Finance API limiti: 15m için maksimum 60 gün
-                period_options = ["1d", "7d", "30d", "60d"]
-                default_period = "30d"
-            elif time_interval in ["1h", "2h", "4h"]:
-                period_options = ["7d", "30d", "90d", "6mo", "1y", "2y"] 
-                default_period = "1y"
-            else:
-                period_options = ["1mo", "3mo", "6mo", "1y", "2y", "5y"]
-                default_period = "1y"
-            
-            time_period = st.selectbox(
-                "Dönem",
-                period_options,
-                index=period_options.index(default_period),
-                format_func=lambda x: {
-                    "1d": "1 Gün", "7d": "7 Gün", "30d": "30 Gün", "60d": "60 Gün", "90d": "90 Gün",
-                    "1mo": "1 Ay", "3mo": "3 Ay", "6mo": "6 Ay", 
-                    "1y": "1 Yıl", "2y": "2 Yıl", "5y": "5 Yıl"
-                }.get(x, x),
-                label_visibility="collapsed",
-                key="content_period"
-            )
-        
-        st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
-        try:
+        ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']
+        selected_ema_list = st.multiselect(
+            "MA/EMA Seç",
+            options=[INDICATORS_CONFIG[ind]["name"] for ind in ema_indicators if ind in INDICATORS_CONFIG],
+            default=[INDICATORS_CONFIG[ind]["name"] for ind in ema_indicators if ind in INDICATORS_CONFIG and INDICATORS_CONFIG[ind]["default"]],
+            key="ema_dropdown",
+            label_visibility="collapsed"
+        )
+        # Convert back to indicator keys
+        for indicator in ema_indicators:
+            if indicator in INDICATORS_CONFIG:
+                selected_indicators[indicator] = INDICATORS_CONFIG[indicator]["name"] in selected_ema_list
+    
+    with indicator_col2:
+        # Ana İndikatörler Dropdown
+        st.markdown("""
+        <div style="color: #00ff00; font-weight: bold; font-size: 14px; margin-bottom: 8px;">
+        📈 Ana İnd.
+        </div>
+        """, unsafe_allow_html=True)
+        main_indicators = ['ott', 'supertrend', 'vwap', 'rsi', 'macd']
+        selected_main_list = st.multiselect(
+            "Ana İndikatör",
+            options=[INDICATORS_CONFIG[ind]["name"] for ind in main_indicators if ind in INDICATORS_CONFIG],
+            default=[INDICATORS_CONFIG[ind]["name"] for ind in main_indicators if ind in INDICATORS_CONFIG and INDICATORS_CONFIG[ind]["default"]],
+            key="main_dropdown",
+            label_visibility="collapsed"
+        )
+        # Convert back to indicator keys
+        for indicator in main_indicators:
+            if indicator in INDICATORS_CONFIG:
+                selected_indicators[indicator] = INDICATORS_CONFIG[indicator]["name"] in selected_main_list
+    
+    with indicator_col3:
+        # Diğer İndikatörler Dropdown
+        st.markdown("""
+        <div style="color: #00ff00; font-weight: bold; font-size: 14px; margin-bottom: 8px;">
+        📊 Diğer İnd.
+        </div>
+        """, unsafe_allow_html=True)
+        other_indicators = ['bollinger', 'stoch', 'williams_r', 'cci']
+        selected_other_list = st.multiselect(
+            "Diğer İndikatör",
+            options=[INDICATORS_CONFIG[ind]["name"] for ind in other_indicators if ind in INDICATORS_CONFIG],
+            default=[INDICATORS_CONFIG[ind]["name"] for ind in other_indicators if ind in INDICATORS_CONFIG and INDICATORS_CONFIG[ind]["default"]],
+            key="other_dropdown",
+            label_visibility="collapsed"
+        )
+        # Convert back to indicator keys
+        for indicator in other_indicators:
+            if indicator in INDICATORS_CONFIG:
+                selected_indicators[indicator] = INDICATORS_CONFIG[indicator]["name"] in selected_other_list
+    
+    with indicator_col4:
+        # Gelişmiş Formasyonlar
+        st.markdown("""
+        <div style="color: #00ff00; font-weight: bold; font-size: 14px; margin-bottom: 8px;">
+        🔍 Gelişmiş
+        </div>
+        """, unsafe_allow_html=True)
+        advanced_indicators = ['fvg', 'order_block', 'bos', 'fvg_ob_combo', 'fvg_bos_combo']
+        selected_advanced_list = st.multiselect(
+            "Gelişmiş Form.",
+            options=[INDICATORS_CONFIG[ind]["name"] for ind in advanced_indicators if ind in INDICATORS_CONFIG],
+            default=[INDICATORS_CONFIG[ind]["name"] for ind in advanced_indicators if ind in INDICATORS_CONFIG and INDICATORS_CONFIG[ind]["default"]],
+            key="advanced_dropdown",
+            label_visibility="collapsed"
+        )
+        # Convert back to indicator keys
+        for indicator in advanced_indicators:
+            if indicator in INDICATORS_CONFIG:
+                selected_indicators[indicator] = INDICATORS_CONFIG[indicator]["name"] in selected_advanced_list
+    
+    with indicator_col5:
+        # Uyarı Ayarları
+        st.markdown("""
+        <div style="color: #00ff00; font-weight: bold; font-size: 14px; margin-bottom: 8px;">
+        🚨 Uyarılar
+        </div>
+        """, unsafe_allow_html=True)
+        alert_methods = st.multiselect(
+            "Yöntem",
+            ["Email", "Telegram", "Desktop"], 
+            default=["Desktop"],
+            key="alert_methods",
+            label_visibility="collapsed"
+        )
+    
+    st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
+    
+    # Ana grafik alanı
+    try:
             with st.spinner("Veriler yükleniyor..."):
                 fetcher = BISTDataFetcher()
                 df = fetcher.get_stock_data(selected_symbol, period=time_period, interval=time_interval)
@@ -1603,6 +1598,199 @@ def show_technical_analysis():
                     # Grafik
                     fig = create_chart(df, analyzer, selected_indicators)
                     st.plotly_chart(fig, use_container_width=True)
+                    
+                    # İndikatör Değerleri - Grafik Altında
+                    if any(selected_indicators.values()):
+                        st.markdown("""
+                        <div style='
+                            margin: 1.5rem 0;
+                            padding: 1.5rem;
+                            border: 1px solid hsl(215, 28%, 20%);
+                            border-radius: 0.75rem;
+                            background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(215, 40%, 10%) 100%);
+                            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                        '>
+                            <div style='
+                                display: flex;
+                                align-items: center;
+                                margin-bottom: 1.5rem;
+                                padding-bottom: 0.75rem;
+                                border-bottom: 1px solid hsl(215, 28%, 20%);
+                            '>
+                                <span style='
+                                    font-size: 1.5rem;
+                                    margin-right: 0.75rem;
+                                '>🔬</span>
+                                <h3 style='
+                                    color: hsl(210, 40%, 98%); 
+                                    margin: 0; 
+                                    font-size: 1.25rem;
+                                    font-weight: 600;
+                                '>İndikatör Değerleri</h3>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        indicator_values = analyzer.get_latest_indicators()
+                        current_price = latest['Close']
+                        
+                        # EMA olmayan indikatörler için
+                        non_ema_indicators = {k: v for k, v in selected_indicators.items() 
+                                            if v and k not in ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']}
+                        
+                        if non_ema_indicators:
+                            # İndikatör kartları - 4 sütunlu grid
+                            indicator_cols = st.columns(min(len(non_ema_indicators), 4))
+                            
+                            col_idx = 0
+                            for indicator, enabled in non_ema_indicators.items():
+                                if enabled and indicator in indicator_values:
+                                    value = indicator_values[indicator]
+                                    config = INDICATORS_CONFIG.get(indicator, {})
+                                    
+                                    # İndikatör durumunu belirleme
+                                    status_class = "neutral"
+                                    status_text = "Nötr"
+                                    status_icon = "⚪"
+                                    status_color = "hsl(215, 20%, 70%)"
+                                    
+                                    if indicator == 'rsi':
+                                        if value > 70:
+                                            status_class = "negative"
+                                            status_text = "Aşırı Alım"
+                                            status_icon = "🔴"
+                                            status_color = "hsl(0, 84%, 60%)"
+                                        elif value < 30:
+                                            status_class = "positive"
+                                            status_text = "Aşırı Satım"
+                                            status_icon = "🟢"
+                                            status_color = "hsl(142, 76%, 36%)"
+                                        else:
+                                            status_class = "neutral"
+                                            status_text = "Normal"
+                                            status_icon = "⚪"
+                                            status_color = "hsl(215, 20%, 70%)"
+                                    
+                                    elif indicator == 'macd':
+                                        if value > 0:
+                                            status_class = "positive"
+                                            status_text = "Pozitif"
+                                            status_icon = "🟢"
+                                            status_color = "hsl(142, 76%, 36%)"
+                                        else:
+                                            status_class = "negative"
+                                            status_text = "Negatif"
+                                            status_icon = "🔴"
+                                            status_color = "hsl(0, 84%, 60%)"
+                                    
+                                    elif indicator == 'vwap':
+                                        if current_price > value:
+                                            status_class = "positive"
+                                            status_text = "Üzeri"
+                                            status_icon = "🟢"
+                                            status_color = "hsl(142, 76%, 36%)"
+                                        else:
+                                            status_class = "negative"
+                                            status_text = "Altı"
+                                            status_icon = "🔴"
+                                            status_color = "hsl(0, 84%, 60%)"
+                                    
+                                    with indicator_cols[col_idx % len(indicator_cols)]:
+                                        st.markdown(f"""
+                                        <div style='
+                                            background: hsl(220, 45%, 12%);
+                                            border: 1px solid hsl(215, 35%, 18%);
+                                            border-radius: 0.5rem;
+                                            padding: 1rem;
+                                            text-align: center;
+                                            margin-bottom: 1rem;
+                                        '>
+                                            <div style='
+                                                color: hsl(210, 40%, 98%);
+                                                font-size: 0.875rem;
+                                                font-weight: 500;
+                                                margin-bottom: 0.5rem;
+                                            '>{config.get('name', indicator)}</div>
+                                            <div style='
+                                                color: hsl(210, 40%, 98%);
+                                                font-size: 1.125rem;
+                                                font-weight: 700;
+                                                margin-bottom: 0.25rem;
+                                            '>{value:.2f}</div>
+                                            <div style='
+                                                color: {status_color};
+                                                font-size: 0.75rem;
+                                                font-weight: 500;
+                                            '>{status_icon} {status_text}</div>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                    
+                                    col_idx += 1
+                        
+                        # EMA değerleri için ayrı bölüm
+                        ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']
+                        selected_emas = [ind for ind in ema_indicators if selected_indicators.get(ind, False)]
+                        
+                        if selected_emas:
+                            st.markdown("""
+                            <div style='
+                                margin-top: 1.5rem;
+                                padding-top: 1.5rem;
+                                border-top: 1px solid hsl(215, 28%, 20%);
+                            '>
+                                <h4 style='
+                                    color: hsl(210, 40%, 98%);
+                                    margin: 0 0 1rem 0;
+                                    font-size: 1rem;
+                                    font-weight: 600;
+                                '>📏 Hareketli Ortalama Değerleri</h4>
+                            """, unsafe_allow_html=True)
+                            
+                            # EMA kartları - 4 sütunlu grid
+                            ema_cols = st.columns(min(len(selected_emas), 4))
+                            
+                            for i, indicator in enumerate(selected_emas):
+                                if indicator in indicator_values:
+                                    ema_value = indicator_values[indicator]
+                                    distance = current_price - ema_value
+                                    distance_pct = (distance / ema_value) * 100
+                                    
+                                    config = INDICATORS_CONFIG.get(indicator, {})
+                                    distance_color = "hsl(142, 76%, 36%)" if distance >= 0 else "hsl(0, 84%, 60%)"
+                                    distance_icon = "🟢" if distance >= 0 else "🔴"
+                                    
+                                    with ema_cols[i % len(ema_cols)]:
+                                        st.markdown(f"""
+                                        <div style='
+                                            background: hsl(220, 45%, 12%);
+                                            border: 1px solid hsl(215, 35%, 18%);
+                                            border-radius: 0.5rem;
+                                            padding: 1rem;
+                                            text-align: center;
+                                            margin-bottom: 1rem;
+                                        '>
+                                            <div style='
+                                                color: hsl(210, 40%, 98%);
+                                                font-size: 0.875rem;
+                                                font-weight: 500;
+                                                margin-bottom: 0.5rem;
+                                            '>{config.get('name', indicator)}</div>
+                                            <div style='
+                                                color: hsl(210, 40%, 98%);
+                                                font-size: 1.125rem;
+                                                font-weight: 700;
+                                                margin-bottom: 0.25rem;
+                                            '>₺{ema_value:.2f}</div>
+                                            <div style='
+                                                color: {distance_color};
+                                                font-size: 0.75rem;
+                                                font-weight: 500;
+                                            '>{distance_icon} {distance:+.2f} ({distance_pct:+.1f}%)</div>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                            
+                            st.markdown("</div>", unsafe_allow_html=True)
+                        
+                        st.markdown("</div>", unsafe_allow_html=True)
                     
                     # Signal
                     alert_system = AlertSystem()
@@ -2523,44 +2711,194 @@ def show_technical_analysis():
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Ayı Sinyalleri - Boğa Sinyallerinin Hemen Altında
+                # Ayı Sinyalleri - Modern ve Kompakt Tasarım
                 st.markdown("""
-                <div style='border: 1px solid hsl(215, 28%, 20%); border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; background: hsl(220, 100%, 6%);'>
-                    <h3 style='color: hsl(210, 40%, 98%); margin: 0; margin-bottom: 1rem;'>🐻 Ayı Sinyalleri</h3>
+                <div style='
+                    border: 1px solid hsl(215, 28%, 20%); 
+                    border-radius: 0.75rem; 
+                    padding: 1.5rem; 
+                    margin: 1.5rem 0; 
+                    background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(215, 40%, 10%) 100%);
+                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                '>
+                    <div style='
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 1rem;
+                        padding-bottom: 0.75rem;
+                        border-bottom: 1px solid hsl(215, 28%, 20%);
+                    '>
+                        <span style='
+                            font-size: 1.5rem;
+                            margin-right: 0.75rem;
+                        '>🐻</span>
+                        <h3 style='
+                            color: hsl(210, 40%, 98%); 
+                            margin: 0; 
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                        '>Ayı Sinyalleri</h3>
+                    </div>
                 """, unsafe_allow_html=True)
                 
-                bear_col1, bear_col2 = st.columns([1, 2], gap="large")
+                # Kompakt Bear Signal Layout
+                bear_col1, bear_col2, bear_col3 = st.columns([1, 1, 1], gap="medium")
                 
                 with bear_col1:
-                    # Ana Bear Signal Kartı - Streamlit Native
-                    st.metric(
-                        label="🐻 Ayı Sinyali",
-                        value=bear_signal['strength_level'],
-                        delta=f"{bear_signal['signal_count']} Sinyal Aktif"
-                    )
-                    
-                    # Progress bar
-                    progress_value = min(bear_signal['strength'] / 10, 1.0)
-                    st.progress(progress_value)
-                    st.caption(f"Güç Skoru: {bear_signal['strength']:.1f}/10")
+                    # Ana Bear Signal Kartı
+                    st.markdown(f"""
+                    <div style='
+                        background: hsl(220, 45%, 12%);
+                        border: 1px solid hsl(215, 35%, 18%);
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                        text-align: center;
+                    '>
+                        <div style='
+                            color: hsl(210, 40%, 98%);
+                            font-size: 0.875rem;
+                            font-weight: 500;
+                            margin-bottom: 0.5rem;
+                        '>🐻 Ayı Sinyali</div>
+                        <div style='
+                            color: {'hsl(142, 76%, 36%)' if bear_signal['strength'] < 5 else 'hsl(0, 84%, 60%)'};
+                            font-size: 1.25rem;
+                            font-weight: 700;
+                            margin-bottom: 0.25rem;
+                        '>{bear_signal['strength_level']}</div>
+                        <div style='
+                            color: hsl(215, 20%, 70%);
+                            font-size: 0.75rem;
+                        '>{bear_signal['signal_count']} Sinyal Aktif</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 with bear_col2:
-                    # Aktif Bear Sinyalleri Listesi - Streamlit Native
-                    if bear_signal['signals']:
-                        st.subheader(f"🚨 Aktif Ayı Sinyalleri ({bear_signal['signal_count']})")
-                        
-                        # Sinyal listesi
-                        for i, signal in enumerate(bear_signal['signals']):
-                            st.info(f"{i+1}. {signal}")
-                        
-                        # Detaylı Açıklamalar
-                        if bear_signal['details']:
-                            with st.expander("📊 Detaylı Sinyal Bilgileri", expanded=False):
-                                for detail in bear_signal['details']:
-                                    st.write(f"• {detail}")
-                    else:
-                        st.success("✅ Ayı Sinyali Tespit Edilmedi")
-                        st.info("Mevcut durumda güçlü düşüş sinyali bulunmuyor.")
+                    # Güç Skoru
+                    progress_value = min(bear_signal['strength'] / 10, 1.0)
+                    progress_color = "hsl(142, 76%, 36%)" if bear_signal['strength'] < 5 else "hsl(0, 84%, 60%)"
+                    
+                    st.markdown(f"""
+                    <div style='
+                        background: hsl(220, 45%, 12%);
+                        border: 1px solid hsl(215, 35%, 18%);
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                    '>
+                        <div style='
+                            color: hsl(210, 40%, 98%);
+                            font-size: 0.875rem;
+                            font-weight: 500;
+                            margin-bottom: 0.5rem;
+                        '>💪 Güç Skoru</div>
+                        <div style='
+                            background: hsl(215, 35%, 18%);
+                            border-radius: 0.25rem;
+                            height: 0.5rem;
+                            margin-bottom: 0.5rem;
+                            overflow: hidden;
+                        '>
+                            <div style='
+                                background: {progress_color};
+                                height: 100%;
+                                width: {progress_value * 100}%;
+                                transition: width 0.3s ease;
+                            '></div>
+                        </div>
+                        <div style='
+                            color: {progress_color};
+                            font-size: 0.875rem;
+                            font-weight: 600;
+                        '>{bear_signal['strength']:.1f}/10</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with bear_col3:
+                    # Durum Özeti
+                    status_icon = "✅" if not bear_signal['signals'] else "🚨"
+                    status_text = "Güvenli" if not bear_signal['signals'] else "Dikkat"
+                    status_color = "hsl(142, 76%, 36%)" if not bear_signal['signals'] else "hsl(0, 84%, 60%)"
+                    
+                    st.markdown(f"""
+                    <div style='
+                        background: hsl(220, 45%, 12%);
+                        border: 1px solid hsl(215, 35%, 18%);
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                        text-align: center;
+                    '>
+                        <div style='
+                            font-size: 1.5rem;
+                            margin-bottom: 0.5rem;
+                        '>{status_icon}</div>
+                        <div style='
+                            color: {status_color};
+                            font-size: 0.875rem;
+                            font-weight: 600;
+                        '>{status_text}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Aktif Sinyaller (Eğer varsa)
+                if bear_signal['signals']:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    # Sinyal listesi - Kompakt
+                    signal_items = []
+                    for i, signal in enumerate(bear_signal['signals']):
+                        signal_items.append(f"<li style='margin-bottom: 0.25rem;'>{i+1}. {signal}</li>")
+                    
+                    st.markdown(f"""
+                    <div style='
+                        background: hsl(220, 45%, 12%);
+                        border: 1px solid hsl(215, 35%, 18%);
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                    '>
+                        <div style='
+                            color: hsl(210, 40%, 98%);
+                            font-size: 0.875rem;
+                            font-weight: 600;
+                            margin-bottom: 0.75rem;
+                        '>🚨 Aktif Ayı Sinyalleri ({bear_signal['signal_count']})</div>
+                        <ul style='
+                            color: hsl(215, 20%, 70%);
+                            font-size: 0.8rem;
+                            margin: 0;
+                            padding-left: 1rem;
+                        '>
+                            {''.join(signal_items)}
+                        </ul>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Detaylı bilgiler (expandable)
+                    if bear_signal['details']:
+                        with st.expander("📊 Detaylı Sinyal Analizi", expanded=False):
+                            for detail in bear_signal['details']:
+                                st.markdown(f"• {detail}")
+                else:
+                    st.markdown("""
+                    <div style='
+                        background: hsl(220, 45%, 12%);
+                        border: 1px solid hsl(215, 35%, 18%);
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                        text-align: center;
+                        margin-top: 1rem;
+                    '>
+                        <div style='
+                            color: hsl(142, 76%, 36%);
+                            font-size: 0.875rem;
+                            font-weight: 500;
+                        '>✅ Ayı Sinyali Tespit Edilmedi</div>
+                        <div style='
+                            color: hsl(215, 20%, 70%);
+                            font-size: 0.75rem;
+                            margin-top: 0.25rem;
+                        '>Mevcut durumda güçlü düşüş sinyali bulunmuyor</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 st.markdown("</div>", unsafe_allow_html=True)
                 
@@ -2814,7 +3152,7 @@ def show_technical_analysis():
                 # Market Info moved to header
                 
                 # Hareketli Ortalama Uzaklıkları
-                ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200']
+                ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']
                 selected_emas = [ind for ind in ema_indicators if selected_indicators.get(ind, False)]
                 
                 if selected_emas:
@@ -2846,182 +3184,7 @@ def show_technical_analysis():
                                 </div>
                                 """, unsafe_allow_html=True)
                 
-                # İndikatör değerleri
-                if any(selected_indicators.values()):
-                    st.markdown("### 🔬 İndikatör Değerleri")
-                    indicator_values = analyzer.get_latest_indicators()
-                    
-                    # Sadece EMA olmayan indikatörler için
-                    non_ema_indicators = {k: v for k, v in selected_indicators.items() 
-                                        if v and k not in ema_indicators}
-                    
-                    if non_ema_indicators:
-                        # İndikatör kartları
-                        indicator_cols = st.columns(min(len(non_ema_indicators), 4))
-                        
-                        col_idx = 0
-                        current_price = latest['Close']
-                        
-                        for indicator, enabled in non_ema_indicators.items():
-                            if enabled and indicator in indicator_values:
-                                value = indicator_values[indicator]
-                                config = INDICATORS_CONFIG.get(indicator, {})
-                                
-                                # İndikatör durumunu belirleme ve tooltip içeriği
-                                status_class = "neutral"
-                                status_text = "Nötr"
-                                status_icon = "⚪"
-                                tooltip_title = ""
-                                tooltip_description = ""
-                                tooltip_range = ""
-                                
-                                if indicator == 'rsi':
-                                    tooltip_title = "RSI (Relative Strength Index)"
-                                    tooltip_description = "14 günlük momentum osilatörü. Aşırı alım/satım seviyelerini gösterir."
-                                    tooltip_range = "<strong>Seviyeler:</strong> 0-30 Aşırı Satım, 30-70 Normal, 70-100 Aşırı Alım"
-                                    
-                                    if value > 70:
-                                        status_class = "negative"
-                                        status_text = "Satış Baskısı Beklentisi"
-                                        status_icon = "🔴"
-                                    elif value < 30:
-                                        status_class = "positive"
-                                        status_text = "Alış Fırsatı Sinyali"
-                                        status_icon = "🟢"
-                                    else:
-                                        status_class = "neutral"
-                                        status_text = "Dengeli Momentum"
-                                        status_icon = "⚪"
-                                
-                                elif indicator == 'macd':
-                                    tooltip_title = "MACD (Moving Average Convergence Divergence)"
-                                    tooltip_description = "12-26 günlük hareketli ortalama farkı. Trend değişimi sinyalleri verir."
-                                    tooltip_range = "<strong>Yorumlama:</strong> 0 üstü Yukarı Momentum, 0 altı Aşağı Momentum"
-                                    
-                                    if value > 0:
-                                        status_class = "positive"
-                                        status_text = "Yukarı Momentum"
-                                        status_icon = "🟢"
-                                    else:
-                                        status_class = "negative"
-                                        status_text = "Aşağı Momentum"
-                                        status_icon = "🔴"
-                                
-                                elif indicator == 'stoch':
-                                    tooltip_title = "Stochastic Oscillator"
-                                    tooltip_description = "14 günlük fiyat pozisyonunu ölçer. Kısa vadeli dönüş noktalarını gösterir."
-                                    tooltip_range = "<strong>Seviyeler:</strong> 0-20 Aşırı Satım, 20-80 Normal, 80-100 Aşırı Alım"
-                                    
-                                    if value > 80:
-                                        status_class = "negative"
-                                        status_text = "Düzeltme Beklentisi"
-                                        status_icon = "🔴"
-                                    elif value < 20:
-                                        status_class = "positive"
-                                        status_text = "Toparlanma Beklentisi"
-                                        status_icon = "🟢"
-                                    else:
-                                        status_class = "neutral"
-                                        status_text = "Kararlı Fiyat Bandı"
-                                        status_icon = "⚪"
-                                
-                                elif indicator == 'williams_r':
-                                    tooltip_title = "Williams %R"
-                                    tooltip_description = "14 günlük ters momentum osilatörü. Kısa vadeli geri dönüşleri işaret eder."
-                                    tooltip_range = "<strong>Seviyeler:</strong> -100/-80 Aşırı Satım, -80/-20 Normal, -20/0 Aşırı Alım"
-                                    
-                                    if value > -20:
-                                        status_class = "negative"
-                                        status_text = "Satış Sinyali Yakın"
-                                        status_icon = "🔴"
-                                    elif value < -80:
-                                        status_class = "positive"
-                                        status_text = "Alış Sinyali Yakın"
-                                        status_icon = "🟢"
-                                    else:
-                                        status_class = "neutral"
-                                        status_text = "Trend Devam Ediyor"
-                                        status_icon = "⚪"
-                                
-                                elif indicator == 'cci':
-                                    tooltip_title = "CCI (Commodity Channel Index)"
-                                    tooltip_description = "Fiyatın tipik seviyesinden sapmasını ölçer. Aşırı alım/satım koşullarını gösterir."
-                                    tooltip_range = "<strong>Seviyeler:</strong> -100'un altı Aşırı Satım, -100/+100 Normal, +100'ün üstü Aşırı Alım"
-                                    
-                                    if value > 100:
-                                        status_class = "negative"
-                                        status_text = "Geri Çekilme Beklenir"
-                                        status_icon = "🔴"
-                                    elif value < -100:
-                                        status_class = "positive"
-                                        status_text = "Yükseliş Beklenir"
-                                        status_icon = "🟢"
-                                    else:
-                                        status_class = "neutral"
-                                        status_text = "Doğal Fiyat Seviyesi"
-                                        status_icon = "⚪"
-                                
-                                elif indicator in ['ott', 'supertrend', 'vwap']:
-                                    if indicator == 'ott':
-                                        tooltip_title = "OTT (Optimized Trend Tracker)"
-                                        tooltip_description = "Trend takip indikatörü. Dinamik destek/direnç seviyesi sağlar."
-                                        tooltip_range = "<strong>Pozisyon:</strong> Fiyat üstünde = Alış Sinyali, Fiyat altında = Satış Sinyali"
-                                    elif indicator == 'supertrend':
-                                        tooltip_title = "SuperTrend"
-                                        tooltip_description = "ATR bazlı trend takip indikatörü. Net alış/satış sinyalleri verir."
-                                        tooltip_range = "<strong>Pozisyon:</strong> Fiyat üstünde = Alış Trendi, Fiyat altında = Satış Trendi"
-                                    else:  # vwap
-                                        tooltip_title = "VWAP (Volume Weighted Average Price)"
-                                        tooltip_description = "Hacim ağırlıklı ortalama fiyat. Kurumsal işlem seviyesini gösterir."
-                                        tooltip_range = "<strong>Pozisyon:</strong> Fiyat üstünde = Güçlü Pozisyon, Fiyat altında = Zayıf Pozisyon"
-                                    
-                                    if current_price > value:
-                                        status_class = "positive"
-                                        status_text = "Alış Bölgesi"
-                                        status_icon = "🟢"
-                                    else:
-                                        status_class = "negative"
-                                        status_text = "Satış Bölgesi"
-                                        status_icon = "🔴"
-                                
-                                elif indicator == 'bollinger':
-                                    tooltip_title = "Bollinger Bands (Orta Band)"
-                                    tooltip_description = "20 günlük hareketli ortalama + volatilite bantları. Fiyat bandlarını gösterir."
-                                    tooltip_range = "<strong>Pozisyon:</strong> Orta bant trend merkezi, Üst band = kuvvet, Alt band = zayıflık"
-                                    
-                                    # Bollinger Bands için orta band ile karşılaştırma
-                                    if abs(current_price - value) / value < 0.02:  # %2 tolerance
-                                        status_class = "neutral"
-                                        status_text = "Trend Merkezi"
-                                        status_icon = "⚪"
-                                    elif current_price > value:
-                                        status_class = "positive"
-                                        status_text = "Güçlü Bölge"
-                                        status_icon = "🟢"
-                                    else:
-                                        status_class = "negative"
-                                        status_text = "Zayıf Bölge"
-                                        status_icon = "🔴"
-                                
-                                with indicator_cols[col_idx % len(indicator_cols)]:
-                                    st.markdown(f"""
-                                    <div class="metric-card">
-                                        <div class="metric-info-icon">i</div>
-                                        <div class="metric-tooltip">
-                                            <div class="metric-tooltip-title">{tooltip_title}</div>
-                                            <div class="metric-tooltip-description">{tooltip_description}</div>
-                                            <div class="metric-tooltip-range">{tooltip_range}</div>
-                                        </div>
-                                        <div class="metric-title">{config.get('name', indicator)}</div>
-                                        <div class="metric-value">{value:.2f}</div>
-                                        <div class="metric-change {status_class}">
-                                            <span>{status_icon}</span>
-                                            <span>{status_text}</span>
-                                        </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                                
-                                col_idx += 1
+
                 
                 else:
                     st.markdown("""
@@ -3031,13 +3194,13 @@ def show_technical_analysis():
                     </div>
                     """, unsafe_allow_html=True)
                 
-        except Exception as e:
-            st.markdown(f"""
-            <div class="error-box">
-                <h4>❌ Hata</h4>
-                <p>{str(e)}</p>
-            </div>
-            """, unsafe_allow_html=True)
+    except Exception as e:
+        st.markdown(f"""
+        <div class="error-box">
+            <h4>❌ Hata</h4>
+            <p>{str(e)}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 def scan_daytrading_opportunities():
     """Day trading fırsatlarını tarar ve puanlar"""
@@ -3344,13 +3507,153 @@ def show_modern_dashboard():
             
             st.markdown("</div>", unsafe_allow_html=True)
             
+            # === TEKNİK İNDİKATÖRLER BÖLÜMÜ ===
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Calculate technical indicators
+            try:
+                from modules.technical_analysis import TechnicalAnalyzer
+                analyzer = TechnicalAnalyzer(df)
+                
+                # Add EMA, VWMA and VWEMA indicators
+                analyzer.add_indicator('ema_5')
+                analyzer.add_indicator('ema_8') 
+                analyzer.add_indicator('ema_13')
+                analyzer.add_indicator('ma_200')
+                analyzer.add_indicator('vwma_5')
+                analyzer.add_indicator('vwema_5')
+                
+                # Get latest values
+                ema_5 = analyzer.indicators.get('ema_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_5', pd.Series()).empty else 0
+                ema_8 = analyzer.indicators.get('ema_8', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_8', pd.Series()).empty else 0
+                ema_13 = analyzer.indicators.get('ema_13', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_13', pd.Series()).empty else 0
+                ma_200 = analyzer.indicators.get('ma_200', pd.Series()).iloc[-1] if not analyzer.indicators.get('ma_200', pd.Series()).empty else 0
+                vwma_5 = analyzer.indicators.get('vwma_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwma_5', pd.Series()).empty else 0
+                vwema_5 = analyzer.indicators.get('vwema_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwema_5', pd.Series()).empty else 0
+                
+                current_price = latest['Close']
+                
+                # EMA/MA Technical Indicators Grid
+                st.markdown("""
+                <div class="technical-indicators">
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Display indicators in 6 columns (including VWMA 5 and VWEMA 5)
+                indicator_cols = st.columns(6)
+                
+                # EMA 5 Card
+                with indicator_cols[0]:
+                    price_above_ema5 = current_price > ema_5
+                    status_color = "#00ff88" if price_above_ema5 else "#ff4757"
+                    status_icon = "🟢" if price_above_ema5 else "🔴"
+                    status_text = "Üzeri" if price_above_ema5 else "Altı"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">{status_icon} EMA 5</div>
+                        <div class="metric-value">₺{ema_5:.2f}</div>
+                        <div class="metric-change" style="color: {status_color};">
+                            {status_text}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+                # EMA 8 Card  
+                with indicator_cols[1]:
+                    price_above_ema8 = current_price > ema_8
+                    status_color = "#00ff88" if price_above_ema8 else "#ff4757"
+                    status_icon = "🟢" if price_above_ema8 else "🔴"
+                    status_text = "Üzeri" if price_above_ema8 else "Altı"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">{status_icon} EMA 8</div>
+                        <div class="metric-value">₺{ema_8:.2f}</div>
+                        <div class="metric-change" style="color: {status_color};">
+                            {status_text}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # EMA 13 Card
+                with indicator_cols[2]:
+                    price_above_ema13 = current_price > ema_13
+                    status_color = "#00ff88" if price_above_ema13 else "#ff4757"
+                    status_icon = "🟢" if price_above_ema13 else "🔴"
+                    status_text = "Üzeri" if price_above_ema13 else "Altı"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">{status_icon} EMA 13</div>
+                        <div class="metric-value">₺{ema_13:.2f}</div>
+                        <div class="metric-change" style="color: {status_color};">
+                            {status_text}
+                        </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+                # MA 200 Card
+                with indicator_cols[3]:
+                    price_above_ma200 = current_price > ma_200
+                    status_color = "#00ff88" if price_above_ma200 else "#ff4757"
+                    status_icon = "🟢" if price_above_ma200 else "🔴"
+                    status_text = "Üzeri" if price_above_ma200 else "Altı"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">{status_icon} MA 200</div>
+                        <div class="metric-value">₺{ma_200:.2f}</div>
+                        <div class="metric-change" style="color: {status_color};">
+                            {status_text}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # VWMA 5 Card
+                with indicator_cols[4]:
+                    price_above_vwma5 = current_price > vwma_5
+                    status_color = "#00ff88" if price_above_vwma5 else "#ff4757"
+                    status_icon = "🟢" if price_above_vwma5 else "🔴"
+                    status_text = "Üzeri" if price_above_vwma5 else "Altı"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">{status_icon} VWMA 5</div>
+                        <div class="metric-value">₺{vwma_5:.2f}</div>
+                        <div class="metric-change" style="color: {status_color};">
+                            {status_text}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # VWEMA 5 Card (NEW)
+                with indicator_cols[5]:
+                    price_above_vwema5 = current_price > vwema_5
+                    status_color = "#00ff88" if price_above_vwema5 else "#ff4757"
+                    status_icon = "🟢" if price_above_vwema5 else "🔴"
+                    status_text = "Üzeri" if price_above_vwema5 else "Altı"
+                            
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">{status_icon} VWEMA 5</div>
+                        <div class="metric-value">₺{vwema_5:.2f}</div>
+                        <div class="metric-change" style="color: {status_color};">
+                            {status_text}
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                
+            except Exception as e:
+                st.warning(f"⚠️ Teknik indikatörler hesaplanamadı: {str(e)}")
+            
             # Bottom Section
             st.markdown("""
             <div class="bottom-grid">
             """, unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
-            
+                
             with col1:
                 st.markdown("""
                 <div class="info-card">
@@ -3361,54 +3664,49 @@ def show_modern_dashboard():
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown("""
-                <div class="info-card">
-                    <div class="info-card-title">Yapay Zeka Tahminleri</div>
-                    <div class="info-card-content">
-                        Makine öğrenmesi modelleri, gelecekteki fiyat hareketlerini 
-                        güven skorları ile tahmin etmek için geçmiş verileri analiz eder.
+                
+                with col2:
+                    st.markdown("""
+                    <div class="info-card">
+                        <div class="info-card-title">Yapay Zeka Tahminleri</div>
+                        <div class="info-card-content">
+                            Makine öğrenmesi modelleri, gelecekteki fiyat hareketlerini 
+                            güven skorları ile tahmin etmek için geçmiş verileri analiz eder.
+                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
             
             st.markdown("</div>", unsafe_allow_html=True)
             
-
+            
             # === HAFTALIK VE AYLIK PERFORMANS BÖLÜMÜ ===
             st.markdown("<br><br>", unsafe_allow_html=True)
-            st.markdown("""
-            <div class="metric-card">
-                <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">📈 Haftalık & Aylık Performans</h2>
-                <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">
-                📊 <strong>Haftalık:</strong> Bir önceki haftanın performansı (5 gün)<br>
-                📅 <strong>Aylık:</strong> Bir önceki ayın performansı (22 gün)<br>
-                (Tamamlanmış periyotların kendi performansı - Top 10)
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Yenileme butonu
-            if st.button("🔄 Performans Verilerini Yenile", type="secondary", key="refresh_performance"):
-                st.session_state.performance_data_loaded_v8 = False
-                st.rerun()
+
             
             # Initialize screener and get performance data
             screener = StockScreener(BIST_SYMBOLS)
             
             # Load performance data (cache'de yoksa hesapla)
-            if "performance_data_loaded_v8" not in st.session_state:
+            if "performance_data_loaded_v9" not in st.session_state:
                 with st.spinner("�� Performans verileri yükleniyor..."):
                     weekly_results = screener.screen_weekly_performance(top_count=15)
                     monthly_results = screener.screen_monthly_performance(top_count=15)
                     st.session_state.weekly_results = weekly_results
                     st.session_state.monthly_results = monthly_results
-                    st.session_state.performance_data_loaded_v8 = True
+                    st.session_state.performance_data_loaded_v9 = True
             
             # Weekly Performance
             weekly_data = st.session_state.weekly_results
-            st.markdown("### 📊 Haftalık Performans")
+            
+            # Başlık ve yenileme butonu aynı satırda
+            title_col, button_col = st.columns([3, 1])
+            with title_col:
+                st.markdown("### 📊 Haftalık & Aylık Performans")
+            with button_col:
+                st.markdown("<br>", unsafe_allow_html=True)  # Biraz boşluk için
+                if st.button("🔄 Performans Verilerini Yenile", type="secondary", key="refresh_performance"):
+                    st.session_state.performance_data_loaded_v9 = False
+                    st.rerun()
             
             col1, col2 = st.columns(2)
             
@@ -3491,7 +3789,6 @@ def show_modern_dashboard():
             # Monthly Performance
             monthly_data = st.session_state.monthly_results
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("### 📅 Aylık Performans")
             
             col1, col2 = st.columns(2)
             

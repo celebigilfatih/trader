@@ -40,6 +40,8 @@ class TechnicalAnalyzer:
             'ema_50': self._calculate_ema,
             'ema_121': self._calculate_ema,
             'ma_200': self._calculate_sma,
+            'vwma_5': self._calculate_vwma,
+            'vwema_5': self._calculate_vwema,
             'rsi': self._calculate_rsi,
             'macd': self._calculate_macd,
             'bollinger': self._calculate_bollinger_bands,
@@ -68,6 +70,58 @@ class TechnicalAnalyzer:
         """Üssel Hareketli Ortalama hesaplar"""
         period = INDICATORS_CONFIG[indicator_name]['period']
         self.indicators[indicator_name] = self.data['Close'].ewm(span=period).mean()
+    
+    def _calculate_vwma(self, indicator_name: str) -> None:
+        """Hacim Ağırlıklı Hareketli Ortalama hesaplar"""
+        period = INDICATORS_CONFIG[indicator_name]['period']
+        
+        # VWMA hesaplaması: (Close * Volume) toplamı / Volume toplamı
+        typical_price_volume = self.data['Close'] * self.data['Volume']
+        vwma = typical_price_volume.rolling(window=period).sum() / self.data['Volume'].rolling(window=period).sum()
+        
+        # NaN değerleri temizle
+        vwma = vwma.fillna(self.data['Close'])
+        
+        self.indicators[indicator_name] = vwma
+    
+    def _calculate_vwema(self, indicator_name: str) -> None:
+        """Hacim Ağırlıklı Üssel Hareketli Ortalama hesaplar"""
+        period = INDICATORS_CONFIG[indicator_name]['period']
+        
+        # VWEMA hesaplaması: EMA'yı hacim ile ağırlıklandırma
+        # İlk olarak, close price'ı volume ile çarpıyoruz
+        volume_weighted_price = self.data['Close'] * self.data['Volume']
+        
+        # EMA hesaplama katsayısı
+        multiplier = 2 / (period + 1)
+        
+        # İlk değer olarak VWMA kullan
+        initial_vwma = (volume_weighted_price.iloc[:period].sum() / 
+                       self.data['Volume'].iloc[:period].sum()) if len(self.data) >= period else self.data['Close'].iloc[0]
+        
+        vwema_values = []
+        
+        # EMA hesaplama
+        for i in range(len(self.data)):
+            if i == 0:
+                vwema_values.append(initial_vwma)
+            else:
+                current_volume = self.data['Volume'].iloc[i]
+                if current_volume > 0:
+                    current_vw_price = volume_weighted_price.iloc[i] / current_volume
+                    current_vwema = (current_vw_price * multiplier) + (vwema_values[-1] * (1 - multiplier))
+                else:
+                    current_vwema = vwema_values[-1]
+                vwema_values.append(current_vwema)
+        
+        # Pandas Series olarak oluştur
+        import pandas as pd
+        vwema_series = pd.Series(vwema_values, index=self.data.index)
+        
+        # NaN değerleri temizle
+        vwema_series = vwema_series.fillna(self.data['Close'])
+        
+        self.indicators[indicator_name] = vwema_series
     
     def _calculate_rsi(self, indicator_name: str) -> None:
         """RSI hesaplar"""

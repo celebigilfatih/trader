@@ -736,6 +736,12 @@ class StockScreener:
                     # Geçen haftanın performansını hesapla
                     if week_start_price > 0:
                         weekly_change = ((week_end_price - week_start_price) / week_start_price) * 100
+                        
+                        # Aşırı değişiklikleri filtrele (hisse bölünmesi, temettü vb.)
+                        # %40'dan fazla düşüş veya %100'den fazla yükseliş anomali olarak kabul edilir
+                        if weekly_change < -40 or weekly_change > 100:
+                            print(f"⚠️  {symbol.replace('.IS', '')}: Anormal haftalık değişim tespit edildi ({weekly_change:.1f}%) - atlaniyor")
+                            continue
                     else:
                         continue  # Geçersiz fiyat
                     
@@ -806,6 +812,12 @@ class StockScreener:
                     # Geçen ayın performansını hesapla
                     if month_start_price > 0:
                         monthly_change = ((month_end_price - month_start_price) / month_start_price) * 100
+                        
+                        # Aşırı değişiklikleri filtrele (hisse bölünmesi, temettü vb.)
+                        # %60'dan fazla düşüş veya %200'den fazla yükseliş anomali olarak kabul edilir
+                        if monthly_change < -60 or monthly_change > 200:
+                            print(f"⚠️  {symbol.replace('.IS', '')}: Anormal değişim tespit edildi ({monthly_change:.1f}%) - atlaniyor")
+                            continue
                     else:
                         continue  # Geçersiz fiyat
                     
