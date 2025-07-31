@@ -532,8 +532,8 @@ def main():
             background: hsl(220, 45%, 12%);
             border: 1px solid hsl(215, 35%, 18%);
             border-radius: 0.75rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
         }
         
         .page-header h1, .page-header-modern h1 {
@@ -1331,70 +1331,70 @@ def show_technical_analysis():
 
     # Hisse seçimi, zaman aralığı ve dönem kontrolleri - Üst bölüm
     control_col1, control_col2, control_col3 = st.columns([2, 1, 1])
-    
+        
     with control_col1:
-        st.markdown("""
-        <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
-            <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📊 Hisse Seçimi</div>
-        </div>
-        """, unsafe_allow_html=True)
-        selected_symbol = st.selectbox(
-            "Hisse",
-            options=sorted(list(BIST_SYMBOLS.keys())),
-            format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
-            label_visibility="collapsed",
-            key="content_symbol"
-        )
-    
+            st.markdown("""
+            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📊 Hisse Seçimi</div>
+            </div>
+            """, unsafe_allow_html=True)
+            selected_symbol = st.selectbox(
+                "Hisse",
+                options=sorted(list(BIST_SYMBOLS.keys())),
+                format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
+                label_visibility="collapsed",
+                key="content_symbol"
+            )
+        
     with control_col2:
-        st.markdown("""
-        <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
-            <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">⏰ Zaman Aralığı</div>
-        </div>
-        """, unsafe_allow_html=True)
-        time_interval = st.selectbox(
-            "Aralık",
-            ["5m", "15m", "1h", "2h", "4h", "1d"],
-            index=5,
-            format_func=lambda x: {
-                "5m": "5 Dakika", "15m": "15 Dakika", "1h": "1 Saat",
-                "2h": "2 Saat", "4h": "4 Saat", "1d": "1 Gün"
-            }[x],
-            label_visibility="collapsed",
-            key="content_interval"
-        )
-    
+            st.markdown("""
+            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">⏰ Zaman Aralığı</div>
+            </div>
+            """, unsafe_allow_html=True)
+            time_interval = st.selectbox(
+                "Aralık",
+                ["5m", "15m", "1h", "2h", "4h", "1d"],
+                index=5,
+                format_func=lambda x: {
+                    "5m": "5 Dakika", "15m": "15 Dakika", "1h": "1 Saat",
+                    "2h": "2 Saat", "4h": "4 Saat", "1d": "1 Gün"
+                }[x],
+                label_visibility="collapsed",
+                key="content_interval"
+            )
+        
     with control_col3:
-        st.markdown("""
-        <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
-            <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📅 Dönem</div>
-        </div>
-        """, unsafe_allow_html=True)
+            st.markdown("""
+            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📅 Dönem</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if time_interval in ["5m", "15m"]:
+                # Yahoo Finance API limiti: 15m için maksimum 60 gün
+                period_options = ["1d", "7d", "30d", "60d"]
+                default_period = "30d"
+            elif time_interval in ["1h", "2h", "4h"]:
+                period_options = ["7d", "30d", "90d", "6mo", "1y", "2y"] 
+                default_period = "1y"
+            else:
+                period_options = ["1mo", "3mo", "6mo", "1y", "2y", "5y"]
+                default_period = "1y"
+            
+            time_period = st.selectbox(
+                "Dönem",
+                period_options,
+                index=period_options.index(default_period),
+                format_func=lambda x: {
+                    "1d": "1 Gün", "7d": "7 Gün", "30d": "30 Gün", "60d": "60 Gün", "90d": "90 Gün",
+                    "1mo": "1 Ay", "3mo": "3 Ay", "6mo": "6 Ay", 
+                    "1y": "1 Yıl", "2y": "2 Yıl", "5y": "5 Yıl"
+                }.get(x, x),
+                label_visibility="collapsed",
+                key="content_period"
+            )
         
-        if time_interval in ["5m", "15m"]:
-            # Yahoo Finance API limiti: 15m için maksimum 60 gün
-            period_options = ["1d", "7d", "30d", "60d"]
-            default_period = "30d"
-        elif time_interval in ["1h", "2h", "4h"]:
-            period_options = ["7d", "30d", "90d", "6mo", "1y", "2y"] 
-            default_period = "1y"
-        else:
-            period_options = ["1mo", "3mo", "6mo", "1y", "2y", "5y"]
-            default_period = "1y"
-        
-        time_period = st.selectbox(
-            "Dönem",
-            period_options,
-            index=period_options.index(default_period),
-            format_func=lambda x: {
-                "1d": "1 Gün", "7d": "7 Gün", "30d": "30 Gün", "60d": "60 Gün", "90d": "90 Gün",
-                "1mo": "1 Ay", "3mo": "3 Ay", "6mo": "6 Ay", 
-                "1y": "1 Yıl", "2y": "2 Yıl", "5y": "5 Yıl"
-            }.get(x, x),
-            label_visibility="collapsed",
-            key="content_period"
-        )
-    
     st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
     
     # İndikatör Seçimi - Kompakt Dropdown'lar
@@ -1409,7 +1409,7 @@ def show_technical_analysis():
         📊 MA/EMA
         </div>
         """, unsafe_allow_html=True)
-        ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']
+        ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5', 'vwema_20']
         selected_ema_list = st.multiselect(
             "MA/EMA Seç",
             options=[INDICATORS_CONFIG[ind]["name"] for ind in ema_indicators if ind in INDICATORS_CONFIG],
@@ -1501,357 +1501,357 @@ def show_technical_analysis():
     
     # Ana grafik alanı
     try:
-            with st.spinner("Veriler yükleniyor..."):
-                fetcher = BISTDataFetcher()
-                df = fetcher.get_stock_data(selected_symbol, period=time_period, interval=time_interval)
+        with st.spinner("Veriler yükleniyor..."):
+            fetcher = BISTDataFetcher()
+            df = fetcher.get_stock_data(selected_symbol, period=time_period, interval=time_interval)
+    
+        if df is not None and not df.empty:
+            # Piyasa bilgilerini header'da güncelle
+            latest = df.iloc[-1]
+            prev = df.iloc[-2]
+            change = latest['Close'] - prev['Close']
+            change_pct = (change / prev['Close']) * 100
+            volume_change = ((latest['Volume'] - df['Volume'].tail(20).mean()) / df['Volume'].tail(20).mean()) * 100
             
-                if df is not None and not df.empty:
-                    # Piyasa bilgilerini header'da güncelle
-                    latest = df.iloc[-1]
-                    prev = df.iloc[-2]
-                    change = latest['Close'] - prev['Close']
-                    change_pct = (change / prev['Close']) * 100
-                    volume_change = ((latest['Volume'] - df['Volume'].tail(20).mean()) / df['Volume'].tail(20).mean()) * 100
-                    
-                    # Haftalık ve aylık performans hesapla
-                    weekly_performance = 0
-                    monthly_performance = 0
-                    
-                    try:
-                        # Haftalık performans (7 gün öncesi ile karşılaştır)
-                        if len(df) >= 7:
-                            week_ago_price = df['Close'].iloc[-7]
-                            weekly_performance = ((latest['Close'] - week_ago_price) / week_ago_price) * 100
-                        
-                        # Aylık performans (30 gün öncesi ile karşılaştır)
-                        if len(df) >= 30:
-                            month_ago_price = df['Close'].iloc[-30]
-                            monthly_performance = ((latest['Close'] - month_ago_price) / month_ago_price) * 100
-                    except:
-                        pass  # Hata durumunda 0 olarak kalacak
-                    
-                    # Piyasa bilgilerini header altında tek satır halinde göster
-                    st.markdown(f"""
-                    <div style='background: hsl(220, 100%, 6%); padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0; border: 1px solid hsl(215, 28%, 20%);'>
-                        <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;'>
-                            <div style='display: flex; align-items: center; gap: 0.5rem;'>
-                                <span style='color: hsl(215, 20%, 70%); font-size: 1.1rem;'>📊 {selected_symbol}</span>
-                                <span style='color: hsl(210, 40%, 98%); font-weight: 600; font-size: 1.3rem;'>₺{latest['Close']:.2f}</span>
-                                <span style='color: {'hsl(142, 76%, 36%)' if change >= 0 else 'hsl(0, 84%, 60%)'}; font-size: 1.1rem;'>{change:+.2f} ({change_pct:+.2f}%)</span>
-                            </div>
-                            <div style='display: flex; gap: 1.5rem; font-size: 1rem;'>
-                                <div>
-                                    <span style='color: hsl(215, 20%, 70%);'>Yüksek: </span>
-                                    <span style='color: hsl(210, 40%, 98%);'>₺{latest['High']:.2f}</span>
-                                </div>
-                                <div>
-                                    <span style='color: hsl(215, 20%, 70%);'>Düşük: </span>
-                                    <span style='color: hsl(210, 40%, 98%);'>₺{latest['Low']:.2f}</span>
-                                </div>
-                                <div>
-                                    <span style='color: hsl(215, 20%, 70%);'>Hacim: </span>
-                                    <span style='color: hsl(210, 40%, 98%);'>{latest['Volume']:,.0f}</span>
-                                    <span style='color: {'hsl(142, 76%, 36%)' if volume_change >= 0 else 'hsl(0, 84%, 60%)'}; margin-left: 0.25rem;'>({volume_change:+.1f}%)</span>
-                                </div>
-                                <div>
-                                    <span style='color: hsl(215, 20%, 70%);'>Haftalık: </span>
-                                    <span style='color: {'hsl(142, 76%, 36%)' if weekly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{weekly_performance:+.1f}%</span>
-                                </div>
-                                <div>
-                                    <span style='color: hsl(215, 20%, 70%);'>Aylık: </span>
-                                    <span style='color: {'hsl(142, 76%, 36%)' if monthly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{monthly_performance:+.1f}%</span>
-                                </div>
-                            </div>
+            # Haftalık ve aylık performans hesapla
+            weekly_performance = 0
+            monthly_performance = 0
+            
+            try:
+                # Haftalık performans (7 gün öncesi ile karşılaştır)
+                if len(df) >= 7:
+                    week_ago_price = df['Close'].iloc[-7]
+                    weekly_performance = ((latest['Close'] - week_ago_price) / week_ago_price) * 100
+                
+                # Aylık performans (30 gün öncesi ile karşılaştır)
+                if len(df) >= 30:
+                    month_ago_price = df['Close'].iloc[-30]
+                    monthly_performance = ((latest['Close'] - month_ago_price) / month_ago_price) * 100
+            except:
+                pass  # Hata durumunda 0 olarak kalacak
+            
+            # Piyasa bilgilerini header altında tek satır halinde göster
+            st.markdown(f"""
+            <div style='background: hsl(220, 100%, 6%); padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0; border: 1px solid hsl(215, 28%, 20%);'>
+                <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;'>
+                    <div style='display: flex; align-items: center; gap: 0.5rem;'>
+                        <span style='color: hsl(215, 20%, 70%); font-size: 1.1rem;'>📊 {selected_symbol}</span>
+                        <span style='color: hsl(210, 40%, 98%); font-weight: 600; font-size: 1.3rem;'>₺{latest['Close']:.2f}</span>
+                        <span style='color: {'hsl(142, 76%, 36%)' if change >= 0 else 'hsl(0, 84%, 60%)'}; font-size: 1.1rem;'>{change:+.2f} ({change_pct:+.2f}%)</span>
+                    </div>
+                    <div style='display: flex; gap: 1.5rem; font-size: 1rem;'>
+                        <div>
+                            <span style='color: hsl(215, 20%, 70%);'>Yüksek: </span>
+                            <span style='color: hsl(210, 40%, 98%);'>₺{latest['High']:.2f}</span>
+                        </div>
+                        <div>
+                            <span style='color: hsl(215, 20%, 70%);'>Düşük: </span>
+                            <span style='color: hsl(210, 40%, 98%);'>₺{latest['Low']:.2f}</span>
+                        </div>
+                        <div>
+                            <span style='color: hsl(215, 20%, 70%);'>Hacim: </span>
+                            <span style='color: hsl(210, 40%, 98%);'>{latest['Volume']:,.0f}</span>
+                            <span style='color: {'hsl(142, 76%, 36%)' if volume_change >= 0 else 'hsl(0, 84%, 60%)'}; margin-left: 0.25rem;'>({volume_change:+.1f}%)</span>
+                        </div>
+                        <div>
+                            <span style='color: hsl(215, 20%, 70%);'>Haftalık: </span>
+                            <span style='color: {'hsl(142, 76%, 36%)' if weekly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{weekly_performance:+.1f}%</span>
+                        </div>
+                        <div>
+                            <span style='color: hsl(215, 20%, 70%);'>Aylık: </span>
+                            <span style='color: {'hsl(142, 76%, 36%)' if monthly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{monthly_performance:+.1f}%</span>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            analyzer = TechnicalAnalyzer(df)
+            
+            # İndikatörleri hesapla
+            for indicator, enabled in selected_indicators.items():
+                if enabled:
+                    analyzer.add_indicator(indicator)
+            
+            # Ayı sinyalleri için gerekli indikatörleri hesapla
+            try:
+                # MA 200 için 1 yıllık veri gerekli, eğer mevcut veri yetersizse 1y ile çek
+                if len(df) < 200:
+                    df_long = fetcher.get_stock_data(selected_symbol, period="1y", interval=time_interval)
+                    if df_long is not None and len(df_long) >= 200:
+                        analyzer_ma200 = TechnicalAnalyzer(df_long)
+                        analyzer_ma200.add_indicator('ma_200')
+                        # MA200 değerini ana analyzer'a aktar
+                        analyzer.indicators['ma_200'] = analyzer_ma200.indicators['ma_200'].tail(len(df))
+                else:
+                    analyzer.add_indicator('ma_200')
+            except:
+                pass  # MA 200 hesaplanamazsa devam et
+                
+            # Diğer kısa vadeli indikatörler
+            for short_indicator in ['ema_5', 'ema_8', 'vwap']:
+                try:
+                    analyzer.add_indicator(short_indicator)
+                except:
+                    pass
+            
+            # Grafik
+            fig = create_chart(df, analyzer, selected_indicators)
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # İndikatör Değerleri - Grafik Altında
+            if any(selected_indicators.values()):
+                st.markdown("""
+                <div style='
+                    margin: 1.5rem 0;
+                    padding: 1.5rem;
+                    border: 1px solid hsl(215, 28%, 20%);
+                    border-radius: 0.75rem;
+                    background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(215, 40%, 10%) 100%);
+                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                '>
+                    <div style='
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 1.5rem;
+                        padding-bottom: 0.75rem;
+                        border-bottom: 1px solid hsl(215, 28%, 20%);
+                    '>
+                        <span style='
+                            font-size: 1.5rem;
+                            margin-right: 0.75rem;
+                        '>🔬</span>
+                        <h3 style='
+                            color: hsl(210, 40%, 98%); 
+                            margin: 0; 
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                        '>İndikatör Değerleri</h3>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                indicator_values = analyzer.get_latest_indicators()
+                current_price = latest['Close']
+                
+                # EMA olmayan indikatörler için
+                non_ema_indicators = {k: v for k, v in selected_indicators.items() 
+                                    if v and k not in ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']}
+                
+                if non_ema_indicators:
+                    # İndikatör kartları - 4 sütunlu grid
+                    indicator_cols = st.columns(min(len(non_ema_indicators), 4))
                     
-                    analyzer = TechnicalAnalyzer(df)
-                    
-                    # İndikatörleri hesapla
-                    for indicator, enabled in selected_indicators.items():
-                        if enabled:
-                            analyzer.add_indicator(indicator)
-                    
-                    # Ayı sinyalleri için gerekli indikatörleri hesapla
-                    try:
-                        # MA 200 için 1 yıllık veri gerekli, eğer mevcut veri yetersizse 1y ile çek
-                        if len(df) < 200:
-                            df_long = fetcher.get_stock_data(selected_symbol, period="1y", interval=time_interval)
-                            if df_long is not None and len(df_long) >= 200:
-                                analyzer_ma200 = TechnicalAnalyzer(df_long)
-                                analyzer_ma200.add_indicator('ma_200')
-                                # MA200 değerini ana analyzer'a aktar
-                                analyzer.indicators['ma_200'] = analyzer_ma200.indicators['ma_200'].tail(len(df))
-                        else:
-                            analyzer.add_indicator('ma_200')
-                    except:
-                        pass  # MA 200 hesaplanamazsa devam et
-                        
-                    # Diğer kısa vadeli indikatörler
-                    for short_indicator in ['ema_5', 'ema_8', 'vwap']:
-                        try:
-                            analyzer.add_indicator(short_indicator)
-                        except:
-                            pass
-                    
-                    # Grafik
-                    fig = create_chart(df, analyzer, selected_indicators)
-                    st.plotly_chart(fig, use_container_width=True)
-                    
-                    # İndikatör Değerleri - Grafik Altında
-                    if any(selected_indicators.values()):
-                        st.markdown("""
-                        <div style='
-                            margin: 1.5rem 0;
-                            padding: 1.5rem;
-                            border: 1px solid hsl(215, 28%, 20%);
-                            border-radius: 0.75rem;
-                            background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(215, 40%, 10%) 100%);
-                            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-                        '>
-                            <div style='
-                                display: flex;
-                                align-items: center;
-                                margin-bottom: 1.5rem;
-                                padding-bottom: 0.75rem;
-                                border-bottom: 1px solid hsl(215, 28%, 20%);
-                            '>
-                                <span style='
-                                    font-size: 1.5rem;
-                                    margin-right: 0.75rem;
-                                '>🔬</span>
-                                <h3 style='
-                                    color: hsl(210, 40%, 98%); 
-                                    margin: 0; 
-                                    font-size: 1.25rem;
-                                    font-weight: 600;
-                                '>İndikatör Değerleri</h3>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        indicator_values = analyzer.get_latest_indicators()
-                        current_price = latest['Close']
-                        
-                        # EMA olmayan indikatörler için
-                        non_ema_indicators = {k: v for k, v in selected_indicators.items() 
-                                            if v and k not in ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']}
-                        
-                        if non_ema_indicators:
-                            # İndikatör kartları - 4 sütunlu grid
-                            indicator_cols = st.columns(min(len(non_ema_indicators), 4))
+                    col_idx = 0
+                    for indicator, enabled in non_ema_indicators.items():
+                        if enabled and indicator in indicator_values:
+                            value = indicator_values[indicator]
+                            config = INDICATORS_CONFIG.get(indicator, {})
                             
-                            col_idx = 0
-                            for indicator, enabled in non_ema_indicators.items():
-                                if enabled and indicator in indicator_values:
-                                    value = indicator_values[indicator]
-                                    config = INDICATORS_CONFIG.get(indicator, {})
-                                    
-                                    # İndikatör durumunu belirleme
+                            # İndikatör durumunu belirleme
+                            status_class = "neutral"
+                            status_text = "Nötr"
+                            status_icon = "⚪"
+                            status_color = "hsl(215, 20%, 70%)"
+                            
+                            if indicator == 'rsi':
+                                if value > 70:
+                                    status_class = "negative"
+                                    status_text = "Aşırı Alım"
+                                    status_icon = "🔴"
+                                    status_color = "hsl(0, 84%, 60%)"
+                                elif value < 30:
+                                    status_class = "positive"
+                                    status_text = "Aşırı Satım"
+                                    status_icon = "🟢"
+                                    status_color = "hsl(142, 76%, 36%)"
+                                else:
                                     status_class = "neutral"
-                                    status_text = "Nötr"
+                                    status_text = "Normal"
                                     status_icon = "⚪"
                                     status_color = "hsl(215, 20%, 70%)"
-                                    
-                                    if indicator == 'rsi':
-                                        if value > 70:
-                                            status_class = "negative"
-                                            status_text = "Aşırı Alım"
-                                            status_icon = "🔴"
-                                            status_color = "hsl(0, 84%, 60%)"
-                                        elif value < 30:
-                                            status_class = "positive"
-                                            status_text = "Aşırı Satım"
-                                            status_icon = "🟢"
-                                            status_color = "hsl(142, 76%, 36%)"
-                                        else:
-                                            status_class = "neutral"
-                                            status_text = "Normal"
-                                            status_icon = "⚪"
-                                            status_color = "hsl(215, 20%, 70%)"
-                                    
-                                    elif indicator == 'macd':
-                                        if value > 0:
-                                            status_class = "positive"
-                                            status_text = "Pozitif"
-                                            status_icon = "🟢"
-                                            status_color = "hsl(142, 76%, 36%)"
-                                        else:
-                                            status_class = "negative"
-                                            status_text = "Negatif"
-                                            status_icon = "🔴"
-                                            status_color = "hsl(0, 84%, 60%)"
-                                    
-                                    elif indicator == 'vwap':
-                                        if current_price > value:
-                                            status_class = "positive"
-                                            status_text = "Üzeri"
-                                            status_icon = "🟢"
-                                            status_color = "hsl(142, 76%, 36%)"
-                                        else:
-                                            status_class = "negative"
-                                            status_text = "Altı"
-                                            status_icon = "🔴"
-                                            status_color = "hsl(0, 84%, 60%)"
-                                    
-                                    with indicator_cols[col_idx % len(indicator_cols)]:
-                                        st.markdown(f"""
-                                        <div style='
-                                            background: hsl(220, 45%, 12%);
-                                            border: 1px solid hsl(215, 35%, 18%);
-                                            border-radius: 0.5rem;
-                                            padding: 1rem;
-                                            text-align: center;
-                                            margin-bottom: 1rem;
-                                        '>
-                                            <div style='
-                                                color: hsl(210, 40%, 98%);
-                                                font-size: 0.875rem;
-                                                font-weight: 500;
-                                                margin-bottom: 0.5rem;
-                                            '>{config.get('name', indicator)}</div>
-                                            <div style='
-                                                color: hsl(210, 40%, 98%);
-                                                font-size: 1.125rem;
-                                                font-weight: 700;
-                                                margin-bottom: 0.25rem;
-                                            '>{value:.2f}</div>
-                                            <div style='
-                                                color: {status_color};
-                                                font-size: 0.75rem;
-                                                font-weight: 500;
-                                            '>{status_icon} {status_text}</div>
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                                    
-                                    col_idx += 1
+                            
+                            elif indicator == 'macd':
+                                if value > 0:
+                                    status_class = "positive"
+                                    status_text = "Pozitif"
+                                    status_icon = "🟢"
+                                    status_color = "hsl(142, 76%, 36%)"
+                                else:
+                                    status_class = "negative"
+                                    status_text = "Negatif"
+                                    status_icon = "🔴"
+                                    status_color = "hsl(0, 84%, 60%)"
+                            
+                            elif indicator == 'vwap':
+                                if current_price > value:
+                                    status_class = "positive"
+                                    status_text = "Üzeri"
+                                    status_icon = "🟢"
+                                    status_color = "hsl(142, 76%, 36%)"
+                                else:
+                                    status_class = "negative"
+                                    status_text = "Altı"
+                                    status_icon = "🔴"
+                                    status_color = "hsl(0, 84%, 60%)"
+                            
+                            with indicator_cols[col_idx % len(indicator_cols)]:
+                                st.markdown(f"""
+                                <div style='
+                                    background: hsl(220, 45%, 12%);
+                                    border: 1px solid hsl(215, 35%, 18%);
+                                    border-radius: 0.5rem;
+                                    padding: 1rem;
+                                    text-align: center;
+                                    margin-bottom: 1rem;
+                                '>
+                                    <div style='
+                                        color: hsl(210, 40%, 98%);
+                                        font-size: 0.875rem;
+                                        font-weight: 500;
+                                        margin-bottom: 0.5rem;
+                                    '>{config.get('name', indicator)}</div>
+                                    <div style='
+                                        color: hsl(210, 40%, 98%);
+                                        font-size: 1.125rem;
+                                        font-weight: 700;
+                                        margin-bottom: 0.25rem;
+                                    '>{value:.2f}</div>
+                                    <div style='
+                                        color: {status_color};
+                                        font-size: 0.75rem;
+                                        font-weight: 500;
+                                    '>{status_icon} {status_text}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
                         
-                        # EMA değerleri için ayrı bölüm
-                        ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']
-                        selected_emas = [ind for ind in ema_indicators if selected_indicators.get(ind, False)]
+                        col_idx += 1
+                
+                # EMA değerleri için ayrı bölüm
+                ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5', 'vwema_20']
+                selected_emas = [ind for ind in ema_indicators if selected_indicators.get(ind, False)]
+                
+                if selected_emas:
+                    st.markdown("""
+                    <div style='
+                        margin-top: 1.5rem;
+                        padding-top: 1.5rem;
+                        border-top: 1px solid hsl(215, 28%, 20%);
+                    '>
+                        <h4 style='
+                            color: hsl(210, 40%, 98%);
+                            margin: 0 0 1rem 0;
+                            font-size: 1rem;
+                            font-weight: 600;
+                        '>📏 Hareketli Ortalama Değerleri</h4>
+                    """, unsafe_allow_html=True)
+                    
+                    # EMA kartları - 4 sütunlu grid
+                    ema_cols = st.columns(min(len(selected_emas), 4))
+                    
+                    for i, indicator in enumerate(selected_emas):
+                        if indicator in indicator_values:
+                            ema_value = indicator_values[indicator]
+                            distance = current_price - ema_value
+                            distance_pct = (distance / ema_value) * 100
+                            
+                            config = INDICATORS_CONFIG.get(indicator, {})
+                            distance_color = "hsl(142, 76%, 36%)" if distance >= 0 else "hsl(0, 84%, 60%)"
+                            distance_icon = "🟢" if distance >= 0 else "🔴"
+                            
+                            with ema_cols[i % len(ema_cols)]:
+                                st.markdown(f"""
+                                <div style='
+                                    background: hsl(220, 45%, 12%);
+                                    border: 1px solid hsl(215, 35%, 18%);
+                                    border-radius: 0.5rem;
+                                    padding: 1rem;
+                                    text-align: center;
+                                    margin-bottom: 1rem;
+                                '>
+                                    <div style='
+                                        color: hsl(210, 40%, 98%);
+                                        font-size: 0.875rem;
+                                        font-weight: 500;
+                                        margin-bottom: 0.5rem;
+                                    '>{config.get('name', indicator)}</div>
+                                    <div style='
+                                        color: hsl(210, 40%, 98%);
+                                        font-size: 1.125rem;
+                                        font-weight: 700;
+                                        margin-bottom: 0.25rem;
+                                    '>₺{ema_value:.2f}</div>
+                                    <div style='
+                                        color: {distance_color};
+                                        font-size: 0.75rem;
+                                        font-weight: 500;
+                                    '>{distance_icon} {distance:+.2f} ({distance_pct:+.1f}%)</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                # Signal
+                alert_system = AlertSystem()
+                signal = alert_system.generate_signal(analyzer)
+                
+                # Bear Signal
+                bear_signal = alert_system.generate_bear_signal(analyzer)
+                
+                # Kapsamlı Risk Analizi
+                risk_analysis = alert_system.generate_comprehensive_risk_analysis(analyzer)
+                
+                # Pozisyon Önerisi (Yeni Sistem)
+                position_recommendation = alert_system.generate_position_recommendation(analyzer)
+                
+                # VWAP Boğa Sinyali Kontrolü
+                vwap_bull_signal = False
+                vwap_signal_strength = "Zayıf"
+                
+                if 'vwap' in analyzer.indicators and len(df) >= 10:
+                    current_price = df['Close'].iloc[-1]
+                    prev_price = df['Close'].iloc[-2]
+                    vwap_current = analyzer.indicators['vwap'].iloc[-1]
+                    vwap_prev = analyzer.indicators['vwap'].iloc[-2]
+                    
+                    # VWAP Crossover kontrolü (fiyat VWAP'i yukarı kesmiş mi?)
+                    if prev_price <= vwap_prev and current_price > vwap_current:
+                        vwap_bull_signal = True
                         
-                        if selected_emas:
-                            st.markdown("""
-                            <div style='
-                                margin-top: 1.5rem;
-                                padding-top: 1.5rem;
-                                border-top: 1px solid hsl(215, 28%, 20%);
-                            '>
-                                <h4 style='
-                                    color: hsl(210, 40%, 98%);
-                                    margin: 0 0 1rem 0;
-                                    font-size: 1rem;
-                                    font-weight: 600;
-                                '>📏 Hareketli Ortalama Değerleri</h4>
-                            """, unsafe_allow_html=True)
-                            
-                            # EMA kartları - 4 sütunlu grid
-                            ema_cols = st.columns(min(len(selected_emas), 4))
-                            
-                            for i, indicator in enumerate(selected_emas):
-                                if indicator in indicator_values:
-                                    ema_value = indicator_values[indicator]
-                                    distance = current_price - ema_value
-                                    distance_pct = (distance / ema_value) * 100
-                                    
-                                    config = INDICATORS_CONFIG.get(indicator, {})
-                                    distance_color = "hsl(142, 76%, 36%)" if distance >= 0 else "hsl(0, 84%, 60%)"
-                                    distance_icon = "🟢" if distance >= 0 else "🔴"
-                                    
-                                    with ema_cols[i % len(ema_cols)]:
-                                        st.markdown(f"""
-                                        <div style='
-                                            background: hsl(220, 45%, 12%);
-                                            border: 1px solid hsl(215, 35%, 18%);
-                                            border-radius: 0.5rem;
-                                            padding: 1rem;
-                                            text-align: center;
-                                            margin-bottom: 1rem;
-                                        '>
-                                            <div style='
-                                                color: hsl(210, 40%, 98%);
-                                                font-size: 0.875rem;
-                                                font-weight: 500;
-                                                margin-bottom: 0.5rem;
-                                            '>{config.get('name', indicator)}</div>
-                                            <div style='
-                                                color: hsl(210, 40%, 98%);
-                                                font-size: 1.125rem;
-                                                font-weight: 700;
-                                                margin-bottom: 0.25rem;
-                                            '>₺{ema_value:.2f}</div>
-                                            <div style='
-                                                color: {distance_color};
-                                                font-size: 0.75rem;
-                                                font-weight: 500;
-                                            '>{distance_icon} {distance:+.2f} ({distance_pct:+.1f}%)</div>
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                            
-                            st.markdown("</div>", unsafe_allow_html=True)
+                        # Hacim artışı kontrolü
+                        current_volume = df['Volume'].iloc[-1]
+                        avg_volume = df['Volume'].tail(20).mean()
+                        volume_increase = current_volume > (avg_volume * 1.2)  # 20% hacim artışı
                         
-                        st.markdown("</div>", unsafe_allow_html=True)
-                    
-                    # Signal
-                    alert_system = AlertSystem()
-                    signal = alert_system.generate_signal(analyzer)
-                    
-                    # Bear Signal
-                    bear_signal = alert_system.generate_bear_signal(analyzer)
-                    
-                    # Kapsamlı Risk Analizi
-                    risk_analysis = alert_system.generate_comprehensive_risk_analysis(analyzer)
-                    
-                    # Pozisyon Önerisi (Yeni Sistem)
-                    position_recommendation = alert_system.generate_position_recommendation(analyzer)
-                    
-                    # VWAP Boğa Sinyali Kontrolü
-                    vwap_bull_signal = False
-                    vwap_signal_strength = "Zayıf"
-                    
-                    if 'vwap' in analyzer.indicators and len(df) >= 10:
-                        current_price = df['Close'].iloc[-1]
-                        prev_price = df['Close'].iloc[-2]
-                        vwap_current = analyzer.indicators['vwap'].iloc[-1]
-                        vwap_prev = analyzer.indicators['vwap'].iloc[-2]
+                        # RSI(5) ve MACD onayı
+                        rsi_confirm = False
+                        macd_confirm = False
                         
-                        # VWAP Crossover kontrolü (fiyat VWAP'i yukarı kesmiş mi?)
-                        if prev_price <= vwap_prev and current_price > vwap_current:
-                            vwap_bull_signal = True
-                            
-                            # Hacim artışı kontrolü
-                            current_volume = df['Volume'].iloc[-1]
-                            avg_volume = df['Volume'].tail(20).mean()
-                            volume_increase = current_volume > (avg_volume * 1.2)  # 20% hacim artışı
-                            
-                            # RSI(5) ve MACD onayı
-                            rsi_confirm = False
-                            macd_confirm = False
-                            
-                            if 'rsi' in analyzer.indicators:
-                                rsi_value = analyzer.indicators['rsi'].iloc[-1]
-                                rsi_confirm = rsi_value > 50
-                            
-                            if 'macd' in analyzer.indicators:
-                                macd_current = analyzer.indicators['macd'].iloc[-1]
-                                macd_prev = analyzer.indicators['macd'].iloc[-2]
-                                macd_confirm = macd_current > macd_prev  # MACD yukarı trend
-                            
-                            # Sinyal gücünü belirleme
-                            confirmations = sum([volume_increase, rsi_confirm, macd_confirm])
-                            if confirmations >= 2:
-                                vwap_signal_strength = "Çok Güçlü"
-                            elif confirmations == 1:
-                                vwap_signal_strength = "Güçlü"
-                            else:
-                                vwap_signal_strength = "Orta"
+                        if 'rsi' in analyzer.indicators:
+                            rsi_value = analyzer.indicators['rsi'].iloc[-1]
+                            rsi_confirm = rsi_value > 50
+                        
+                        if 'macd' in analyzer.indicators:
+                            macd_current = analyzer.indicators['macd'].iloc[-1]
+                            macd_prev = analyzer.indicators['macd'].iloc[-2]
+                            macd_confirm = macd_current > macd_prev  # MACD yukarı trend
+                        
+                        # Sinyal gücünü belirleme
+                        confirmations = sum([volume_increase, rsi_confirm, macd_confirm])
+                        if confirmations >= 2:
+                            vwap_signal_strength = "Çok Güçlü"
+                        elif confirmations == 1:
+                            vwap_signal_strength = "Güçlü"
+                        else:
+                            vwap_signal_strength = "Orta"
                     
-                    # Golden Cross Boğa Sinyali Kontrolü
-                    golden_cross_signal = False
-                    golden_cross_strength = "Zayıf"
-                    
-                    if ('ema_21' in analyzer.indicators and 'ema_50' in analyzer.indicators and 
-                        len(df) >= 50):
+                # Golden Cross Boğa Sinyali Kontrolü
+                golden_cross_signal = False
+                golden_cross_strength = "Zayıf"
+                
+                if ('ema_21' in analyzer.indicators and 'ema_50' in analyzer.indicators and 
+                    len(df) >= 50):
                         
                         ema21_current = analyzer.indicators['ema_21'].iloc[-1]
                         ema21_prev = analyzer.indicators['ema_21'].iloc[-2]
@@ -1888,12 +1888,12 @@ def show_technical_analysis():
                             else:
                                 golden_cross_strength = "Orta"
                     
-                    # MACD Boğa Sinyali Kontrolü
-                    macd_bull_signal = False
-                    macd_signal_strength = "Zayıf"
-                    
-                    if ('macd' in analyzer.indicators and 'macd_signal' in analyzer.indicators and 
-                        len(df) >= 26):
+                # MACD Boğa Sinyali Kontrolü
+                macd_bull_signal = False
+                macd_signal_strength = "Zayıf"
+                
+                if ('macd' in analyzer.indicators and 'macd_signal' in analyzer.indicators and 
+                    len(df) >= 26):
                         
                         macd_current = analyzer.indicators['macd'].iloc[-1]
                         macd_prev = analyzer.indicators['macd'].iloc[-2]
@@ -2839,44 +2839,11 @@ def show_technical_analysis():
                     </div>
                     """, unsafe_allow_html=True)
                 
-                # Aktif Sinyaller (Eğer varsa)
-                if bear_signal['signals']:
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    
-                    # Sinyal listesi - Kompakt
-                    signal_items = []
-                    for i, signal in enumerate(bear_signal['signals']):
-                        signal_items.append(f"<li style='margin-bottom: 0.25rem;'>{i+1}. {signal}</li>")
-                    
-                    st.markdown(f"""
-                    <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(215, 35%, 18%);
-                        border-radius: 0.5rem;
-                        padding: 1rem;
-                    '>
-                        <div style='
-                            color: hsl(210, 40%, 98%);
-                            font-size: 0.875rem;
-                            font-weight: 600;
-                            margin-bottom: 0.75rem;
-                        '>🚨 Aktif Ayı Sinyalleri ({bear_signal['signal_count']})</div>
-                        <ul style='
-                            color: hsl(215, 20%, 70%);
-                            font-size: 0.8rem;
-                            margin: 0;
-                            padding-left: 1rem;
-                        '>
-                            {''.join(signal_items)}
-                        </ul>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Detaylı bilgiler (expandable)
-                    if bear_signal['details']:
-                        with st.expander("📊 Detaylı Sinyal Analizi", expanded=False):
-                            for detail in bear_signal['details']:
-                                st.markdown(f"• {detail}")
+                # Detaylı bilgiler (expandable)
+                if bear_signal['details']:
+                    with st.expander("📊 Detaylı Sinyal Analizi", expanded=False):
+                        for detail in bear_signal['details']:
+                            st.markdown(f"• {detail}")
                 else:
                     st.markdown("""
                     <div style='
@@ -2902,249 +2869,272 @@ def show_technical_analysis():
                 
                 st.markdown("</div>", unsafe_allow_html=True)
                 
-                # Risk Analizi ve Pozisyon Önerileri - Modern Tasarım
+                # Risk Analizi & Pozisyon Önerileri - Sade ve Geliştirilmiş
                 st.markdown("""
                 <div style='
-                    margin-top: 2rem;
-                    padding: 2rem;
-                    border: 1px solid hsl(215, 35%, 18%);
-                    border-radius: 1rem;
-                    background: linear-gradient(135deg, hsl(220, 45%, 12%) 0%, hsl(215, 40%, 16%) 100%);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                    margin-top: 1.5rem;
+                    padding: 1.25rem;
+                    border: 1px solid #4a5568;
+                    border-radius: 8px;
+                    background: #2d3748;
                 '>
                     <div style='
                         display: flex;
                         align-items: center;
-                        margin-bottom: 2rem;
-                        padding-bottom: 1rem;
-                        border-bottom: 2px solid hsl(215, 35%, 18%);
+                        margin-bottom: 1rem;
+                        padding-bottom: 0.5rem;
+                        border-bottom: 1px solid #4a5568;
                     '>
-                        <div style='
-                            width: 60px;
-                            height: 60px;
-                            border-radius: 50%;
-                            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            margin-right: 1rem;
-                            box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
-                        '>
-                            <span style='font-size: 24px;'>🔍</span>
-                        </div>
-                        <div>
-                            <h3 style='
-                                color: hsl(210, 40%, 98%);
-                                margin: 0;
-                                font-size: 1.8rem;
-                                font-weight: 700;
-                                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-                            '>Risk Analizi & Pozisyon Önerileri</h3>
-                            <p style='
-                                color: hsl(215, 20%, 70%);
-                                margin: 0.5rem 0 0 0;
-                                font-size: 1rem;
-                                opacity: 0.9;
-                            '>Detaylı risk değerlendirmesi ve akıllı pozisyon önerileri</p>
-                        </div>
+                        <span style='
+                            font-size: 20px;
+                            margin-right: 12px;
+                            color: #4299e1;
+                        '>📊</span>
+                        <h3 style='
+                            color: #ffffff;
+                            margin: 0;
+                            font-size: 18px;
+                            font-weight: 600;
+                        '>Risk Analizi & Pozisyon Önerileri</h3>
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # Risk skoru ve seviyesi - Kompakt kartlar
+                # Ana Risk ve Pozisyon Kartları
                 risk_col1, risk_col2, risk_col3 = st.columns(3)
                 
                 with risk_col1:
+                    risk_color = risk_analysis['risk_color']
                     st.markdown(f"""
                     <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(215, 35%, 18%);
-                        border-radius: 0.75rem;
-                        padding: 1.25rem;
-                        margin: 1rem 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 1rem;
-                        transition: all 0.15s ease-in-out;
+                        background: #4a5568;
+                        border: 1px solid {risk_color};
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 8px 0;
+                        text-align: center;
                     '>
-                        <div style='font-size: 1.5rem;'>📊</div>
-                        <div>
-                            <div style='
-                                color: hsl(215, 20%, 65%);
-                                font-size: 0.8rem;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 0.25rem;
-                            '>Risk Skoru</div>
-                            <div style='
-                                color: hsl(210, 40%, 98%);
-                                font-size: 1.125rem;
-                                font-weight: 600;
-                            '>{risk_analysis['risk_score']:.1f}/10 - {risk_analysis['risk_level']}</div>
-                        </div>
+                        <div style='
+                            color: {risk_color};
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>📊 Risk Skoru</div>
+                        <div style='
+                            color: #ffffff;
+                            font-size: 20px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>{risk_analysis['risk_score']:.1f}/10</div>
+                        <div style='
+                            color: {risk_color};
+                            font-size: 12px;
+                        '>{risk_analysis['risk_level']}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with risk_col2:
                     st.markdown(f"""
                     <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(215, 35%, 18%);
-                        border-radius: 0.75rem;
-                        padding: 1.25rem;
-                        margin: 1rem 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 1rem;
-                        transition: all 0.15s ease-in-out;
+                        background: #4a5568;
+                        border: 1px solid #38a169;
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 8px 0;
+                        text-align: center;
                     '>
-                        <div style='font-size: 1.5rem;'>💰</div>
-                        <div>
-                            <div style='
-                                color: hsl(215, 20%, 65%);
-                                font-size: 0.8rem;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 0.25rem;
-                            '>Pozisyon Önerisi</div>
-                            <div style='
-                                color: hsl(210, 40%, 98%);
-                                font-size: 1.125rem;
-                                font-weight: 600;
-                            '>{risk_analysis['position_sizing']}</div>
-                        </div>
+                        <div style='
+                            color: #38a169;
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>💰 Pozisyon</div>
+                        <div style='
+                            color: #ffffff;
+                            font-size: 14px;
+                            font-weight: 600;
+                            line-height: 1.2;
+                        '>{risk_analysis['position_sizing']}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with risk_col3:
                     st.markdown(f"""
                     <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(215, 35%, 18%);
-                        border-radius: 0.75rem;
-                        padding: 1.25rem;
-                        margin: 1rem 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 1rem;
-                        transition: all 0.15s ease-in-out;
+                        background: #4a5568;
+                        border: 1px solid #e53e3e;
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 8px 0;
+                        text-align: center;
                     '>
-                        <div style='font-size: 1.5rem;'>🛡️</div>
-                        <div>
-                            <div style='
-                                color: hsl(215, 20%, 65%);
-                                font-size: 0.8rem;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 0.25rem;
-                            '>Stop-Loss</div>
-                            <div style='
-                                color: hsl(210, 40%, 98%);
-                                font-size: 1.125rem;
-                                font-weight: 600;
-                            '>{risk_analysis['stop_loss_suggestion']}</div>
-                        </div>
+                        <div style='
+                            color: #e53e3e;
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>🛡️ Stop-Loss</div>
+                        <div style='
+                            color: #ffffff;
+                            font-size: 14px;
+                            font-weight: 600;
+                            line-height: 1.2;
+                        '>{risk_analysis['stop_loss_suggestion']}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                # Ana pozisyon önerisi - Kompakt kartlar
+                # Pozisyon Önerisi Kartları
                 pos_col1, pos_col2, pos_col3 = st.columns(3)
                 
                 with pos_col1:
+                    recommendation_color = position_recommendation['recommendation_color']
                     st.markdown(f"""
                     <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(142, 76%, 36%);
-                        border-radius: 0.75rem;
-                        padding: 1.25rem;
-                        margin: 1rem 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 1rem;
-                        transition: all 0.15s ease-in-out;
+                        background: #4a5568;
+                        border: 1px solid {recommendation_color};
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 8px 0;
+                        text-align: center;
                     '>
-                        <div style='font-size: 1.5rem;'>📈</div>
-                        <div>
-                            <div style='
-                                color: hsl(215, 20%, 65%);
-                                font-size: 0.8rem;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 0.25rem;
-                            '>Pozisyon Önerisi</div>
-                            <div style='
-                                color: hsl(210, 40%, 98%);
-                                font-size: 1.125rem;
-                                font-weight: 600;
-                            '>{position_recommendation['recommendation']} ({position_recommendation['position_strength']} sinyal)</div>
-                        </div>
+                        <div style='
+                            color: {recommendation_color};
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>📈 Öneri</div>
+                        <div style='
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>{position_recommendation['recommendation']}</div>
+                        <div style='
+                            color: {recommendation_color};
+                            font-size: 12px;
+                        '>{position_recommendation['position_strength']} sinyal</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with pos_col2:
                     st.markdown(f"""
                     <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(47, 96%, 53%);
-                        border-radius: 0.75rem;
-                        padding: 1.25rem;
-                        margin: 1rem 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 1rem;
-                        transition: all 0.15s ease-in-out;
+                        background: #4a5568;
+                        border: 1px solid #f6ad55;
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 8px 0;
+                        text-align: center;
                     '>
-                        <div style='font-size: 1.5rem;'>🎯</div>
-                        <div>
-                            <div style='
-                                color: hsl(215, 20%, 65%);
-                                font-size: 0.8rem;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 0.25rem;
-                            '>Güven Skoru</div>
-                            <div style='
-                                color: hsl(210, 40%, 98%);
-                                font-size: 1.125rem;
-                                font-weight: 600;
-                            '>{position_recommendation['confidence']:.0f}% (Boğa: {position_recommendation['bull_score']:.1f} | Ayı: {position_recommendation['bear_score']:.1f})</div>
-                        </div>
+                        <div style='
+                            color: #f6ad55;
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>🎯 Güven</div>
+                        <div style='
+                            color: #ffffff;
+                            font-size: 20px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>{position_recommendation['confidence']:.0f}%</div>
+                        <div style='
+                            color: #a0aec0;
+                            font-size: 10px;
+                        '>Boğa: {position_recommendation['bull_score']:.1f} | Ayı: {position_recommendation['bear_score']:.1f}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with pos_col3:
                     st.markdown(f"""
                     <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(215, 20%, 65%);
-                        border-radius: 0.75rem;
-                        padding: 1.25rem;
-                        margin: 1rem 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 1rem;
-                        transition: all 0.15s ease-in-out;
+                        background: #4a5568;
+                        border: 1px solid #38a169;
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 8px 0;
+                        text-align: center;
                     '>
-                        <div style='font-size: 1.5rem;'>💰</div>
-                        <div>
-                            <div style='
-                                color: hsl(215, 20%, 65%);
-                                font-size: 0.8rem;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 0.25rem;
-                            '>Pozisyon Büyüklüğü</div>
-                            <div style='
-                                color: hsl(210, 40%, 98%);
-                                font-size: 1.125rem;
-                                font-weight: 600;
-                            '>{position_recommendation['position_size']} (Skor: {position_recommendation['total_score']:+.1f})</div>
-                        </div>
+                        <div style='
+                            color: #38a169;
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 4px;
+                        '>💰 Büyüklük</div>
+                        <div style='
+                            color: #ffffff;
+                            font-size: 14px;
+                            font-weight: 600;
+                            line-height: 1.2;
+                            margin-bottom: 4px;
+                        '>{position_recommendation['position_size']}</div>
+                        <div style='
+                            color: #a0aec0;
+                            font-size: 10px;
+                        '>Skor: {position_recommendation['total_score']:+.1f}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
-                # Modern çerçeveyi kapat
+                # Risk Önerileri - Sade Tasarım
+                if risk_analysis.get('recommendations'):
+                    st.markdown("""
+                    <div style='
+                        margin-top: 1rem;
+                        padding: 1rem;
+                        border: 1px solid #4a5568;
+                        border-radius: 6px;
+                        background: #2d3748;
+                    '>
+                        <div style='
+                            display: flex;
+                            align-items: center;
+                            margin-bottom: 0.75rem;
+                            padding-bottom: 0.5rem;
+                            border-bottom: 1px solid #4a5568;
+                        '>
+                            <span style='
+                                font-size: 16px;
+                                margin-right: 8px;
+                                color: #f6ad55;
+                            '>💡</span>
+                            <h4 style='
+                                color: #ffffff;
+                                margin: 0;
+                                font-size: 16px;
+                                font-weight: 600;
+                            '>Risk Önerileri</h4>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Öneriler listesi - Sade
+                    for i, recommendation in enumerate(risk_analysis['recommendations']):
+                        st.markdown(f"""
+                        <div style='
+                            background: #4a5568;
+                            border: 1px solid #4a5568;
+                            border-radius: 4px;
+                            padding: 8px;
+                            margin: 4px 0;
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 8px;
+                        '>
+                            <span style='
+                                color: #a0aec0;
+                                font-size: 12px;
+                                margin-top: 2px;
+                            '>•</span>
+                            <div style='
+                                color: #e2e8f0;
+                                font-size: 12px;
+                                line-height: 1.4;
+                                flex: 1;
+                            '>{recommendation}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
+                
+                # Ana çerçeveyi kapat
                 st.markdown("</div>", unsafe_allow_html=True)
                 
 
@@ -3152,7 +3142,7 @@ def show_technical_analysis():
                 # Market Info moved to header
                 
                 # Hareketli Ortalama Uzaklıkları
-                ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5']
+                ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5', 'vwema_20']
                 selected_emas = [ind for ind in ema_indicators if selected_indicators.get(ind, False)]
                 
                 if selected_emas:
@@ -3188,9 +3178,29 @@ def show_technical_analysis():
                 
                 else:
                     st.markdown("""
-                    <div class="error-box">
-                        <h4>⚠️ Veri Hatası</h4>
-                        <p>Seçilen hisse için veri yüklenemedi.</p>
+                    <div style='
+                        background: hsl(220, 45%, 12%);
+                        border: 1px solid hsl(0, 84%, 60%);
+                        border-radius: 0.5rem;
+                        padding: 1.5rem;
+                        margin: 1rem 0;
+                        text-align: center;
+                    '>
+                        <div style='
+                            color: hsl(0, 84%, 60%);
+                            font-size: 1.5rem;
+                            margin-bottom: 0.5rem;
+                        '>⚠️</div>
+                        <h4 style='
+                            color: hsl(210, 40%, 98%);
+                            margin: 0 0 0.5rem 0;
+                            font-size: 1.1rem;
+                        '>Veri Yüklenemedi</h4>
+                        <p style='
+                            color: hsl(215, 20%, 70%);
+                            margin: 0;
+                            font-size: 0.9rem;
+                        '>Seçilen hisse için veri bulunamadı. Lütfen farklı bir hisse seçin veya daha sonra tekrar deneyin.</p>
                     </div>
                     """, unsafe_allow_html=True)
                 
@@ -3288,56 +3298,56 @@ def scan_daytrading_opportunities():
                 score += 1
                 reasons.append("RSI nötr")
             
-            # MACD puanı
-            if macd_bullish and macd_line > 0:
-                score += 1.5
-                reasons.append("MACD pozitif")
-            elif macd_bullish:
-                score += 1
-                reasons.append("MACD yukarı")
-            
-            # Trend puanı
-            if price_above_ema:
-                score += 1
-                reasons.append("EMA üstünde")
-            
-            # Momentum puanı
-            if abs(three_day_change) >= 3:
-                score += 1
-                reasons.append("Güçlü momentum")
-            elif abs(three_day_change) >= 1.5:
-                score += 0.5
-                reasons.append("Momentum var")
-            
-            # Sinyal belirleme
-            signal = "BEKLE"
-            if rsi <= 35 and macd_bullish and volume_ratio >= 1.5:
-                signal = "AL"
-            elif rsi >= 65 and not macd_bullish and volume_ratio >= 1.5:
-                signal = "SAT"
-            elif price_above_ema and macd_bullish and volume_ratio >= 1.3:
-                signal = "AL"
-            
-            # Minimum puan kontrolü
-            if score >= 4:  # En az 4 puan alan hisseleri dahil et
-                opportunity = {
-                    'symbol': symbol.replace('.IS', ''),
-                    'name': BIST_SYMBOLS[symbol],
-                    'price': current_price,
-                    'signal': signal,
-                    'score': round(score, 1),
-                    'volatility': daily_range,
-                    'volume_ratio': volume_ratio,
-                    'rsi': rsi,
-                    'macd_bullish': macd_bullish,
-                    'three_day_change': three_day_change,
-                    'reason': ", ".join(reasons[:3])  # İlk 3 sebep
-                }
-                opportunities.append(opportunity)
+                # MACD puanı
+                if macd_bullish and macd_line > 0:
+                    score += 1.5
+                    reasons.append("MACD pozitif")
+                elif macd_bullish:
+                    score += 1
+                    reasons.append("MACD yukarı")
                 
+                # Trend puanı
+                if price_above_ema:
+                    score += 1
+                    reasons.append("EMA üstünde")
+                
+                # Momentum puanı
+                if abs(three_day_change) >= 3:
+                    score += 1
+                    reasons.append("Güçlü momentum")
+                elif abs(three_day_change) >= 1.5:
+                    score += 0.5
+                    reasons.append("Momentum var")
+                
+                # Sinyal belirleme
+                signal = "BEKLE"
+                if rsi <= 35 and macd_bullish and volume_ratio >= 1.5:
+                    signal = "AL"
+                elif rsi >= 65 and not macd_bullish and volume_ratio >= 1.5:
+                    signal = "SAT"
+                elif price_above_ema and macd_bullish and volume_ratio >= 1.3:
+                    signal = "AL"
+                
+                # Minimum puan kontrolü
+                if score >= 4:  # En az 4 puan alan hisseleri dahil et
+                    opportunity = {
+                        'symbol': symbol.replace('.IS', ''),
+                        'name': BIST_SYMBOLS[symbol],
+                        'price': current_price,
+                        'signal': signal,
+                        'score': round(score, 1),
+                        'volatility': daily_range,
+                        'volume_ratio': volume_ratio,
+                        'rsi': rsi,
+                        'macd_bullish': macd_bullish,
+                        'three_day_change': three_day_change,
+                        'reason': ", ".join(reasons[:3])  # İlk 3 sebep
+                    }
+                    opportunities.append(opportunity)
+                    
         except Exception as e:
-            # Hata durumunda geç, diğer hisseleri kontrol et
-            continue
+                # Hata durumunda geç, diğer hisseleri kontrol et
+                continue
     
     # Puana göre sırala
     opportunities.sort(key=lambda x: x['score'], reverse=True)
@@ -3405,472 +3415,475 @@ def show_modern_dashboard():
             period = "1y"   # 1 year for daily intervals
             
         df = fetcher.get_stock_data(selected_symbol, period=period, interval=time_interval)
+    except Exception as e:
+        st.error(f"Veri alınırken bir hata oluştu: {e}")
+        df = None
+    
+    if df is not None and not df.empty:
+        # Calculate metrics
+        latest = df.iloc[-1]
+        prev = df.iloc[-2]
+        change = latest['Close'] - prev['Close']
+        change_pct = (change / prev['Close']) * 100
+        volume_change = ((latest['Volume'] - df['Volume'].tail(20).mean()) / df['Volume'].tail(20).mean()) * 100
         
-        if df is not None and not df.empty:
-            # Calculate metrics
-            latest = df.iloc[-1]
-            prev = df.iloc[-2]
-            change = latest['Close'] - prev['Close']
-            change_pct = (change / prev['Close']) * 100
-            volume_change = ((latest['Volume'] - df['Volume'].tail(20).mean()) / df['Volume'].tail(20).mean()) * 100
+        # Weekly/Monthly changes
+        week_ago = df.iloc[-7] if len(df) > 7 else prev
+        month_ago = df.iloc[-22] if len(df) > 22 else prev
+        week_change = ((latest['Close'] - week_ago['Close']) / week_ago['Close']) * 100
+        month_change = ((latest['Close'] - month_ago['Close']) / month_ago['Close']) * 100
+        
+        # KPI Cards Grid
+        st.markdown("""
+        <div class="kpi-grid">
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            # Mevcut Fiyat - ilk sıraya taşındı
+            price_class = "positive" if change > 0 else "negative"
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">
+                        <span>💰</span> Fiyat Hareketi (Günlük)
+                    </div>
+                    <div class="kpi-trend">{'📈' if change > 0 else '📉'}</div>
+                </div>
+                <div class="kpi-value">₺{latest['Close']:.2f}</div>
+                <div class="kpi-change {price_class}">
+                    <span>{'↗' if change > 0 else '↘'}</span>
+                    <span>{'+' if change > 0 else ''}{change_pct:.2f}% son kapanıştan</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            # Haftalık Performans
+            week_trend_icon = "📈" if week_change > 0 else "📉"
+            week_change_class = "positive" if week_change > 0 else "negative"
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">
+                        <span>📊</span> Haftalık Performans
+                    </div>
+                    <div class="kpi-trend">{week_trend_icon}</div>
+                </div>
+                <div class="kpi-value">{abs(week_change):.1f}%</div>
+                <div class="kpi-change {week_change_class}">
+                    <span>{'↗' if week_change > 0 else '↘'}</span>
+                    <span>{'+' if week_change > 0 else ''}{week_change:.2f}% son haftadan beri</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            # Aylık Performans - YENİ EKLENEN
+            month_trend_icon = "📈" if month_change > 0 else "📉"
+            month_change_class = "positive" if month_change > 0 else "negative"
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">
+                        <span>📅</span> Aylık Performans
+                    </div>
+                    <div class="kpi-trend">{month_trend_icon}</div>
+                </div>
+                <div class="kpi-value">{abs(month_change):.1f}%</div>
+                <div class="kpi-change {month_change_class}">
+                    <span>{'↗' if month_change > 0 else '↘'}</span>
+                    <span>{'+' if month_change > 0 else ''}{month_change:.2f}% son aydan beri</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            # Hacim Aktivitesi
+            volume_class = "positive" if volume_change > 0 else "negative"
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-title">
+                        <span>📊</span> Hacim Aktivitesi
+                    </div>
+                    <div class="kpi-trend">📊</div>
+                </div>
+                <div class="kpi-value">{latest['Volume']:,.0f}</div>
+                <div class="kpi-change {volume_class}">
+                    <span>{'↗' if volume_change > 0 else '↘'}</span>
+                    <span>{'+' if volume_change > 0 else ''}{volume_change:.1f}% ortalamaya karşı</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # === TEKNİK İNDİKATÖRLER BÖLÜMÜ ===
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Calculate technical indicators
+        try:
+            from modules.technical_analysis import TechnicalAnalyzer
+            analyzer = TechnicalAnalyzer(df)
             
-            # Weekly/Monthly changes
-            week_ago = df.iloc[-7] if len(df) > 7 else prev
-            month_ago = df.iloc[-22] if len(df) > 22 else prev
-            week_change = ((latest['Close'] - week_ago['Close']) / week_ago['Close']) * 100
-            month_change = ((latest['Close'] - month_ago['Close']) / month_ago['Close']) * 100
+            # Add EMA, VWMA and VWEMA indicators
+            analyzer.add_indicator('ema_5')
+            analyzer.add_indicator('ema_8') 
+            analyzer.add_indicator('ema_13')
+            analyzer.add_indicator('ma_200')
+            analyzer.add_indicator('vwma_5')
+            analyzer.add_indicator('vwema_5')
             
-            # KPI Cards Grid
+            # Get latest values
+            ema_5 = analyzer.indicators.get('ema_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_5', pd.Series()).empty else 0
+            ema_8 = analyzer.indicators.get('ema_8', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_8', pd.Series()).empty else 0
+            ema_13 = analyzer.indicators.get('ema_13', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_13', pd.Series()).empty else 0
+            ma_200 = analyzer.indicators.get('ma_200', pd.Series()).iloc[-1] if not analyzer.indicators.get('ma_200', pd.Series()).empty else 0
+            vwma_5 = analyzer.indicators.get('vwma_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwma_5', pd.Series()).empty else 0
+            vwema_5 = analyzer.indicators.get('vwema_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwema_5', pd.Series()).empty else 0
+            
+            current_price = latest['Close']
+            
+            # EMA/MA Technical Indicators Grid
             st.markdown("""
-            <div class="kpi-grid">
+            <div class="technical-indicators">
+            </div>
             """, unsafe_allow_html=True)
             
-            col1, col2, col3, col4 = st.columns(4)
+            # Display indicators in 6 columns (including VWMA 5 and VWEMA 5)
+            indicator_cols = st.columns(6)
             
-            with col1:
-                # Mevcut Fiyat - ilk sıraya taşındı
-                price_class = "positive" if change > 0 else "negative"
+            # EMA 5 Card
+            with indicator_cols[0]:
+                price_above_ema5 = current_price > ema_5
+                status_color = "#00ff88" if price_above_ema5 else "#ff4757"
+                status_icon = "🟢" if price_above_ema5 else "🔴"
+                status_text = "Üzeri" if price_above_ema5 else "Altı"
+                
                 st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-title">
-                            <span>💰</span> Fiyat Hareketi (Günlük)
-                        </div>
-                        <div class="kpi-trend">{'📈' if change > 0 else '📉'}</div>
-                    </div>
-                    <div class="kpi-value">₺{latest['Close']:.2f}</div>
-                    <div class="kpi-change {price_class}">
-                        <span>{'↗' if change > 0 else '↘'}</span>
-                        <span>{'+' if change > 0 else ''}{change_pct:.2f}% son kapanıştan</span>
+                <div class="metric-card">
+                    <div class="metric-title">{status_icon} EMA 5</div>
+                    <div class="metric-value">₺{ema_5:.2f}</div>
+                    <div class="metric-change" style="color: {status_color};">
+                        {status_text}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
-            with col2:
-                # Haftalık Performans
-                week_trend_icon = "📈" if week_change > 0 else "📉"
-                week_change_class = "positive" if week_change > 0 else "negative"
+            # EMA 8 Card  
+            with indicator_cols[1]:
+                price_above_ema8 = current_price > ema_8
+                status_color = "#00ff88" if price_above_ema8 else "#ff4757"
+                status_icon = "🟢" if price_above_ema8 else "🔴"
+                status_text = "Üzeri" if price_above_ema8 else "Altı"
+                
                 st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-title">
-                            <span>📊</span> Haftalık Performans
-                        </div>
-                        <div class="kpi-trend">{week_trend_icon}</div>
-                    </div>
-                    <div class="kpi-value">{abs(week_change):.1f}%</div>
-                    <div class="kpi-change {week_change_class}">
-                        <span>{'↗' if week_change > 0 else '↘'}</span>
-                        <span>{'+' if week_change > 0 else ''}{week_change:.2f}% son haftadan beri</span>
+                <div class="metric-card">
+                    <div class="metric-title">{status_icon} EMA 8</div>
+                    <div class="metric-value">₺{ema_8:.2f}</div>
+                    <div class="metric-change" style="color: {status_color};">
+                        {status_text}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
-            with col3:
-                # Aylık Performans - YENİ EKLENEN
-                month_trend_icon = "📈" if month_change > 0 else "📉"
-                month_change_class = "positive" if month_change > 0 else "negative"
+            # EMA 13 Card
+            with indicator_cols[2]:
+                price_above_ema13 = current_price > ema_13
+                status_color = "#00ff88" if price_above_ema13 else "#ff4757"
+                status_icon = "🟢" if price_above_ema13 else "🔴"
+                status_text = "Üzeri" if price_above_ema13 else "Altı"
+                
                 st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-title">
-                            <span>📅</span> Aylık Performans
-                        </div>
-                        <div class="kpi-trend">{month_trend_icon}</div>
-                    </div>
-                    <div class="kpi-value">{abs(month_change):.1f}%</div>
-                    <div class="kpi-change {month_change_class}">
-                        <span>{'↗' if month_change > 0 else '↘'}</span>
-                        <span>{'+' if month_change > 0 else ''}{month_change:.2f}% son aydan beri</span>
+                <div class="metric-card">
+                    <div class="metric-title">{status_icon} EMA 13</div>
+                    <div class="metric-value">₺{ema_13:.2f}</div>
+                    <div class="metric-change" style="color: {status_color};">
+                        {status_text}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
-            with col4:
-                # Hacim Aktivitesi
-                volume_class = "positive" if volume_change > 0 else "negative"
+            # MA 200 Card
+            with indicator_cols[3]:
+                price_above_ma200 = current_price > ma_200
+                status_color = "#00ff88" if price_above_ma200 else "#ff4757"
+                status_icon = "🟢" if price_above_ma200 else "🔴"
+                status_text = "Üzeri" if price_above_ma200 else "Altı"
+                
                 st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-title">
-                            <span>📊</span> Hacim Aktivitesi
-                        </div>
-                        <div class="kpi-trend">📊</div>
-                    </div>
-                    <div class="kpi-value">{latest['Volume']:,.0f}</div>
-                    <div class="kpi-change {volume_class}">
-                        <span>{'↗' if volume_change > 0 else '↘'}</span>
-                        <span>{'+' if volume_change > 0 else ''}{volume_change:.1f}% ortalamaya karşı</span>
+                <div class="metric-card">
+                    <div class="metric-title">{status_icon} MA 200</div>
+                    <div class="metric-value">₺{ma_200:.2f}</div>
+                    <div class="metric-change" style="color: {status_color};">
+                        {status_text}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            # === TEKNİK İNDİKATÖRLER BÖLÜMÜ ===
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # Calculate technical indicators
-            try:
-                from modules.technical_analysis import TechnicalAnalyzer
-                analyzer = TechnicalAnalyzer(df)
+            # VWMA 5 Card
+            with indicator_cols[4]:
+                price_above_vwma5 = current_price > vwma_5
+                status_color = "#00ff88" if price_above_vwma5 else "#ff4757"
+                status_icon = "🟢" if price_above_vwma5 else "🔴"
+                status_text = "Üzeri" if price_above_vwma5 else "Altı"
                 
-                # Add EMA, VWMA and VWEMA indicators
-                analyzer.add_indicator('ema_5')
-                analyzer.add_indicator('ema_8') 
-                analyzer.add_indicator('ema_13')
-                analyzer.add_indicator('ma_200')
-                analyzer.add_indicator('vwma_5')
-                analyzer.add_indicator('vwema_5')
-                
-                # Get latest values
-                ema_5 = analyzer.indicators.get('ema_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_5', pd.Series()).empty else 0
-                ema_8 = analyzer.indicators.get('ema_8', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_8', pd.Series()).empty else 0
-                ema_13 = analyzer.indicators.get('ema_13', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_13', pd.Series()).empty else 0
-                ma_200 = analyzer.indicators.get('ma_200', pd.Series()).iloc[-1] if not analyzer.indicators.get('ma_200', pd.Series()).empty else 0
-                vwma_5 = analyzer.indicators.get('vwma_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwma_5', pd.Series()).empty else 0
-                vwema_5 = analyzer.indicators.get('vwema_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwema_5', pd.Series()).empty else 0
-                
-                current_price = latest['Close']
-                
-                # EMA/MA Technical Indicators Grid
-                st.markdown("""
-                <div class="technical-indicators">
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Display indicators in 6 columns (including VWMA 5 and VWEMA 5)
-                indicator_cols = st.columns(6)
-                
-                # EMA 5 Card
-                with indicator_cols[0]:
-                    price_above_ema5 = current_price > ema_5
-                    status_color = "#00ff88" if price_above_ema5 else "#ff4757"
-                    status_icon = "🟢" if price_above_ema5 else "🔴"
-                    status_text = "Üzeri" if price_above_ema5 else "Altı"
-                    
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">{status_icon} EMA 5</div>
-                        <div class="metric-value">₺{ema_5:.2f}</div>
-                        <div class="metric-change" style="color: {status_color};">
-                            {status_text}
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">{status_icon} VWMA 5</div>
+                    <div class="metric-value">₺{vwma_5:.2f}</div>
+                    <div class="metric-change" style="color: {status_color};">
+                        {status_text}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
-                # EMA 8 Card  
-                with indicator_cols[1]:
-                    price_above_ema8 = current_price > ema_8
-                    status_color = "#00ff88" if price_above_ema8 else "#ff4757"
-                    status_icon = "🟢" if price_above_ema8 else "🔴"
-                    status_text = "Üzeri" if price_above_ema8 else "Altı"
+            # VWEMA 5 Card (NEW)
+            with indicator_cols[5]:
+                price_above_vwema5 = current_price > vwema_5
+                status_color = "#00ff88" if price_above_vwema5 else "#ff4757"
+                status_icon = "🟢" if price_above_vwema5 else "🔴"
+                status_text = "Üzeri" if price_above_vwema5 else "Altı"
                     
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">{status_icon} EMA 8</div>
-                        <div class="metric-value">₺{ema_8:.2f}</div>
-                        <div class="metric-change" style="color: {status_color};">
-                            {status_text}
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">{status_icon} VWEMA 5</div>
+                    <div class="metric-value">₺{vwema_5:.2f}</div>
+                    <div class="metric-change" style="color: {status_color};">
+                        {status_text}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                # EMA 13 Card
-                with indicator_cols[2]:
-                    price_above_ema13 = current_price > ema_13
-                    status_color = "#00ff88" if price_above_ema13 else "#ff4757"
-                    status_icon = "🟢" if price_above_ema13 else "🔴"
-                    status_text = "Üzeri" if price_above_ema13 else "Altı"
-                    
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">{status_icon} EMA 13</div>
-                        <div class="metric-value">₺{ema_13:.2f}</div>
-                        <div class="metric-change" style="color: {status_color};">
-                            {status_text}
-                        </div>
-                </div>
-            """, unsafe_allow_html=True)
+        
+        except Exception as e:
+            st.warning(f"⚠️ Teknik indikatörler hesaplanamadı: {str(e)}")
+        
+        # Bottom Section
+        st.markdown("""
+        <div class="bottom-grid">
+        """, unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
             
-                # MA 200 Card
-                with indicator_cols[3]:
-                    price_above_ma200 = current_price > ma_200
-                    status_color = "#00ff88" if price_above_ma200 else "#ff4757"
-                    status_icon = "🟢" if price_above_ma200 else "🔴"
-                    status_text = "Üzeri" if price_above_ma200 else "Altı"
-                    
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">{status_icon} MA 200</div>
-                        <div class="metric-value">₺{ma_200:.2f}</div>
-                        <div class="metric-change" style="color: {status_color};">
-                            {status_text}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # VWMA 5 Card
-                with indicator_cols[4]:
-                    price_above_vwma5 = current_price > vwma_5
-                    status_color = "#00ff88" if price_above_vwma5 else "#ff4757"
-                    status_icon = "🟢" if price_above_vwma5 else "🔴"
-                    status_text = "Üzeri" if price_above_vwma5 else "Altı"
-                    
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">{status_icon} VWMA 5</div>
-                        <div class="metric-value">₺{vwma_5:.2f}</div>
-                        <div class="metric-change" style="color: {status_color};">
-                            {status_text}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # VWEMA 5 Card (NEW)
-                with indicator_cols[5]:
-                    price_above_vwema5 = current_price > vwema_5
-                    status_color = "#00ff88" if price_above_vwema5 else "#ff4757"
-                    status_icon = "🟢" if price_above_vwema5 else "🔴"
-                    status_text = "Üzeri" if price_above_vwema5 else "Altı"
-                            
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-title">{status_icon} VWEMA 5</div>
-                        <div class="metric-value">₺{vwema_5:.2f}</div>
-                        <div class="metric-change" style="color: {status_color};">
-                            {status_text}
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.warning(f"⚠️ Teknik indikatörler hesaplanamadı: {str(e)}")
-            
-            # Bottom Section
+        with col1:
             st.markdown("""
-            <div class="bottom-grid">
+            <div class="info-card">
+                <div class="info-card-title">Piyasa Analizi</div>
+                <div class="info-card-content">
+                Gelişmiş algoritmalarla desteklenen gerçek zamanlı teknik analiz.
+                Piyasa trendleri ve işlem fırsatları hakkında bilgi edinin.
+                </div>
+            </div>
             """, unsafe_allow_html=True)
             
-            col1, col2 = st.columns(2)
-                
-            with col1:
-                st.markdown("""
-                <div class="info-card">
-                    <div class="info-card-title">Piyasa Analizi</div>
-                    <div class="info-card-content">
-                        Gelişmiş algoritmalarla desteklenen gerçek zamanlı teknik analiz.
-                        Piyasa trendleri ve işlem fırsatları hakkında bilgi edinin.
-                    </div>
+        with col2:
+            st.markdown("""
+            <div class="info-card">
+                <div class="info-card-title">Yapay Zeka Tahminleri</div>
+                <div class="info-card-content">
+                    Makine öğrenmesi modelleri, gelecekteki fiyat hareketlerini 
+                    güven skorları ile tahmin etmek için geçmiş verileri analiz eder.
                 </div>
-                """, unsafe_allow_html=True)
-                
-                with col2:
-                    st.markdown("""
-                    <div class="info-card">
-                        <div class="info-card-title">Yapay Zeka Tahminleri</div>
-                        <div class="info-card-content">
-                            Makine öğrenmesi modelleri, gelecekteki fiyat hareketlerini 
-                            güven skorları ile tahmin etmek için geçmiş verileri analiz eder.
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            
-            # === HAFTALIK VE AYLIK PERFORMANS BÖLÜMÜ ===
-            st.markdown("<br><br>", unsafe_allow_html=True)
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        
+        # === HAFTALIK VE AYLIK PERFORMANS BÖLÜMÜ ===
+        st.markdown("<br><br>", unsafe_allow_html=True)
 
-            
-            # Initialize screener and get performance data
-            screener = StockScreener(BIST_SYMBOLS)
-            
-            # Load performance data (cache'de yoksa hesapla)
-            if "performance_data_loaded_v9" not in st.session_state:
-                with st.spinner("�� Performans verileri yükleniyor..."):
-                    weekly_results = screener.screen_weekly_performance(top_count=15)
-                    monthly_results = screener.screen_monthly_performance(top_count=15)
-                    st.session_state.weekly_results = weekly_results
-                    st.session_state.monthly_results = monthly_results
-                    st.session_state.performance_data_loaded_v9 = True
-            
-            # Weekly Performance
-            weekly_data = st.session_state.weekly_results
-            
-            # Başlık ve yenileme butonu aynı satırda
-            title_col, button_col = st.columns([3, 1])
-            with title_col:
-                st.markdown("### 📊 Haftalık & Aylık Performans")
-            with button_col:
-                st.markdown("<br>", unsafe_allow_html=True)  # Biraz boşluk için
-                if st.button("🔄 Performans Verilerini Yenile", type="secondary", key="refresh_performance"):
-                    st.session_state.performance_data_loaded_v9 = False
-                    st.rerun()
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("#### 🚀 En Çok Yükselenler (Haftalık)")
-                if weekly_data["gainers"]:
-                    # Tablo için veri hazırla
-                    gainers_df = []
-                    for stock in weekly_data["gainers"][:10]:
-                        gainers_df.append({
-                            'Hisse': stock['symbol'],
-                            'Değişim (%)': stock['weekly_change'],
-                            'Fiyat (₺)': stock['current_price'],
-                            'Hacim': stock['volume_ratio']
-                        })
-                    
-                    # DataFrame oluştur ve renkli stil uygula
-                    df_gainers = pd.DataFrame(gainers_df)
-                    
-                    # Stil fonksiyonu - yeşil arkaplan
-                    def style_weekly_gainers(val):
-                        if isinstance(val, (int, float)) and val > 0:
-                            return 'background-color: #1f4e3d; color: #00ff88; font-weight: bold;'
-                        return 'background-color: #1a202c; color: white;'
-                    
-                    styled_df = df_gainers.style.applymap(style_weekly_gainers, subset=['Değişim (%)']) \
-                        .format({
-                            'Değişim (%)': '+{:.2f}%',
-                            'Fiyat (₺)': '₺{:.2f}',
-                            'Hacim': '{:.1f}x'
-                        }) \
-                        .set_table_styles([
-                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
-                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
-                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
-                        ])
-                    
-                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
-                else:
-                    st.info("Henüz haftalık yükselen hisse bulunamadı.")
-            
-            with col2:
-                st.markdown("#### 📉 En Çok Düşenler (Haftalık)")
-                if weekly_data["losers"]:
-                    # Tablo için veri hazırla
-                    losers_df = []
-                    for stock in weekly_data["losers"][:10]:
-                        losers_df.append({
-                            'Hisse': stock['symbol'],
-                            'Değişim (%)': stock['weekly_change'],
-                            'Fiyat (₺)': stock['current_price'],
-                            'Hacim': stock['volume_ratio']
-                        })
-                    
-                    # DataFrame oluştur ve renkli stil uygula
-                    df_losers = pd.DataFrame(losers_df)
-                    
-                    # Stil fonksiyonu - kırmızı arkaplan
-                    def style_weekly_losers(val):
-                        if isinstance(val, (int, float)) and val < 0:
-                            return 'background-color: #4a1e1e; color: #ff4757; font-weight: bold;'
-                        return 'background-color: #1a202c; color: white;'
-                    
-                    styled_df = df_losers.style.applymap(style_weekly_losers, subset=['Değişim (%)']) \
-                        .format({
-                            'Değişim (%)': '{:.2f}%',
-                            'Fiyat (₺)': '₺{:.2f}',
-                            'Hacim': '{:.1f}x'
-                        }) \
-                        .set_table_styles([
-                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
-                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
-                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
-                        ])
-                    
-                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
-                else:
-                    st.info("Henüz haftalık düşen hisse bulunamadı.")
-            
-            # Monthly Performance
-            monthly_data = st.session_state.monthly_results
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("#### 🚀 En Çok Yükselenler (Aylık)")
-                if monthly_data["gainers"]:
-                    # Tablo için veri hazırla
-                    gainers_df = []
-                    for stock in monthly_data["gainers"][:10]:
-                        gainers_df.append({
-                            'Hisse': stock['symbol'],
-                            'Değişim (%)': stock['monthly_change'],
-                            'Fiyat (₺)': stock['current_price'],
-                            'Volatilite (%)': stock['volatility'],
-                            'Hacim': stock['volume_ratio']
-                        })
-                    
-                    # DataFrame oluştur ve renkli stil uygula
-                    df_gainers = pd.DataFrame(gainers_df)
-                    
-                    # Stil fonksiyonu - yeşil arkaplan
-                    def style_monthly_gainers(val):
-                        if isinstance(val, (int, float)) and val > 0:
-                            return 'background-color: #1f4e3d; color: #00ff88; font-weight: bold;'
-                        return 'background-color: #1a202c; color: white;'
-                    
-                    styled_df = df_gainers.style.applymap(style_monthly_gainers, subset=['Değişim (%)']) \
-                        .format({
-                            'Değişim (%)': '+{:.2f}%',
-                            'Fiyat (₺)': '₺{:.2f}',
-                            'Volatilite (%)': '{:.1f}%',
-                            'Hacim': '{:.1f}x'
-                        }) \
-                        .set_table_styles([
-                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
-                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
-                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
-                        ])
-                    
-                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
-                else:
-                    st.info("Henüz aylık yükselen hisse bulunamadı.")
-            
-            with col2:
-                st.markdown("#### 📉 En Çok Düşenler (Aylık)")
-                if monthly_data["losers"]:
-                    # Tablo için veri hazırla
-                    losers_df = []
-                    for stock in monthly_data["losers"][:10]:
-                        losers_df.append({
-                            'Hisse': stock['symbol'],
-                            'Değişim (%)': stock['monthly_change'],
-                            'Fiyat (₺)': stock['current_price'],
-                            'Volatilite (%)': stock['volatility'],
-                            'Hacim': stock['volume_ratio']
-                        })
-                    
-                    # DataFrame oluştur ve renkli stil uygula
-                    df_losers = pd.DataFrame(losers_df)
-                    
-                    # Stil fonksiyonu - kırmızı arkaplan
-                    def style_monthly_losers(val):
-                        if isinstance(val, (int, float)) and val < 0:
-                            return 'background-color: #4a1e1e; color: #ff4757; font-weight: bold;'
-                        return 'background-color: #1a202c; color: white;'
-                    
-                    styled_df = df_losers.style.applymap(style_monthly_losers, subset=['Değişim (%)']) \
-                        .format({
-                            'Değişim (%)': '{:.2f}%',
-                            'Fiyat (₺)': '₺{:.2f}',
-                            'Volatilite (%)': '{:.1f}%',
-                            'Hacim': '{:.1f}x'
-                        }) \
-                        .set_table_styles([
-                            {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
-                            {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
-                            {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
-                        ])
-                    
-                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
-                else:
-                    st.info("Henüz aylık düşen hisse bulunamadı.")
+    try:
+        # Initialize screener and get performance data
+        screener = StockScreener(BIST_SYMBOLS)
+        
+        # Load performance data (cache'de yoksa hesapla)
+        if "performance_data_loaded_v9" not in st.session_state:
+            with st.spinner("�� Performans verileri yükleniyor..."):
+                weekly_results = screener.screen_weekly_performance(top_count=15)
+                monthly_results = screener.screen_monthly_performance(top_count=15)
+                st.session_state.weekly_results = weekly_results
+                st.session_state.monthly_results = monthly_results
+                st.session_state.performance_data_loaded_v9 = True
+        
+        # Weekly Performance
+        weekly_data = st.session_state.weekly_results
+        
+        # Başlık ve yenileme butonu aynı satırda
+        title_col, button_col = st.columns([3, 1])
+        with title_col:
+            st.markdown("### 📊 Haftalık & Aylık Performans")
+        with button_col:
+            st.markdown("<br>", unsafe_allow_html=True)  # Biraz boşluk için
+            if st.button("🔄 Performans Verilerini Yenile", type="secondary", key="refresh_performance"):
+                st.session_state.performance_data_loaded_v9 = False
+                st.rerun()
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 🚀 En Çok Yükselenler (Haftalık)")
+            if weekly_data["gainers"]:
+                # Tablo için veri hazırla
+                gainers_df = []
+                for stock in weekly_data["gainers"][:10]:
+                    gainers_df.append({
+                        'Hisse': stock['symbol'],
+                        'Değişim (%)': stock['weekly_change'],
+                        'Fiyat (₺)': stock['current_price'],
+                        'Hacim': stock['volume_ratio']
+                    })
+                
+                # DataFrame oluştur ve renkli stil uygula
+                df_gainers = pd.DataFrame(gainers_df)
+                
+                # Stil fonksiyonu - yeşil arkaplan
+                def style_weekly_gainers(val):
+                    if isinstance(val, (int, float)) and val > 0:
+                        return 'background-color: #1f4e3d; color: #00ff88; font-weight: bold;'
+                    return 'background-color: #1a202c; color: white;'
+                
+                styled_df = df_gainers.style.applymap(style_weekly_gainers, subset=['Değişim (%)']) \
+                .format({
+                    'Değişim (%)': '+{:.2f}%',
+                    'Fiyat (₺)': '₺{:.2f}',
+                    'Hacim': '{:.1f}x'
+                }) \
+                .set_table_styles([
+                    {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                    {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                    {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                ])
+                
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("Henüz haftalık yükselen hisse bulunamadı.")
+        
+        with col2:
+            st.markdown("#### 📉 En Çok Düşenler (Haftalık)")
+            if weekly_data["losers"]:
+                # Tablo için veri hazırla
+                losers_df = []
+                for stock in weekly_data["losers"][:10]:
+                    losers_df.append({
+                        'Hisse': stock['symbol'],
+                        'Değişim (%)': stock['weekly_change'],
+                        'Fiyat (₺)': stock['current_price'],
+                        'Hacim': stock['volume_ratio']
+                    })
+                
+                # DataFrame oluştur ve renkli stil uygula
+                df_losers = pd.DataFrame(losers_df)
+                
+                # Stil fonksiyonu - kırmızı arkaplan
+                def style_weekly_losers(val):
+                    if isinstance(val, (int, float)) and val < 0:
+                        return 'background-color: #4a1e1e; color: #ff4757; font-weight: bold;'
+                    return 'background-color: #1a202c; color: white;'
+                
+                styled_df = df_losers.style.applymap(style_weekly_losers, subset=['Değişim (%)']) \
+                .format({
+                    'Değişim (%)': '{:.2f}%',
+                    'Fiyat (₺)': '₺{:.2f}',
+                    'Hacim': '{:.1f}x'
+                }) \
+                .set_table_styles([
+                    {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                    {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                    {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                ])
+                
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("Henüz haftalık düşen hisse bulunamadı.")
+        
+        # Monthly Performance
+        monthly_data = st.session_state.monthly_results
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 🚀 En Çok Yükselenler (Aylık)")
+            if monthly_data["gainers"]:
+                # Tablo için veri hazırla
+                gainers_df = []
+                for stock in monthly_data["gainers"][:10]:
+                    gainers_df.append({
+                        'Hisse': stock['symbol'],
+                        'Değişim (%)': stock['monthly_change'],
+                        'Fiyat (₺)': stock['current_price'],
+                        'Volatilite (%)': stock['volatility'],
+                        'Hacim': stock['volume_ratio']
+                    })
+                
+                # DataFrame oluştur ve renkli stil uygula
+                df_gainers = pd.DataFrame(gainers_df)
+                
+                # Stil fonksiyonu - yeşil arkaplan
+                def style_monthly_gainers(val):
+                    if isinstance(val, (int, float)) and val > 0:
+                        return 'background-color: #1f4e3d; color: #00ff88; font-weight: bold;'
+                    return 'background-color: #1a202c; color: white;'
+                
+                styled_df = df_gainers.style.applymap(style_monthly_gainers, subset=['Değişim (%)']) \
+                .format({
+                    'Değişim (%)': '+{:.2f}%',
+                    'Fiyat (₺)': '₺{:.2f}',
+                    'Volatilite (%)': '{:.1f}%',
+                    'Hacim': '{:.1f}x'
+                }) \
+                .set_table_styles([
+                    {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                    {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                    {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                ])
+                
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("Henüz aylık yükselen hisse bulunamadı.")
+        
+        with col2:
+            st.markdown("#### 📉 En Çok Düşenler (Aylık)")
+            if monthly_data["losers"]:
+                # Tablo için veri hazırla
+                losers_df = []
+                for stock in monthly_data["losers"][:10]:
+                    losers_df.append({
+                        'Hisse': stock['symbol'],
+                        'Değişim (%)': stock['monthly_change'],
+                        'Fiyat (₺)': stock['current_price'],
+                        'Volatilite (%)': stock['volatility'],
+                        'Hacim': stock['volume_ratio']
+                    })
+                
+                # DataFrame oluştur ve renkli stil uygula
+                df_losers = pd.DataFrame(losers_df)
+                
+                # Stil fonksiyonu - kırmızı arkaplan
+                def style_monthly_losers(val):
+                    if isinstance(val, (int, float)) and val < 0:
+                        return 'background-color: #4a1e1e; color: #ff4757; font-weight: bold;'
+                    return 'background-color: #1a202c; color: white;'
+                
+                styled_df = df_losers.style.applymap(style_monthly_losers, subset=['Değişim (%)']) \
+                .format({
+                    'Değişim (%)': '{:.2f}%',
+                    'Fiyat (₺)': '₺{:.2f}',
+                    'Volatilite (%)': '{:.1f}%',
+                    'Hacim': '{:.1f}x'
+                }) \
+                .set_table_styles([
+                    {'selector': 'th', 'props': [('background-color', '#2d3748'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center')]},
+                    {'selector': 'td', 'props': [('text-align', 'center'), ('padding', '8px')]},
+                    {'selector': 'tr:hover', 'props': [('background-color', '#2d3748')]}
+                ])
+                
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("Henüz aylık düşen hisse bulunamadı.")
     
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")

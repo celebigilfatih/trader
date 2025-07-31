@@ -42,6 +42,7 @@ class TechnicalAnalyzer:
             'ma_200': self._calculate_sma,
             'vwma_5': self._calculate_vwma,
             'vwema_5': self._calculate_vwema,
+            'vwema_20': self._calculate_vwema,
             'rsi': self._calculate_rsi,
             'macd': self._calculate_macd,
             'bollinger': self._calculate_bollinger_bands,

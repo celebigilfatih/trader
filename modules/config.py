@@ -180,6 +180,12 @@ INDICATORS_CONFIG = {
         "default": False,
         "color": "#e67e22"
     },
+    "vwema_20": {
+        "name": "VWEMA 20",
+        "period": 20,
+        "default": False,
+        "color": "#f39c12"
+    },
     "rsi": {
         "name": "Göreceli Güç Endeksi (RSI)",
         "period": 14,
