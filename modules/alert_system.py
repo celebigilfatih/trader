@@ -1057,6 +1057,10 @@ class AlertSystem:
             recommendation = "ZAYIF AL"
             recommendation_color = "#90ee90"
             position_strength = "ZAYIF"
+        elif total_score >= 0.5:
+            recommendation = "ZAYIF AL ZAYIF"
+            recommendation_color = "#b8f5b8"
+            position_strength = "ÇOK ZAYIF"
         elif total_score <= -4:
             recommendation = "GÜÇLÜ SAT"
             recommendation_color = "#ff0000"
@@ -1081,6 +1085,8 @@ class AlertSystem:
             position_size = "Portföyün %50-75'i"
         elif "SAT" in recommendation and "ZAYIF" not in recommendation:
             position_size = "Pozisyonun %75-100'ünü sat"
+        elif "ZAYIF AL ZAYIF" in recommendation:
+            position_size = "Portföyün %10-25'i"
         elif "ZAYIF" in recommendation:
             position_size = "Portföyün %25-50'si"
         else:
@@ -1108,4 +1114,4 @@ class AlertSystem:
             'position_size': position_size,
             'risk_warnings': risk_warnings,
             'confidence': min(abs(total_score) * 10, 100)  # Güven skoru %0-100
-        } 
+        }

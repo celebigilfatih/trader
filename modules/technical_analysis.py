@@ -245,38 +245,190 @@ class TechnicalAnalyzer:
         self.indicators['supertrend_trend'] = trend
         
     def _calculate_ott(self, indicator_name: str) -> None:
-        """OTT (Optimized Trend Tracker) hesaplar"""
+        """OTT (Optimized Trend Tracker) hesaplar - Pine Script versiyonuna göre"""
         config = INDICATORS_CONFIG[indicator_name]
         period = config['period']
         percent = config['percent']
         
-        # VAR hesapla (Moving Average) - pandas rolling kullan
-        var = self.data['Close'].rolling(window=period).mean()
+        # Pine Script'teki VAR (Variable Moving Average) hesaplama
+        def calculate_var(src, length):
+            """Variable Moving Average hesaplar"""
+            alpha = 2 / (length + 1)
+            
+            # Up/Down movement hesapla
+            up_moves = np.where(src > src.shift(1), src - src.shift(1), 0)
+            down_moves = np.where(src < src.shift(1), src.shift(1) - src, 0)
+            
+            # 9 günlük toplamlar
+            ud_sum = pd.Series(up_moves).rolling(window=9).sum()
+            dd_sum = pd.Series(down_moves).rolling(window=9).sum()
+            
+            # CMO (Chande Momentum Oscillator)
+            cmo = (ud_sum - dd_sum) / (ud_sum + dd_sum)
+            cmo = cmo.fillna(0)
+            
+            # VAR hesaplama
+            var = pd.Series(index=src.index, dtype=float)
+            var.iloc[0] = src.iloc[0]
+            
+            for i in range(1, len(src)):
+                abs_cmo = abs(cmo.iloc[i])
+                var.iloc[i] = alpha * abs_cmo * src.iloc[i] + (1 - alpha * abs_cmo) * var.iloc[i-1]
+            
+            return var
         
-        # OTT hesapla
-        ott = pd.Series(index=self.data.index, dtype=float)
+        # Pine Script'teki WWMA (Welles Wilder Moving Average) hesaplama
+        def calculate_wwma(src, length):
+            """Welles Wilder Moving Average hesaplar"""
+            alpha = 1 / length
+            wwma = pd.Series(index=src.index, dtype=float)
+            wwma.iloc[0] = src.iloc[0]
+            
+            for i in range(1, len(src)):
+                wwma.iloc[i] = alpha * src.iloc[i] + (1 - alpha) * wwma.iloc[i-1]
+            
+            return wwma
         
-        for i in range(len(self.data)):
-            if i == 0:
-                ott.iloc[i] = var.iloc[i]
-            else:
-                fark = var.iloc[i] * percent / 100
-                if var.iloc[i] > ott.iloc[i-1]:
-                    ott.iloc[i] = var.iloc[i] - fark
+        # Pine Script'teki ZLEMA (Zero Lag Exponential Moving Average) hesaplama
+        def calculate_zlema(src, length):
+            """Zero Lag Exponential Moving Average hesaplar"""
+            lag = length // 2 if length % 2 == 0 else (length - 1) // 2
+            ema_data = src + (src - src.shift(lag))
+            zlema = ema_data.ewm(span=length).mean()
+            return zlema
+        
+        # Pine Script'teki TSF (Time Series Forecast) hesaplama
+        def calculate_tsf(src, length):
+            """Time Series Forecast hesaplar"""
+            tsf = pd.Series(index=src.index, dtype=float)
+            
+            for i in range(length-1, len(src)):
+                # Linear regression hesapla
+                x = np.arange(length)
+                y = src.iloc[i-length+1:i+1].values
+                
+                if len(y) == length:
+                    slope, intercept = np.polyfit(x, y, 1)
+                    tsf.iloc[i] = slope * (length - 1) + intercept + slope
                 else:
-                    ott.iloc[i] = var.iloc[i] + fark
+                    tsf.iloc[i] = src.iloc[i]
+            
+            return tsf
         
-        self.indicators['ott'] = ott
+        # Moving Average türünü seç (konfigürasyondan al)
+        ma_type = config.get('ma_type', 'VAR')  # Varsayılan VAR
+        
+        if ma_type == "VAR":
+            ma = calculate_var(self.data['Close'], period)
+        elif ma_type == "WWMA":
+            ma = calculate_wwma(self.data['Close'], period)
+        elif ma_type == "ZLEMA":
+            ma = calculate_zlema(self.data['Close'], period)
+        elif ma_type == "TSF":
+            ma = calculate_tsf(self.data['Close'], period)
+        elif ma_type == "SMA":
+            ma = self.data['Close'].rolling(window=period).mean()
+        elif ma_type == "EMA":
+            ma = self.data['Close'].ewm(span=period).mean()
+        elif ma_type == "WMA":
+            # Weighted Moving Average
+            weights = np.arange(1, period + 1)
+            ma = self.data['Close'].rolling(window=period).apply(
+                lambda x: np.dot(x, weights) / weights.sum(), raw=True
+            )
+        elif ma_type == "TMA":
+            # Triangular Moving Average
+            half_period = period // 2
+            ma = self.data['Close'].rolling(window=half_period).mean().rolling(window=half_period + 1).mean()
+        else:
+            # Varsayılan olarak VAR kullan
+            ma = calculate_var(self.data['Close'], period)
+        
+        # OTT hesaplama - Pine Script algoritmasına göre
+        fark = ma * percent * 0.01
+        
+        # Long Stop hesaplama
+        long_stop = ma - fark
+        long_stop_prev = long_stop.shift(1).fillna(long_stop)
+        long_stop = np.where(ma > long_stop_prev, np.maximum(long_stop, long_stop_prev), long_stop)
+        
+        # Short Stop hesaplama
+        short_stop = ma + fark
+        short_stop_prev = short_stop.shift(1).fillna(short_stop)
+        short_stop = np.where(ma < short_stop_prev, np.minimum(short_stop, short_stop_prev), short_stop)
+        
+        # Direction hesaplama
+        dir_series = pd.Series(index=self.data.index, dtype=int)
+        dir_series.iloc[0] = 1  # Başlangıç yönü
+        
+        for i in range(1, len(self.data)):
+            prev_dir = dir_series.iloc[i-1]
+            ma_val = ma.iloc[i]
+            short_stop_prev_val = short_stop_prev.iloc[i]
+            long_stop_prev_val = long_stop_prev.iloc[i]
+            
+            if prev_dir == -1 and ma_val > short_stop_prev_val:
+                dir_series.iloc[i] = 1
+            elif prev_dir == 1 and ma_val < long_stop_prev_val:
+                dir_series.iloc[i] = -1
+            else:
+                dir_series.iloc[i] = prev_dir
+        
+        # MT (Moving Trend) hesaplama
+        mt = np.where(dir_series == 1, long_stop, short_stop)
+        
+        # OTT hesaplama
+        ott = np.where(ma > mt, mt * (200 + percent) / 200, mt * (200 - percent) / 200)
+        
+        # OTT'yi 2 periyot gecikmeli olarak hesapla (Pine Script'teki gibi)
+        ott_shifted = pd.Series(ott).shift(2)
+        
+        self.indicators['ott'] = ott_shifted
         
         # OTT trend belirleme
         ott_trend = pd.Series(index=self.data.index, dtype=int)
         for i in range(len(self.data)):
-            if self.data['Close'].iloc[i] > ott.iloc[i]:
+            if pd.notna(ott_shifted.iloc[i]) and self.data['Close'].iloc[i] > ott_shifted.iloc[i]:
                 ott_trend.iloc[i] = 1  # Yukarı trend
-            else:
+            elif pd.notna(ott_shifted.iloc[i]) and self.data['Close'].iloc[i] < ott_shifted.iloc[i]:
                 ott_trend.iloc[i] = -1  # Aşağı trend
+            else:
+                ott_trend.iloc[i] = 0  # Nötr
                 
         self.indicators['ott_trend'] = ott_trend
+        
+        # OTT renk değişimi sinyalleri
+        ott_color_change = pd.Series(index=self.data.index, dtype=bool)
+        for i in range(2, len(self.data)):
+            if pd.notna(ott_shifted.iloc[i]) and pd.notna(ott_shifted.iloc[i-1]):
+                ott_color_change.iloc[i] = ott_shifted.iloc[i] > ott_shifted.iloc[i-1]
+        
+        self.indicators['ott_color_change'] = ott_color_change
+        
+        # OTT sinyalleri (Pine Script versiyonuna göre)
+        # Support Line Crossing Signals
+        ma_cross_ott = pd.Series(index=self.data.index, dtype=bool)
+        ma_cross_ott_prev = pd.Series(index=self.data.index, dtype=bool)
+        
+        for i in range(1, len(self.data)):
+            if pd.notna(ma.iloc[i]) and pd.notna(ott_shifted.iloc[i]) and pd.notna(ma.iloc[i-1]) and pd.notna(ott_shifted.iloc[i-1]):
+                ma_cross_ott.iloc[i] = ma.iloc[i] > ott_shifted.iloc[i] and ma.iloc[i-1] <= ott_shifted.iloc[i-1]  # Crossover
+                ma_cross_ott_prev.iloc[i] = ma.iloc[i] < ott_shifted.iloc[i] and ma.iloc[i-1] >= ott_shifted.iloc[i-1]  # Crossunder
+        
+        self.indicators['ott_buy_signal'] = ma_cross_ott  # Support Line BUY Signal
+        self.indicators['ott_sell_signal'] = ma_cross_ott_prev  # Support Line SELL Signal
+        
+        # Price Crossing OTT Signals
+        price_cross_ott = pd.Series(index=self.data.index, dtype=bool)
+        price_cross_ott_prev = pd.Series(index=self.data.index, dtype=bool)
+        
+        for i in range(1, len(self.data)):
+            if pd.notna(self.data['Close'].iloc[i]) and pd.notna(ott_shifted.iloc[i]) and pd.notna(self.data['Close'].iloc[i-1]) and pd.notna(ott_shifted.iloc[i-1]):
+                price_cross_ott.iloc[i] = self.data['Close'].iloc[i] > ott_shifted.iloc[i] and self.data['Close'].iloc[i-1] <= ott_shifted.iloc[i-1]  # Price Crossover
+                price_cross_ott_prev.iloc[i] = self.data['Close'].iloc[i] < ott_shifted.iloc[i] and self.data['Close'].iloc[i-1] >= ott_shifted.iloc[i-1]  # Price Crossunder
+        
+        self.indicators['ott_price_buy_signal'] = price_cross_ott  # Price BUY Signal
+        self.indicators['ott_price_sell_signal'] = price_cross_ott_prev  # Price SELL Signal
     
     def _calculate_vwap(self, indicator_name: str) -> None:
         """VWAP (Volume Weighted Average Price) hesaplar"""

@@ -177,19 +177,19 @@ INDICATORS_CONFIG = {
     "vwema_5": {
         "name": "VWEMA 5",
         "period": 5,
-        "default": False,
+        "default": True,
         "color": "#e67e22"
     },
     "vwema_20": {
         "name": "VWEMA 20",
         "period": 20,
-        "default": False,
-        "color": "#f39c12"
+        "default": True,
+        "color": "#3498db"
     },
     "rsi": {
         "name": "Göreceli Güç Endeksi (RSI)",
         "period": 14,
-        "default": False,
+        "default": True,
         "overbought": 70,
         "oversold": 30
     },

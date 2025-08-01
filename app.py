@@ -177,7 +177,7 @@ def create_chart(df, analyzer, selected_indicators):
             indicator_data = analyzer.indicators[indicator]
             config = INDICATORS_CONFIG.get(indicator, {})
             
-            if indicator.startswith('ema') or indicator.startswith('ma_') or indicator.startswith('vwma') or indicator.startswith('vwema'):
+            if indicator.startswith('ema') or indicator.startswith('ma_'):
                 fig.add_trace(
                     go.Scatter(
                         x=df.index,
@@ -186,6 +186,20 @@ def create_chart(df, analyzer, selected_indicators):
                         line=dict(
                             color=config.get('color', '#2196f3'),
                             width=2
+                        )
+                    ),
+                    row=1, col=1
+                )
+            elif indicator.startswith('vwma') or indicator.startswith('vwema'):
+                fig.add_trace(
+                    go.Scatter(
+                        x=df.index,
+                        y=indicator_data,
+                        name=config.get('name', indicator),
+                        line=dict(
+                            color=config.get('color', '#2196f3'),
+                            width=2,
+                            dash='dot'
                         )
                     ),
                     row=1, col=1
@@ -280,7 +294,7 @@ def create_chart(df, analyzer, selected_indicators):
     # X ekseni ayarları
     fig.update_xaxes(
         rangeslider_visible=False,
-        showgrid=True,
+        showgrid=False,
         gridcolor='rgba(255,255,255,0.1)',
         showline=True,
         linecolor='rgba(255,255,255,0.2)'
@@ -288,7 +302,7 @@ def create_chart(df, analyzer, selected_indicators):
     
     # Y ekseni ayarları
     fig.update_yaxes(
-        showgrid=True,
+        showgrid=False,
         gridcolor='rgba(255,255,255,0.1)',
         showline=True,
         linecolor='rgba(255,255,255,0.2)'
@@ -1603,31 +1617,18 @@ def show_technical_analysis():
             if any(selected_indicators.values()):
                 st.markdown("""
                 <div style='
-                    margin: 1.5rem 0;
-                    padding: 1.5rem;
+                    margin: 1rem 0;
+                    padding: 1rem;
                     border: 1px solid hsl(215, 28%, 20%);
-                    border-radius: 0.75rem;
-                    background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(215, 40%, 10%) 100%);
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                    border-radius: 0.5rem;
+                    background: hsl(220, 45%, 12%);
                 '>
-                    <div style='
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 1.5rem;
-                        padding-bottom: 0.75rem;
-                        border-bottom: 1px solid hsl(215, 28%, 20%);
-                    '>
-                        <span style='
-                            font-size: 1.5rem;
-                            margin-right: 0.75rem;
-                        '>🔬</span>
-                        <h3 style='
-                            color: hsl(210, 40%, 98%); 
-                            margin: 0; 
-                            font-size: 1.25rem;
-                            font-weight: 600;
-                        '>İndikatör Değerleri</h3>
-                    </div>
+                    <h3 style='
+                        color: hsl(210, 40%, 98%); 
+                        margin: 0 0 1rem 0; 
+                        font-size: 1.1rem;
+                        font-weight: 600;
+                    '>İndikatör Değerleri</h3>
                 """, unsafe_allow_html=True)
                 
                 indicator_values = analyzer.get_latest_indicators()
@@ -1697,30 +1698,30 @@ def show_technical_analysis():
                             with indicator_cols[col_idx % len(indicator_cols)]:
                                 st.markdown(f"""
                                 <div style='
-                                    background: hsl(220, 45%, 12%);
-                                    border: 1px solid hsl(215, 35%, 18%);
-                                    border-radius: 0.5rem;
-                                    padding: 1rem;
+                                    background: hsl(215, 35%, 18%);
+                                    border: 1px solid hsl(215, 35%, 25%);
+                                    border-radius: 0.375rem;
+                                    padding: 0.75rem;
                                     text-align: center;
-                                    margin-bottom: 1rem;
+                                    margin-bottom: 0.5rem;
                                 '>
                                     <div style='
-                                        color: hsl(210, 40%, 98%);
-                                        font-size: 0.875rem;
+                                        color: hsl(215, 20%, 70%);
+                                        font-size: 0.75rem;
                                         font-weight: 500;
-                                        margin-bottom: 0.5rem;
+                                        margin-bottom: 0.25rem;
                                     '>{config.get('name', indicator)}</div>
                                     <div style='
                                         color: hsl(210, 40%, 98%);
-                                        font-size: 1.125rem;
-                                        font-weight: 700;
+                                        font-size: 1rem;
+                                        font-weight: 600;
                                         margin-bottom: 0.25rem;
                                     '>{value:.2f}</div>
                                     <div style='
                                         color: {status_color};
-                                        font-size: 0.75rem;
+                                        font-size: 0.7rem;
                                         font-weight: 500;
-                                    '>{status_icon} {status_text}</div>
+                                    '>{status_text}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
                         
@@ -1745,8 +1746,8 @@ def show_technical_analysis():
                         '>📏 Hareketli Ortalama Değerleri</h4>
                     """, unsafe_allow_html=True)
                     
-                    # EMA kartları - 4 sütunlu grid
-                    ema_cols = st.columns(min(len(selected_emas), 4))
+                    # EMA değerleri - yan yana grid düzeni
+                    ema_cols = st.columns(min(len(selected_emas), 3))  # Maksimum 3 sütun
                     
                     for i, indicator in enumerate(selected_emas):
                         if indicator in indicator_values:
@@ -1756,35 +1757,38 @@ def show_technical_analysis():
                             
                             config = INDICATORS_CONFIG.get(indicator, {})
                             distance_color = "hsl(142, 76%, 36%)" if distance >= 0 else "hsl(0, 84%, 60%)"
-                            distance_icon = "🟢" if distance >= 0 else "🔴"
                             
                             with ema_cols[i % len(ema_cols)]:
                                 st.markdown(f"""
                                 <div style='
-                                    background: hsl(220, 45%, 12%);
-                                    border: 1px solid hsl(215, 35%, 18%);
+                                    background: hsl(215, 35%, 18%);
+                                    border: 1px solid hsl(215, 35%, 25%);
                                     border-radius: 0.5rem;
-                                    padding: 1rem;
+                                    padding: 0.75rem;
+                                    margin-bottom: 0.75rem;
                                     text-align: center;
-                                    margin-bottom: 1rem;
+                                    height: 120px;
+                                    display: flex;
+                                    flex-direction: column;
+                                    justify-content: center;
                                 '>
                                     <div style='
-                                        color: hsl(210, 40%, 98%);
+                                        color: hsl(215, 20%, 70%);
                                         font-size: 0.875rem;
                                         font-weight: 500;
                                         margin-bottom: 0.5rem;
                                     '>{config.get('name', indicator)}</div>
                                     <div style='
                                         color: hsl(210, 40%, 98%);
-                                        font-size: 1.125rem;
-                                        font-weight: 700;
-                                        margin-bottom: 0.25rem;
+                                        font-size: 1.1rem;
+                                        font-weight: 600;
+                                        margin-bottom: 0.5rem;
                                     '>₺{ema_value:.2f}</div>
                                     <div style='
                                         color: {distance_color};
-                                        font-size: 0.75rem;
+                                        font-size: 0.875rem;
                                         font-weight: 500;
-                                    '>{distance_icon} {distance:+.2f} ({distance_pct:+.1f}%)</div>
+                                    '>{distance:+.2f} ({distance_pct:+.1f}%)</div>
                                 </div>
                                 """, unsafe_allow_html=True)
                     
@@ -2869,314 +2873,9 @@ def show_technical_analysis():
                 
                 st.markdown("</div>", unsafe_allow_html=True)
                 
-                # Risk Analizi & Pozisyon Önerileri - Sade ve Geliştirilmiş
-                st.markdown("""
-                <div style='
-                    margin-top: 1.5rem;
-                    padding: 1.25rem;
-                    border: 1px solid #4a5568;
-                    border-radius: 8px;
-                    background: #2d3748;
-                '>
-                    <div style='
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 1rem;
-                        padding-bottom: 0.5rem;
-                        border-bottom: 1px solid #4a5568;
-                    '>
-                        <span style='
-                            font-size: 20px;
-                            margin-right: 12px;
-                            color: #4299e1;
-                        '>📊</span>
-                        <h3 style='
-                            color: #ffffff;
-                            margin: 0;
-                            font-size: 18px;
-                            font-weight: 600;
-                        '>Risk Analizi & Pozisyon Önerileri</h3>
-                    </div>
-                """, unsafe_allow_html=True)
+                # Risk Analizi & Pozisyon Önerileri bölümü kaldırıldı
                 
-                # Ana Risk ve Pozisyon Kartları
-                risk_col1, risk_col2, risk_col3 = st.columns(3)
-                
-                with risk_col1:
-                    risk_color = risk_analysis['risk_color']
-                    st.markdown(f"""
-                    <div style='
-                        background: #4a5568;
-                        border: 1px solid {risk_color};
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin: 8px 0;
-                        text-align: center;
-                    '>
-                        <div style='
-                            color: {risk_color};
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>📊 Risk Skoru</div>
-                        <div style='
-                            color: #ffffff;
-                            font-size: 20px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>{risk_analysis['risk_score']:.1f}/10</div>
-                        <div style='
-                            color: {risk_color};
-                            font-size: 12px;
-                        '>{risk_analysis['risk_level']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with risk_col2:
-                    st.markdown(f"""
-                    <div style='
-                        background: #4a5568;
-                        border: 1px solid #38a169;
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin: 8px 0;
-                        text-align: center;
-                    '>
-                        <div style='
-                            color: #38a169;
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>💰 Pozisyon</div>
-                        <div style='
-                            color: #ffffff;
-                            font-size: 14px;
-                            font-weight: 600;
-                            line-height: 1.2;
-                        '>{risk_analysis['position_sizing']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with risk_col3:
-                    st.markdown(f"""
-                    <div style='
-                        background: #4a5568;
-                        border: 1px solid #e53e3e;
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin: 8px 0;
-                        text-align: center;
-                    '>
-                        <div style='
-                            color: #e53e3e;
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>🛡️ Stop-Loss</div>
-                        <div style='
-                            color: #ffffff;
-                            font-size: 14px;
-                            font-weight: 600;
-                            line-height: 1.2;
-                        '>{risk_analysis['stop_loss_suggestion']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # Pozisyon Önerisi Kartları
-                pos_col1, pos_col2, pos_col3 = st.columns(3)
-                
-                with pos_col1:
-                    recommendation_color = position_recommendation['recommendation_color']
-                    st.markdown(f"""
-                    <div style='
-                        background: #4a5568;
-                        border: 1px solid {recommendation_color};
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin: 8px 0;
-                        text-align: center;
-                    '>
-                        <div style='
-                            color: {recommendation_color};
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>📈 Öneri</div>
-                        <div style='
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>{position_recommendation['recommendation']}</div>
-                        <div style='
-                            color: {recommendation_color};
-                            font-size: 12px;
-                        '>{position_recommendation['position_strength']} sinyal</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with pos_col2:
-                    st.markdown(f"""
-                    <div style='
-                        background: #4a5568;
-                        border: 1px solid #f6ad55;
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin: 8px 0;
-                        text-align: center;
-                    '>
-                        <div style='
-                            color: #f6ad55;
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>🎯 Güven</div>
-                        <div style='
-                            color: #ffffff;
-                            font-size: 20px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>{position_recommendation['confidence']:.0f}%</div>
-                        <div style='
-                            color: #a0aec0;
-                            font-size: 10px;
-                        '>Boğa: {position_recommendation['bull_score']:.1f} | Ayı: {position_recommendation['bear_score']:.1f}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with pos_col3:
-                    st.markdown(f"""
-                    <div style='
-                        background: #4a5568;
-                        border: 1px solid #38a169;
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin: 8px 0;
-                        text-align: center;
-                    '>
-                        <div style='
-                            color: #38a169;
-                            font-size: 16px;
-                            font-weight: bold;
-                            margin-bottom: 4px;
-                        '>💰 Büyüklük</div>
-                        <div style='
-                            color: #ffffff;
-                            font-size: 14px;
-                            font-weight: 600;
-                            line-height: 1.2;
-                            margin-bottom: 4px;
-                        '>{position_recommendation['position_size']}</div>
-                        <div style='
-                            color: #a0aec0;
-                            font-size: 10px;
-                        '>Skor: {position_recommendation['total_score']:+.1f}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # Risk Önerileri - Sade Tasarım
-                if risk_analysis.get('recommendations'):
-                    st.markdown("""
-                    <div style='
-                        margin-top: 1rem;
-                        padding: 1rem;
-                        border: 1px solid #4a5568;
-                        border-radius: 6px;
-                        background: #2d3748;
-                    '>
-                        <div style='
-                            display: flex;
-                            align-items: center;
-                            margin-bottom: 0.75rem;
-                            padding-bottom: 0.5rem;
-                            border-bottom: 1px solid #4a5568;
-                        '>
-                            <span style='
-                                font-size: 16px;
-                                margin-right: 8px;
-                                color: #f6ad55;
-                            '>💡</span>
-                            <h4 style='
-                                color: #ffffff;
-                                margin: 0;
-                                font-size: 16px;
-                                font-weight: 600;
-                            '>Risk Önerileri</h4>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Öneriler listesi - Sade
-                    for i, recommendation in enumerate(risk_analysis['recommendations']):
-                        st.markdown(f"""
-                        <div style='
-                            background: #4a5568;
-                            border: 1px solid #4a5568;
-                            border-radius: 4px;
-                            padding: 8px;
-                            margin: 4px 0;
-                            display: flex;
-                            align-items: flex-start;
-                            gap: 8px;
-                        '>
-                            <span style='
-                                color: #a0aec0;
-                                font-size: 12px;
-                                margin-top: 2px;
-                            '>•</span>
-                            <div style='
-                                color: #e2e8f0;
-                                font-size: 12px;
-                                line-height: 1.4;
-                                flex: 1;
-                            '>{recommendation}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    st.markdown("</div>", unsafe_allow_html=True)
-                
-                # Ana çerçeveyi kapat
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-
-                
-                # Market Info moved to header
-                
-                # Hareketli Ortalama Uzaklıkları
-                ema_indicators = ['ema_5', 'ema_8', 'ema_13', 'ema_21', 'ema_50', 'ema_121', 'ma_200', 'vwma_5', 'vwema_5', 'vwema_20']
-                selected_emas = [ind for ind in ema_indicators if selected_indicators.get(ind, False)]
-                
-                if selected_emas:
-                    st.markdown("### 📏 Hareketli Ortalama Uzaklıkları")
-                    
-                    current_price = latest['Close']
-                    indicator_values = analyzer.get_latest_indicators()
-                    
-                    # EMA uzaklık kartları
-                    ema_distance_cols = st.columns(min(len(selected_emas), 4))
-                    
-                    for i, indicator in enumerate(selected_emas):
-                        if indicator in indicator_values:
-                            ema_value = indicator_values[indicator]
-                            distance = current_price - ema_value
-                            distance_pct = (distance / ema_value) * 100
-                            
-                            config = INDICATORS_CONFIG.get(indicator, {})
-                            distance_class = "positive" if distance >= 0 else "negative"
-                            
-                            with ema_distance_cols[i % len(ema_distance_cols)]:
-                                st.markdown(f"""
-                                <div class="metric-card">
-                                    <div class="metric-title">{config.get('name', indicator)}</div>
-                                    <div class="metric-value">₺{ema_value:.2f}</div>
-                                    <div class="metric-change {distance_class}">
-                                        {'+' if distance >= 0 else ''}{distance:.2f} ({distance_pct:+.1f}%)
-                                    </div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                
-
-                
-                else:
+        else:
                     st.markdown("""
                     <div style='
                         background: hsl(220, 45%, 12%);
