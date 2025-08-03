@@ -271,6 +271,202 @@ def create_chart(df, analyzer, selected_indicators):
                         ),
                         row=1, col=1
                     )
+            
+            # Gelişmiş indikatörler için görselleştirme
+            elif indicator in ['fvg', 'order_block', 'bos', 'fvg_ob_combo', 'fvg_bos_combo']:
+                if isinstance(indicator_data, dict):
+                    # FVG (Fair Value Gap) görselleştirmesi
+                    if 'fvg' in indicator and 'bullish' in indicator_data:
+                        bullish_fvg = indicator_data.get('bullish', [])
+                        bearish_fvg = indicator_data.get('bearish', [])
+                        
+                        # Bullish FVG'ler
+                        for fvg in bullish_fvg:
+                            if len(fvg) >= 4:  # [index, low, high, volume]
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=df.index[fvg[0]], x1=df.index[min(fvg[0]+5, len(df.index)-1)],
+                                    y0=fvg[1], y1=fvg[2],
+                                    fillcolor="rgba(76, 175, 80, 0.2)",
+                                    line=dict(color="rgba(76, 175, 80, 0.5)", width=1),
+                                    row=1, col=1
+                                )
+                        
+                        # Bearish FVG'ler
+                        for fvg in bearish_fvg:
+                            if len(fvg) >= 4:  # [index, low, high, volume]
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=df.index[fvg[0]], x1=df.index[min(fvg[0]+5, len(df.index)-1)],
+                                    y0=fvg[1], y1=fvg[2],
+                                    fillcolor="rgba(244, 67, 54, 0.2)",
+                                    line=dict(color="rgba(244, 67, 54, 0.5)", width=1),
+                                    row=1, col=1
+                                )
+                    
+                    # Order Block görselleştirmesi
+                    if 'order_block' in indicator and 'bullish' in indicator_data:
+                        bullish_ob = indicator_data.get('bullish', [])
+                        bearish_ob = indicator_data.get('bearish', [])
+                        
+                        # Bullish Order Blocks
+                        for ob in bullish_ob:
+                            if len(ob) >= 4:  # [index, low, high, volume]
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=df.index[ob[0]], x1=df.index[min(ob[0]+10, len(df.index)-1)],
+                                    y0=ob[1], y1=ob[2],
+                                    fillcolor="rgba(33, 150, 243, 0.15)",
+                                    line=dict(color="rgba(33, 150, 243, 0.6)", width=2),
+                                    row=1, col=1
+                                )
+                        
+                        # Bearish Order Blocks
+                        for ob in bearish_ob:
+                            if len(ob) >= 4:  # [index, low, high, volume]
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=df.index[ob[0]], x1=df.index[min(ob[0]+10, len(df.index)-1)],
+                                    y0=ob[1], y1=ob[2],
+                                    fillcolor="rgba(255, 152, 0, 0.15)",
+                                    line=dict(color="rgba(255, 152, 0, 0.6)", width=2),
+                                    row=1, col=1
+                                )
+                    
+                    # BOS (Break of Structure) görselleştirmesi
+                    if 'bos' in indicator and 'bullish' in indicator_data:
+                        bullish_bos = indicator_data.get('bullish', [])
+                        bearish_bos = indicator_data.get('bearish', [])
+                        
+                        # Bullish BOS işaretleri
+                        for bos in bullish_bos:
+                            if len(bos) >= 2:  # [index, price]
+                                fig.add_annotation(
+                                    x=df.index[bos[0]],
+                                    y=bos[1],
+                                    text="BOS↑",
+                                    showarrow=True,
+                                    arrowhead=2,
+                                    arrowcolor="green",
+                                    arrowwidth=2,
+                                    font=dict(color="green", size=10),
+                                    bgcolor="rgba(76, 175, 80, 0.8)",
+                                    bordercolor="green",
+                                    row=1, col=1
+                                )
+                        
+                        # Bearish BOS işaretleri
+                        for bos in bearish_bos:
+                            if len(bos) >= 2:  # [index, price]
+                                fig.add_annotation(
+                                    x=df.index[bos[0]],
+                                    y=bos[1],
+                                    text="BOS↓",
+                                    showarrow=True,
+                                    arrowhead=2,
+                                    arrowcolor="red",
+                                    arrowwidth=2,
+                                    font=dict(color="red", size=10),
+                                    bgcolor="rgba(244, 67, 54, 0.8)",
+                                    bordercolor="red",
+                                    row=1, col=1
+                                )
+                
+                # FVG + Order Block Kombinasyonu görselleştirmesi
+                elif indicator == 'fvg_ob_combo' and isinstance(indicator_data, list):
+                    for combo in indicator_data:
+                        if isinstance(combo, dict) and 'type' in combo:
+                            combo_type = combo['type']
+                            fvg_zone = combo.get('fvg_zone', (0, 0))
+                            order_block = combo.get('order_block', (0, 0))
+                            date = combo.get('date')
+                            
+                            if date and date in df.index:
+                                date_idx = df.index.get_loc(date)
+                                
+                                # FVG bölgesi
+                                color = "rgba(108, 92, 231, 0.3)" if combo_type == 'bullish' else "rgba(225, 112, 85, 0.3)"
+                                border_color = "rgba(108, 92, 231, 0.7)" if combo_type == 'bullish' else "rgba(225, 112, 85, 0.7)"
+                                
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=df.index[date_idx], x1=df.index[min(date_idx+8, len(df.index)-1)],
+                                    y0=fvg_zone[0], y1=fvg_zone[1],
+                                    fillcolor=color,
+                                    line=dict(color=border_color, width=2, dash="dash"),
+                                    row=1, col=1
+                                )
+                                
+                                # Order Block bölgesi
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=df.index[date_idx], x1=df.index[min(date_idx+8, len(df.index)-1)],
+                                    y0=order_block[0], y1=order_block[1],
+                                    fillcolor=color.replace('0.3', '0.2'),
+                                    line=dict(color=border_color, width=3),
+                                    row=1, col=1
+                                )
+                                
+                                # Kombinasyon etiketi
+                                fig.add_annotation(
+                                    x=df.index[date_idx],
+                                    y=(fvg_zone[1] + order_block[1]) / 2,
+                                    text=f"FVG+OB {'↑' if combo_type == 'bullish' else '↓'}",
+                                    showarrow=False,
+                                    font=dict(color="white", size=8, family="Arial Black"),
+                                    bgcolor=border_color,
+                                    bordercolor="white",
+                                    borderwidth=1,
+                                    row=1, col=1
+                                )
+                
+                # FVG + BOS Kombinasyonu görselleştirmesi
+                elif indicator == 'fvg_bos_combo' and isinstance(indicator_data, list):
+                    for combo in indicator_data:
+                        if isinstance(combo, dict) and 'type' in combo:
+                            combo_type = combo['type']
+                            fvg_zone = combo.get('fvg_zone', (0, 0))
+                            bos_price = combo.get('bos_price', 0)
+                            date = combo.get('date')
+                            
+                            if date and date in df.index:
+                                date_idx = df.index.get_loc(date)
+                                
+                                # FVG bölgesi
+                                color = "rgba(0, 184, 148, 0.3)" if combo_type == 'bullish' else "rgba(214, 48, 49, 0.3)"
+                                border_color = "rgba(0, 184, 148, 0.8)" if combo_type == 'bullish' else "rgba(214, 48, 49, 0.8)"
+                                
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=df.index[date_idx], x1=df.index[min(date_idx+6, len(df.index)-1)],
+                                    y0=fvg_zone[0], y1=fvg_zone[1],
+                                    fillcolor=color,
+                                    line=dict(color=border_color, width=2, dash="dot"),
+                                    row=1, col=1
+                                )
+                                
+                                # BOS çizgisi
+                                fig.add_hline(
+                                    y=bos_price,
+                                    line=dict(color=border_color, width=3, dash="solid"),
+                                    row=1, col=1
+                                )
+                                
+                                # Kombinasyon etiketi
+                                fig.add_annotation(
+                                    x=df.index[date_idx],
+                                    y=bos_price,
+                                    text=f"FVG+BOS {'↑' if combo_type == 'bullish' else '↓'}",
+                                    showarrow=True,
+                                    arrowhead=3,
+                                    arrowcolor=border_color,
+                                    arrowwidth=2,
+                                    font=dict(color="white", size=8, family="Arial Black"),
+                                    bgcolor=border_color,
+                                    bordercolor="white",
+                                    borderwidth=1,
+                                    row=1, col=1
+                                )
     
     # Grafik düzeni ve stil
     fig.update_layout(
@@ -1343,8 +1539,8 @@ def show_technical_analysis():
     
 
 
-    # Hisse seçimi, zaman aralığı ve dönem kontrolleri - Üst bölüm
-    control_col1, control_col2, control_col3 = st.columns([2, 1, 1])
+    # Hisse seçimi, zaman aralığı, dönem ve uyarı kontrolleri - Üst bölüm
+    control_col1, control_col2, control_col3, control_col4 = st.columns([2, 1, 1, 1])
         
     with control_col1:
             st.markdown("""
@@ -1408,11 +1604,26 @@ def show_technical_analysis():
                 label_visibility="collapsed",
                 key="content_period"
             )
+    
+    with control_col4:
+            # Uyarı Ayarları
+            st.markdown("""
+            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">🚨 Uyarılar</div>
+            </div>
+            """, unsafe_allow_html=True)
+            alert_methods = st.multiselect(
+                "Yöntem",
+                ["Email", "Telegram", "Desktop"], 
+                default=["Desktop"],
+                key="alert_methods",
+                label_visibility="collapsed"
+            )
         
     st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
     
     # İndikatör Seçimi - Kompakt Dropdown'lar
-    indicator_col1, indicator_col2, indicator_col3, indicator_col4, indicator_col5 = st.columns(5)
+    indicator_col1, indicator_col2, indicator_col3, indicator_col4 = st.columns(4)
     
     selected_indicators = {}
     
@@ -1496,20 +1707,7 @@ def show_technical_analysis():
             if indicator in INDICATORS_CONFIG:
                 selected_indicators[indicator] = INDICATORS_CONFIG[indicator]["name"] in selected_advanced_list
     
-    with indicator_col5:
-        # Uyarı Ayarları
-        st.markdown("""
-        <div style="color: #00ff00; font-weight: bold; font-size: 14px; margin-bottom: 8px;">
-        🚨 Uyarılar
-        </div>
-        """, unsafe_allow_html=True)
-        alert_methods = st.multiselect(
-            "Yöntem",
-            ["Email", "Telegram", "Desktop"], 
-            default=["Desktop"],
-            key="alert_methods",
-            label_visibility="collapsed"
-        )
+
     
     st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
     
