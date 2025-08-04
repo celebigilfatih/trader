@@ -117,7 +117,7 @@ def create_chart(df, analyzer, selected_indicators):
         shared_xaxes=True,
         vertical_spacing=0.02,
         subplot_titles=['Price & Indicators', 'Volume', 'RSI'],
-        row_heights=[0.8, 0.12, 0.08],
+        row_heights=[0.65, 0.12, 0.23],
         specs=[[{"secondary_y": False}],
                [{"secondary_y": False}], 
                [{"secondary_y": False}]]
@@ -155,21 +155,143 @@ def create_chart(df, analyzer, selected_indicators):
     
     # RSI grafiği (eğer RSI indikatörü seçilmişse)
     if selected_indicators.get('rsi', False) and 'rsi' in analyzer.indicators:
+        config = INDICATORS_CONFIG.get('rsi', {})
         rsi_data = analyzer.indicators['rsi']
+        
+        # Ana RSI çizgisi
         fig.add_trace(
             go.Scatter(
                 x=df.index,
                 y=rsi_data,
                 name="RSI",
-                line=dict(color='#ff9800', width=2)
+                line=dict(
+                    color='#ff9800', 
+                    width=config.get('line_width', 1)
+                )
             ),
             row=3, col=1
         )
         
+        # RSI EMA çizgisi (eğer varsa)
+        if 'rsi_ema' in analyzer.indicators:
+            fig.add_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=analyzer.indicators['rsi_ema'],
+                    name="RSI EMA",
+                    line=dict(color='#2196f3', width=1, dash='dot'),
+                    opacity=0.7
+                ),
+                row=3, col=1
+            )
+        
         # RSI seviyeler
-        fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
-        fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
+        top_color = config.get('top_line_color', 'red')
+        bottom_color = config.get('bottom_line_color', 'blue')
+        
+        fig.add_hline(y=70, line_dash="dash", line_color=top_color, opacity=0.5, row=3, col=1)
+        fig.add_hline(y=30, line_dash="dash", line_color=bottom_color, opacity=0.5, row=3, col=1)
         fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
+        
+        # Pivot noktaları (eğer varsa ve gösterilmek isteniyorsa)
+        if config.get('show_pivot_points', True):
+            if 'rsi_pivot_highs' in analyzer.indicators:
+                pivot_highs = analyzer.indicators['rsi_pivot_highs']
+                valid_highs = pivot_highs.dropna()
+                if not valid_highs.empty:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=valid_highs.index,
+                            y=valid_highs.values,
+                            mode='markers',
+                            name="RSI Pivot Highs",
+                            marker=dict(
+                                color='red',
+                                size=6,
+                                symbol='triangle-down'
+                            ),
+                            showlegend=False
+                        ),
+                        row=3, col=1
+                    )
+            
+            if 'rsi_pivot_lows' in analyzer.indicators:
+                pivot_lows = analyzer.indicators['rsi_pivot_lows']
+                valid_lows = pivot_lows.dropna()
+                if not valid_lows.empty:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=valid_lows.index,
+                            y=valid_lows.values,
+                            mode='markers',
+                            name="RSI Pivot Lows",
+                            marker=dict(
+                                color='green',
+                                size=6,
+                                symbol='triangle-up'
+                            ),
+                            showlegend=False
+                        ),
+                        row=3, col=1
+                    )
+        
+        # Trend çizgileri (eğer varsa ve gösterilmek isteniyorsa)
+        if config.get('show_broken_trend_lines', True) and 'rsi_trend_lines' in analyzer.indicators:
+            trend_lines = analyzer.indicators['rsi_trend_lines']
+            
+            # Direnç çizgileri
+            for line in trend_lines.get('resistance_lines', []):
+                if config.get('extend_lines', False):
+                    # Çizgiyi genişlet
+                    end_idx = len(df.index) - 1
+                    end_val = line['slope'] * end_idx + line['intercept']
+                else:
+                    end_idx = line['end_idx']
+                    end_val = line['end_val']
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=[df.index[line['start_idx']], df.index[end_idx]],
+                        y=[line['start_val'], end_val],
+                        mode='lines',
+                        name="RSI Resistance",
+                        line=dict(
+                            color=top_color,
+                            width=1,
+                            dash='solid' if config.get('line_style') == 'solid' else 'dash'
+                        ),
+                        showlegend=False,
+                        opacity=0.6
+                    ),
+                    row=3, col=1
+                )
+            
+            # Destek çizgileri
+            for line in trend_lines.get('support_lines', []):
+                if config.get('extend_lines', False):
+                    # Çizgiyi genişlet
+                    end_idx = len(df.index) - 1
+                    end_val = line['slope'] * end_idx + line['intercept']
+                else:
+                    end_idx = line['end_idx']
+                    end_val = line['end_val']
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=[df.index[line['start_idx']], df.index[end_idx]],
+                        y=[line['start_val'], end_val],
+                        mode='lines',
+                        name="RSI Support",
+                        line=dict(
+                            color=bottom_color,
+                            width=1,
+                            dash='solid' if config.get('line_style') == 'solid' else 'dash'
+                        ),
+                        showlegend=False,
+                        opacity=0.6
+                    ),
+                    row=3, col=1
+                )
     
     # Teknik indikatörleri ana grafiğe ekle
     for indicator, enabled in selected_indicators.items():
@@ -236,12 +358,17 @@ def create_chart(df, analyzer, selected_indicators):
             
             elif indicator == 'bollinger':
                 # Bollinger bantları için özel işlem
-                if isinstance(indicator_data, dict):
+                # Ayrı ayrı kaydedilen bb_upper, bb_lower, bb_middle verilerini al
+                bb_upper = analyzer.indicators.get('bb_upper')
+                bb_lower = analyzer.indicators.get('bb_lower')
+                bb_middle = analyzer.indicators.get('bb_middle')
+                
+                if bb_upper is not None and bb_lower is not None and bb_middle is not None:
                     # Üst bant
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=indicator_data.get('upper', []),
+                            y=bb_upper,
                             name="BB Upper",
                             line=dict(color='rgba(158,158,158,0.5)', width=1),
                             showlegend=False
@@ -252,7 +379,7 @@ def create_chart(df, analyzer, selected_indicators):
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=indicator_data.get('lower', []),
+                            y=bb_lower,
                             name="BB Lower",
                             line=dict(color='rgba(158,158,158,0.5)', width=1),
                             fill='tonexty',
@@ -265,7 +392,7 @@ def create_chart(df, analyzer, selected_indicators):
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=indicator_data.get('middle', []),
+                            y=bb_middle,
                             name="BB Middle",
                             line=dict(color='#9e9e9e', width=1)
                         ),
@@ -428,6 +555,8 @@ def create_chart(df, analyzer, selected_indicators):
                             fvg_zone = combo.get('fvg_zone', (0, 0))
                             bos_price = combo.get('bos_price', 0)
                             date = combo.get('date')
+                            strength = combo.get('strength', 0)
+                            confidence = combo.get('confidence', 50)
                             
                             if date and date in df.index:
                                 date_idx = df.index.get_loc(date)
@@ -452,11 +581,11 @@ def create_chart(df, analyzer, selected_indicators):
                                     row=1, col=1
                                 )
                                 
-                                # Kombinasyon etiketi
+                                # Kombinasyon etiketi - daha detaylı bilgi
                                 fig.add_annotation(
                                     x=df.index[date_idx],
                                     y=bos_price,
-                                    text=f"FVG+BOS {'↑' if combo_type == 'bullish' else '↓'}",
+                                    text=f"FVG+BOS {'↑' if combo_type == 'bullish' else '↓'}<br>Güven: {confidence:.0f}%<br>Güç: {strength:.0f}",
                                     showarrow=True,
                                     arrowhead=3,
                                     arrowcolor=border_color,
@@ -1404,6 +1533,39 @@ def main():
         
         .metric-tooltip-range strong {
             color: hsl(210, 40%, 85%);
+        }
+        
+        /* Tab Styling - Beyaz başlıklar */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            background-color: transparent !important;
+            border: 1px solid hsl(215, 35%, 18%) !important;
+            border-radius: 8px !important;
+            color: hsl(210, 40%, 98%) !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            padding: 12px 16px !important;
+            margin: 0 !important;
+            height: auto !important;
+        }
+        
+        .stTabs [data-baseweb="tab"]:hover {
+            background-color: hsl(220, 45%, 15%) !important;
+            border-color: hsl(215, 35%, 25%) !important;
+            color: hsl(210, 40%, 100%) !important;
+        }
+        
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            background-color: hsl(220, 45%, 18%) !important;
+            border-color: hsl(215, 35%, 30%) !important;
+            color: hsl(210, 40%, 100%) !important;
+        }
+        
+        .stTabs [data-baseweb="tab-panel"] {
+            padding-top: 1.5rem !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -3788,30 +3950,13 @@ def show_modern_dashboard():
 def show_ai_predictions():
     """AI tahminleri sayfası - Gelişmiş AI/ML Dashboard"""
     st.markdown("""
-    <div class="page-header">
-        <h1 style="display: inline-block; margin-right: 1rem;">🤖 AI Tahminleri</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Çok modelli makine öğrenmesi ile gelişmiş fiyat tahmini ve analizi</span>
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0;">🤖 AI Tahminleri</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem;">Çok modelli makine öğrenmesi ile gelişmiş fiyat tahmini ve analizi</span>
     </div>
     """, unsafe_allow_html=True)
     
-    # Settings panel
-    st.markdown("""
-    <div class="modern-card">
-        <h3>🎛️ Tahmin Ayarları</h3>
-        <p>AI tahmin parametrelerinizi yapılandırın</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Zaman dilimi açıklaması
-    st.info("""
-    💡 **Zaman Dilimi Nasıl Çalışır?**
-    
-    • **1 gün sonra**: AI modeli yarınki fiyatı tahmin eder
-    • **1 hafta sonra**: 7 gün sonraki fiyatı tahmin eder  
-    • **1 ay sonra**: 30 gün sonraki fiyatı tahmin eder
-    
-    ⚡ **Kısa vadeli tahminler** (1-3 gün) daha güvenilir, **uzun vadeli** (30 gün) daha belirsizdir.
-    """)
+
     
     col1, col2, col3 = st.columns([2, 1, 1])
     
@@ -3825,10 +3970,9 @@ def show_ai_predictions():
     
     with col2:
         prediction_horizon = st.selectbox(
-            "⏰ Zaman Dilimi",
-            options=[1, 3, 7, 14, 30],
+            "⏰ Tahmin Süresi",
+            options=[3, 7, 14, 30],
             format_func=lambda x: {
-                1: "1 gün sonra (yarın)",
                 3: "3 gün sonra", 
                 7: "1 hafta sonra",
                 14: "2 hafta sonra",
@@ -4387,9 +4531,9 @@ def show_ai_predictions():
 def show_stock_screener():
     """Hisse tarayıcı sayfası"""
     st.markdown("""
-    <div class="page-header">
-        <h1 style="display: inline-block; margin-right: 1rem;">🔍 Hisse Tarayıcı</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Teknik kriterlere göre hisse taraması</span>
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0;">🔍 Hisse Tarayıcı</h1>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem;">Teknik kriterlere göre hisse taraması</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -4406,28 +4550,10 @@ def show_stock_screener():
         "5m": "5 Dakika"
     }
     
-    # Kompakt zaman dilimi seçimi
-    col1, col2 = st.columns([2, 3])
-    with col1:
-        selected_interval = st.selectbox(
-            "⏰ Zaman Dilimi", 
-            list(time_intervals.keys()),
-            format_func=lambda x: time_intervals[x],
-            index=0,
-            key="screener_interval"
-        )
-    
     # Tarama sekmeli yapısı
-    tab1, tab2, tab3, tab4 = st.tabs(["🚀 Boğa Sinyalleri", "⚡ Teknik Taramalar", "📊 Genel Taramalar", "💰 Day Trade Fırsatları"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🚀 BOĞA SİNYALLERİ", "⚡ TEKNİK TARAMALAR", "📊 GENEL TARAMALAR", "💰 DAY TRADE FIRSATLARI"])
     
     with tab1:
-        st.markdown("""
-        <div class="metric-card">
-            <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">🚀 Boğa Sinyalleri Taraması</h2>
-            <p style="color: rgba(255,255,255,0.7);">Ana uygulamadaki boğa sinyallerini BIST hisselerinde tara</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
         # Boğa sinyali seçimi
         signal_types = {
             'VWAP Bull Signal': '📈 VWAP Boğa Sinyali',
@@ -4441,13 +4567,22 @@ def show_stock_screener():
             'Gap Up Signal': '⬆️ Gap Up Sinyali'
         }
         
-        col1, col2 = st.columns(2)
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             selected_signal = st.selectbox("Sinyal Türü Seç", list(signal_types.keys()),
                                          format_func=lambda x: signal_types[x], key="signal_type")
         
         with col2:
+            selected_interval = st.selectbox(
+                "⏰ Zaman Dilimi", 
+                list(time_intervals.keys()),
+                format_func=lambda x: time_intervals[x],
+                index=0,
+                key="screener_interval"
+            )
+        
+        with col3:
             if st.button("🔍 Sinyal Taraması Yap", type="primary", key="bull_signal_scan"):
                 with st.spinner(f"{signal_types[selected_signal]} sinyali aranıyor..."):
                     # Seçili sinyale göre tarama fonksiyonu çağır
@@ -4507,30 +4642,30 @@ def show_stock_screener():
                         </div>
                         """, unsafe_allow_html=True)
         
-        # Tüm sinyalleri tara butonu
-        if st.button("🚀 Tüm Boğa Sinyallerini Tara", type="secondary", key="all_bull_signals"):
-            with st.spinner("Tüm boğa sinyalleri taranıyor..."):
-                all_results = screener.screen_all_bull_signals(selected_interval)
-                
-                # Her sinyal için sonuçları göster
-                for signal_name, signal_results in all_results.items():
-                    if signal_results:
-                        st.markdown(f"""
-                        <div class="metric-card">
-                            <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">{signal_types[signal_name]}</h3>
-                            <p style="color: rgba(255,255,255,0.7);">{len(signal_results)} hisse bulundu</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        df = pd.DataFrame(signal_results)
-                        st.dataframe(df, use_container_width=True)
-                    else:
-                        st.markdown(f"""
-                        <div class="warning-box">
-                            <h4>{signal_types[signal_name]}</h4>
-                            <p>Sinyal bulunamadı</p>
-                        </div>
-                        """, unsafe_allow_html=True)
+        with col4:
+            if st.button("🚀 Tüm Boğa Sinyallerini Tara", type="secondary", key="all_bull_signals"):
+                with st.spinner("Tüm boğa sinyalleri taranıyor..."):
+                    all_results = screener.screen_all_bull_signals(selected_interval)
+                    
+                    # Her sinyal için sonuçları göster
+                    for signal_name, signal_results in all_results.items():
+                        if signal_results:
+                            st.markdown(f"""
+                            <div class="metric-card">
+                                <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">{signal_types[signal_name]}</h3>
+                                <p style="color: rgba(255,255,255,0.7);">{len(signal_results)} hisse bulundu</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            df = pd.DataFrame(signal_results)
+                            st.dataframe(df, use_container_width=True)
+                        else:
+                            st.markdown(f"""
+                            <div class="warning-box">
+                                <h4>{signal_types[signal_name]}</h4>
+                                <p>Sinyal bulunamadı</p>
+                            </div>
+                            """, unsafe_allow_html=True)
     
     with tab2:
         st.markdown("""

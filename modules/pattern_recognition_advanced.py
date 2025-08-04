@@ -178,8 +178,8 @@ class AdvancedPatternRecognition:
         self._identify_structure_points(lookback, swing_threshold)
         
         # Boş DataFrame'ler oluştur
-        bullish_bos = pd.DataFrame(columns=['date', 'price', 'prev_high', 'strength'])
-        bearish_bos = pd.DataFrame(columns=['date', 'price', 'prev_low', 'strength'])
+        bullish_bos = pd.DataFrame(columns=['date', 'price', 'prev_high', 'strength', 'volume_confirmation'])
+        bearish_bos = pd.DataFrame(columns=['date', 'price', 'prev_low', 'strength', 'volume_confirmation'])
         
         # Minimum veri kontrolü
         if len(self.data) < 10 or not self.structure_points:
@@ -194,101 +194,177 @@ class AdvancedPatternRecognition:
             current_idx = len(self.data) - i
             current_price = self.data['Close'].iloc[current_idx]
             current_date = self.data.index[current_idx]
+            current_volume = self.data['Volume'].iloc[current_idx]
+            
+            # Hacim onayı için ortalama hacmi hesapla
+            avg_volume = self.data['Volume'].iloc[max(0, current_idx-20):current_idx].mean()
+            volume_confirmation = current_volume > avg_volume * 1.2  # %20 fazla hacim
             
             # Bullish BOS: Önceki swing high kırıldı mı?
             prev_highs = [h for h in highs if h['idx'] < current_idx]
-            if prev_highs and current_price > max([h['price'] for h in prev_highs]):
+            if prev_highs:
                 # En yakın önceki swing high'ı bul
-                prev_high = max([h for h in prev_highs], key=lambda x: x['price'])
+                recent_high = max([h for h in prev_highs], key=lambda x: x['price'])
                 
-                # BOS gücünü hesapla (kırılan yapının büyüklüğüne göre)
-                strength = min(100, (current_price - prev_high['price']) / prev_high['price'] * 100 * 10)
-                
-                # BOS'u kaydet
-                bullish_bos = pd.concat([bullish_bos, pd.DataFrame({
-                    'date': [current_date],
-                    'price': [current_price],
-                    'prev_high': [prev_high['price']],
-                    'strength': [strength]
-                })], ignore_index=True)
+                # BOS koşulu: Fiyat önceki swing high'ı kırmalı ve kapanış da üstünde olmalı
+                if (current_price > recent_high['price'] and 
+                    self.data['High'].iloc[current_idx] > recent_high['price']):
+                    
+                    # BOS gücünü hesapla (kırılan yapının büyüklüğüne göre)
+                    price_break_percent = (current_price - recent_high['price']) / recent_high['price'] * 100
+                    strength = min(100, price_break_percent * 15 + recent_high['strength'] * 0.3)
+                    
+                    # Hacim onayı varsa güçü artır
+                    if volume_confirmation:
+                        strength *= 1.3
+                    
+                    # BOS'u kaydet
+                    bullish_bos = pd.concat([bullish_bos, pd.DataFrame({
+                        'date': [current_date],
+                        'price': [current_price],
+                        'prev_high': [recent_high['price']],
+                        'strength': [strength],
+                        'volume_confirmation': [volume_confirmation]
+                    })], ignore_index=True)
             
             # Bearish BOS: Önceki swing low kırıldı mı?
             prev_lows = [l for l in lows if l['idx'] < current_idx]
-            if prev_lows and current_price < min([l['price'] for l in prev_lows]):
+            if prev_lows:
                 # En yakın önceki swing low'u bul
-                prev_low = min([l for l in prev_lows], key=lambda x: x['price'])
+                recent_low = min([l for l in prev_lows], key=lambda x: x['price'])
                 
-                # BOS gücünü hesapla (kırılan yapının büyüklüğüne göre)
-                strength = min(100, (prev_low['price'] - current_price) / prev_low['price'] * 100 * 10)
-                
-                # BOS'u kaydet
-                bearish_bos = pd.concat([bearish_bos, pd.DataFrame({
-                    'date': [current_date],
-                    'price': [current_price],
-                    'prev_low': [prev_low['price']],
-                    'strength': [strength]
-                })], ignore_index=True)
+                # BOS koşulu: Fiyat önceki swing low'u kırmalı ve kapanış da altında olmalı
+                if (current_price < recent_low['price'] and 
+                    self.data['Low'].iloc[current_idx] < recent_low['price']):
+                    
+                    # BOS gücünü hesapla (kırılan yapının büyüklüğüne göre)
+                    price_break_percent = (recent_low['price'] - current_price) / recent_low['price'] * 100
+                    strength = min(100, price_break_percent * 15 + recent_low['strength'] * 0.3)
+                    
+                    # Hacim onayı varsa güçü artır
+                    if volume_confirmation:
+                        strength *= 1.3
+                    
+                    # BOS'u kaydet
+                    bearish_bos = pd.concat([bearish_bos, pd.DataFrame({
+                        'date': [current_date],
+                        'price': [current_price],
+                        'prev_low': [recent_low['price']],
+                        'strength': [strength],
+                        'volume_confirmation': [volume_confirmation]
+                    })], ignore_index=True)
         
         return {'bullish': bullish_bos, 'bearish': bearish_bos}
     
-    def _identify_structure_points(self, lookback: int = 50, threshold: float = 0.5) -> Dict[str, List[Dict]]:
+    def _identify_structure_points(self, lookback: int = 50, swing_threshold: float = 0.5):
         """
-        Fiyat yapısındaki swing high/low noktalarını tespit eder
+        Swing high/low noktalarını tespit eder
         
         Args:
             lookback: Geriye dönük bakılacak mum sayısı
-            threshold: Swing noktası olarak kabul edilecek minimum fiyat hareketi yüzdesi
-            
-        Returns:
-            Dict: Swing high ve low noktaları
+            swing_threshold: Swing noktası olarak kabul edilecek minimum fiyat hareketi yüzdesi
         """
+        if len(self.data) < 10:
+            self.structure_points = {'highs': [], 'lows': []}
+            return
+        
         highs = []
         lows = []
         
-        # Minimum veri kontrolü
-        if len(self.data) < lookback:
-            lookback = len(self.data)
+        # Daha hassas swing tespit parametreleri
+        min_swing_distance = 5  # Swing noktaları arası minimum mesafe
+        strength_multiplier = 2.0  # Güç hesaplama çarpanı
         
         # Son lookback kadar mumu analiz et
-        for i in range(5, lookback - 5):
-            idx = len(self.data) - i
+        for i in range(5, min(len(self.data) - 5, lookback)):
+            current_idx = len(self.data) - i
+            current_high = self.data['High'].iloc[current_idx]
+            current_low = self.data['Low'].iloc[current_idx]
+            current_volume = self.data['Volume'].iloc[current_idx]
             
-            # Swing High tespiti (önceki ve sonraki 5 mumdan yüksek)
-            if all(self.data['High'].iloc[idx] > self.data['High'].iloc[idx-j] for j in range(1, 6)) and \
-               all(self.data['High'].iloc[idx] > self.data['High'].iloc[idx+j] for j in range(1, 6)):
-                
-                # Swing büyüklüğü yeterli mi?
-                left_min = min(self.data['Low'].iloc[idx-5:idx])
-                right_min = min(self.data['Low'].iloc[idx+1:idx+6])
-                swing_size = (self.data['High'].iloc[idx] - min(left_min, right_min)) / min(left_min, right_min) * 100
-                
-                if swing_size > threshold:
-                    highs.append({
-                        'idx': idx,
-                        'date': self.data.index[idx],
-                        'price': self.data['High'].iloc[idx],
-                        'strength': min(100, swing_size * 10)
-                    })
+            # Hacim onayı için ortalama hacmi hesapla
+            avg_volume = self.data['Volume'].iloc[max(0, current_idx-10):current_idx+10].mean()
+            volume_strength = min(2.0, current_volume / avg_volume) if avg_volume > 0 else 1.0
             
-            # Swing Low tespiti (önceki ve sonraki 5 mumdan düşük)
-            if all(self.data['Low'].iloc[idx] < self.data['Low'].iloc[idx-j] for j in range(1, 6)) and \
-               all(self.data['Low'].iloc[idx] < self.data['Low'].iloc[idx+j] for j in range(1, 6)):
+            # Swing High kontrolü - önceki ve sonraki 3 mumla karşılaştır
+            is_swing_high = True
+            for j in range(1, 4):
+                if (current_idx - j >= 0 and current_high <= self.data['High'].iloc[current_idx - j]) or \
+                   (current_idx + j < len(self.data) and current_high <= self.data['High'].iloc[current_idx + j]):
+                    is_swing_high = False
+                    break
+            
+            if is_swing_high:
+                # Swing high gücünü hesapla
+                price_range = max(self.data['High'].iloc[max(0, current_idx-10):current_idx+10]) - \
+                             min(self.data['Low'].iloc[max(0, current_idx-10):current_idx+10])
                 
-                # Swing büyüklüğü yeterli mi?
-                left_max = max(self.data['High'].iloc[idx-5:idx])
-                right_max = max(self.data['High'].iloc[idx+1:idx+6])
-                swing_size = (max(left_max, right_max) - self.data['Low'].iloc[idx]) / self.data['Low'].iloc[idx] * 100
+                if price_range > 0:
+                    # Çevredeki mumlarla fark yüzdesi
+                    nearby_highs = [self.data['High'].iloc[current_idx + k] for k in range(-3, 4) 
+                                   if 0 <= current_idx + k < len(self.data) and k != 0]
+                    if nearby_highs:
+                        avg_nearby_high = sum(nearby_highs) / len(nearby_highs)
+                        height_advantage = (current_high - avg_nearby_high) / avg_nearby_high * 100
+                        
+                        # Güç hesaplama: yükseklik avantajı + hacim onayı
+                        strength = min(100, height_advantage * strength_multiplier * volume_strength)
+                        
+                        # Minimum güç eşiği kontrolü
+                        if strength >= swing_threshold * 10:  # swing_threshold'u güç için uyarla
+                            # Çok yakın swing high var mı kontrol et
+                            too_close = any(abs(h['idx'] - current_idx) < min_swing_distance for h in highs)
+                            if not too_close:
+                                highs.append({
+                                    'idx': current_idx,
+                                    'price': current_high,
+                                    'strength': strength,
+                                    'volume_strength': volume_strength,
+                                    'date': self.data.index[current_idx]
+                                })
+            
+            # Swing Low kontrolü - önceki ve sonraki 3 mumla karşılaştır
+            is_swing_low = True
+            for j in range(1, 4):
+                if (current_idx - j >= 0 and current_low >= self.data['Low'].iloc[current_idx - j]) or \
+                   (current_idx + j < len(self.data) and current_low >= self.data['Low'].iloc[current_idx + j]):
+                    is_swing_low = False
+                    break
+            
+            if is_swing_low:
+                # Swing low gücünü hesapla
+                price_range = max(self.data['High'].iloc[max(0, current_idx-10):current_idx+10]) - \
+                             min(self.data['Low'].iloc[max(0, current_idx-10):current_idx+10])
                 
-                if swing_size > threshold:
-                    lows.append({
-                        'idx': idx,
-                        'date': self.data.index[idx],
-                        'price': self.data['Low'].iloc[idx],
-                        'strength': min(100, swing_size * 10)
-                    })
+                if price_range > 0:
+                    # Çevredeki mumlarla fark yüzdesi
+                    nearby_lows = [self.data['Low'].iloc[current_idx + k] for k in range(-3, 4) 
+                                  if 0 <= current_idx + k < len(self.data) and k != 0]
+                    if nearby_lows:
+                        avg_nearby_low = sum(nearby_lows) / len(nearby_lows)
+                        depth_advantage = (avg_nearby_low - current_low) / avg_nearby_low * 100
+                        
+                        # Güç hesaplama: derinlik avantajı + hacim onayı
+                        strength = min(100, depth_advantage * strength_multiplier * volume_strength)
+                        
+                        # Minimum güç eşiği kontrolü
+                        if strength >= swing_threshold * 10:  # swing_threshold'u güç için uyarla
+                            # Çok yakın swing low var mı kontrol et
+                            too_close = any(abs(l['idx'] - current_idx) < min_swing_distance for l in lows)
+                            if not too_close:
+                                lows.append({
+                                    'idx': current_idx,
+                                    'price': current_low,
+                                    'strength': strength,
+                                    'volume_strength': volume_strength,
+                                    'date': self.data.index[current_idx]
+                                })
+        
+        # Güce göre sırala ve en güçlü olanları seç
+        highs = sorted(highs, key=lambda x: x['strength'], reverse=True)[:20]
+        lows = sorted(lows, key=lambda x: x['strength'], reverse=True)[:20]
         
         self.structure_points = {'highs': highs, 'lows': lows}
-        return self.structure_points
     
     def get_fvg_order_block_combo(self) -> List[Dict]:
         """
@@ -342,6 +418,14 @@ class AdvancedPatternRecognition:
         Returns:
             List: FVG ve BOS kombinasyonları
         """
+        from .config import INDICATORS_CONFIG
+        
+        # Konfigürasyondan parametreleri al
+        config = INDICATORS_CONFIG.get('fvg_bos_combo', {})
+        time_window = config.get('time_window', 3)
+        strength_threshold = config.get('strength_threshold', 30)
+        proximity_threshold = config.get('proximity_threshold', 0.015)
+        
         # Eğer henüz tespit edilmediyse, FVG ve BOS'ları tespit et
         if not self.fvg_zones:
             self.detect_fair_value_gaps()
@@ -353,30 +437,57 @@ class AdvancedPatternRecognition:
         # Bullish FVG + Bullish BOS kombinasyonları
         for _, fvg in self.fvg_zones['bullish'].iterrows():
             for _, bos in bos_data['bullish'].iterrows():
-                # FVG ve BOS yakın mı? (5 gün içinde)
-                if abs((fvg['date'] - bos['date']).days) <= 5:
-                    combos.append({
-                        'type': 'bullish',
-                        'date': max(fvg['date'], bos['date']),
-                        'fvg_zone': (fvg['low'], fvg['high']),
-                        'bos_price': bos['price'],
-                        'prev_high': bos['prev_high'],
-                        'strength': (fvg['size'] + bos['strength']) / 2  # Ortalama güç
-                    })
+                # Zaman yakınlığı kontrolü (ayarlanabilir gün farkı)
+                time_diff = abs((fvg['date'] - bos['date']).days)
+                if time_diff <= time_window:
+                    # Fiyat yakınlığı kontrolü
+                    fvg_mid = (fvg['low'] + fvg['high']) / 2
+                    price_diff = abs(fvg_mid - bos['price']) / bos['price']
+                    
+                    # Güç kontrolü
+                    combo_strength = (fvg['size'] + bos['strength']) / 2
+                    
+                    if price_diff <= proximity_threshold and combo_strength >= strength_threshold:
+                        combos.append({
+                            'type': 'bullish',
+                            'date': max(fvg['date'], bos['date']),
+                            'fvg_zone': (fvg['low'], fvg['high']),
+                            'bos_price': bos['price'],
+                            'prev_high': bos['prev_high'],
+                            'strength': combo_strength,
+                            'time_diff': time_diff,
+                            'price_proximity': price_diff,
+                            'confidence': min(100, combo_strength * (1 - price_diff) * (1 - time_diff/time_window))
+                        })
         
         # Bearish FVG + Bearish BOS kombinasyonları
         for _, fvg in self.fvg_zones['bearish'].iterrows():
             for _, bos in bos_data['bearish'].iterrows():
-                # FVG ve BOS yakın mı? (5 gün içinde)
-                if abs((fvg['date'] - bos['date']).days) <= 5:
-                    combos.append({
-                        'type': 'bearish',
-                        'date': max(fvg['date'], bos['date']),
-                        'fvg_zone': (fvg['low'], fvg['high']),
-                        'bos_price': bos['price'],
-                        'prev_low': bos['prev_low'],
-                        'strength': (fvg['size'] + bos['strength']) / 2  # Ortalama güç
-                    })
+                # Zaman yakınlığı kontrolü (ayarlanabilir gün farkı)
+                time_diff = abs((fvg['date'] - bos['date']).days)
+                if time_diff <= time_window:
+                    # Fiyat yakınlığı kontrolü
+                    fvg_mid = (fvg['low'] + fvg['high']) / 2
+                    price_diff = abs(fvg_mid - bos['price']) / bos['price']
+                    
+                    # Güç kontrolü
+                    combo_strength = (fvg['size'] + bos['strength']) / 2
+                    
+                    if price_diff <= proximity_threshold and combo_strength >= strength_threshold:
+                        combos.append({
+                            'type': 'bearish',
+                            'date': max(fvg['date'], bos['date']),
+                            'fvg_zone': (fvg['low'], fvg['high']),
+                            'bos_price': bos['price'],
+                            'prev_low': bos['prev_low'],
+                            'strength': combo_strength,
+                            'time_diff': time_diff,
+                            'price_proximity': price_diff,
+                            'confidence': min(100, combo_strength * (1 - price_diff) * (1 - time_diff/time_window))
+                        })
+        
+        # Güce göre sırala (en güçlü kombinasyonlar önce)
+        combos.sort(key=lambda x: x['confidence'], reverse=True)
         
         return combos
     

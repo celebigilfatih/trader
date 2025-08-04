@@ -30,7 +30,7 @@ class BISTDataFetcher:
         try:
             # Yahoo Finance kullanarak veri çek
             ticker = yf.Ticker(symbol)
-            df = ticker.history(period=period, interval=interval)
+            df = ticker.history(period=period, interval=interval, auto_adjust=False, prepost=False, actions=True)
             
             if df.empty:
                 print(f"Veri bulunamadı: {symbol}")
@@ -89,7 +89,7 @@ class BISTDataFetcher:
                     df[col] = pd.to_numeric(df[col], errors='coerce')
             
             # Son veriyi kontrol et
-            if len(df) < 25:  # En az 25 gün veri olsun
+            if len(df) < 15:  # En az 15 gün veri olsun
                 print(f"Yetersiz veri: {symbol} - {len(df)} kayıt")
                 return None
             
@@ -222,4 +222,4 @@ class BISTDataFetcher:
             
         except Exception as e:
             print(f"Şirket bilgisi hatası {symbol}: {str(e)}")
-            return None 
+            return None

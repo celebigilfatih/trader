@@ -125,9 +125,118 @@ class TechnicalAnalyzer:
         self.indicators[indicator_name] = vwema_series
     
     def _calculate_rsi(self, indicator_name: str) -> None:
-        """RSI hesaplar"""
-        period = INDICATORS_CONFIG[indicator_name]['period']
-        self.indicators['rsi'] = ta.momentum.rsi(self.data['Close'], window=period)
+        """RSI hesaplar - Gelişmiş pivot point ve trend çizgisi analizi ile"""
+        config = INDICATORS_CONFIG[indicator_name]
+        period = config['period']
+        rsi_ema_length = config.get('rsi_ema_length', 66)
+        pivot_point_period = config.get('pivot_point_period', 10)
+        pivot_points_to_check = config.get('pivot_points_to_check', 10)
+        
+        # Temel RSI hesapla
+        rsi = ta.momentum.rsi(self.data['Close'], window=period)
+        self.indicators['rsi'] = rsi
+        
+        # RSI EMA hesapla
+        rsi_ema = rsi.ewm(span=rsi_ema_length).mean()
+        self.indicators['rsi_ema'] = rsi_ema
+        
+        # Pivot point analizi
+        if config.get('show_pivot_points', True):
+            pivot_highs, pivot_lows = self._find_rsi_pivot_points(
+                rsi, pivot_point_period, pivot_points_to_check
+            )
+            self.indicators['rsi_pivot_highs'] = pivot_highs
+            self.indicators['rsi_pivot_lows'] = pivot_lows
+        
+        # Trend çizgileri analizi
+        if config.get('show_broken_trend_lines', True):
+            trend_lines = self._calculate_rsi_trend_lines(rsi, pivot_point_period)
+            self.indicators['rsi_trend_lines'] = trend_lines
+    
+    def _find_rsi_pivot_points(self, rsi, pivot_period, points_to_check):
+        """RSI için pivot high ve low noktalarını bulur"""
+        pivot_highs = pd.Series(index=rsi.index, dtype=float)
+        pivot_lows = pd.Series(index=rsi.index, dtype=float)
+        
+        for i in range(pivot_period, len(rsi) - pivot_period):
+            # Pivot High kontrolü
+            current_high = rsi.iloc[i]
+            is_pivot_high = True
+            
+            for j in range(i - pivot_period, i + pivot_period + 1):
+                if j != i and not pd.isna(rsi.iloc[j]) and rsi.iloc[j] >= current_high:
+                    is_pivot_high = False
+                    break
+            
+            if is_pivot_high and not pd.isna(current_high):
+                pivot_highs.iloc[i] = current_high
+            
+            # Pivot Low kontrolü
+            current_low = rsi.iloc[i]
+            is_pivot_low = True
+            
+            for j in range(i - pivot_period, i + pivot_period + 1):
+                if j != i and not pd.isna(rsi.iloc[j]) and rsi.iloc[j] <= current_low:
+                    is_pivot_low = False
+                    break
+            
+            if is_pivot_low and not pd.isna(current_low):
+                pivot_lows.iloc[i] = current_low
+        
+        return pivot_highs, pivot_lows
+    
+    def _calculate_rsi_trend_lines(self, rsi, pivot_period):
+        """RSI trend çizgilerini hesaplar"""
+        trend_lines = {
+            'resistance_lines': [],
+            'support_lines': [],
+            'broken_lines': []
+        }
+        
+        # Pivot noktalarını bul
+        pivot_highs, pivot_lows = self._find_rsi_pivot_points(rsi, pivot_period, 10)
+        
+        # Direnç çizgileri (pivot high'lar arası)
+        high_points = [(i, val) for i, val in enumerate(pivot_highs) if not pd.isna(val)]
+        for i in range(len(high_points) - 1):
+            for j in range(i + 1, len(high_points)):
+                idx1, val1 = high_points[i]
+                idx2, val2 = high_points[j]
+                
+                # Trend çizgisi parametreleri
+                slope = (val2 - val1) / (idx2 - idx1)
+                intercept = val1 - slope * idx1
+                
+                trend_lines['resistance_lines'].append({
+                    'start_idx': idx1,
+                    'end_idx': idx2,
+                    'start_val': val1,
+                    'end_val': val2,
+                    'slope': slope,
+                    'intercept': intercept
+                })
+        
+        # Destek çizgileri (pivot low'lar arası)
+        low_points = [(i, val) for i, val in enumerate(pivot_lows) if not pd.isna(val)]
+        for i in range(len(low_points) - 1):
+            for j in range(i + 1, len(low_points)):
+                idx1, val1 = low_points[i]
+                idx2, val2 = low_points[j]
+                
+                # Trend çizgisi parametreleri
+                slope = (val2 - val1) / (idx2 - idx1)
+                intercept = val1 - slope * idx1
+                
+                trend_lines['support_lines'].append({
+                    'start_idx': idx1,
+                    'end_idx': idx2,
+                    'start_val': val1,
+                    'end_val': val2,
+                    'slope': slope,
+                    'intercept': intercept
+                })
+        
+        return trend_lines
     
     def _calculate_macd(self, indicator_name: str) -> None:
         """MACD hesaplar"""
