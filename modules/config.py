@@ -121,7 +121,22 @@ BIST_SYMBOLS = {
     "GLYHO.IS": "Global Yatırım Holding A.Ş.",
     "IHEVA.IS": "İheva İnşaat ve Ticaret A.Ş.",
     "KLMSN.IS": "Klimasan Klima Sanayi ve Ticaret A.Ş.",
-    "MAVI.IS": "Mavi Giyim Sanayi ve Ticaret A.Ş."
+    "MAVI.IS": "Mavi Giyim Sanayi ve Ticaret A.Ş.",
+    "KZBGY.IS": "Kızılbük GYO",
+    "IHAAS.IS": "İhlas Haber Ajansı",
+    "TEHOL.IS": "Tek-Art İnşaat",
+    "DURDO.IS": "Dur-Do Örme",
+    "DOBUR.IS": "Doğusan Boru",
+    "HDFGS.IS": "Hedef Girişim Sermayesi",
+    "TRILC.IS": "Turk İlaç ve Serum Sanayi",
+    "PEKGY.IS": "Peker GYO",
+    "DMRGD.IS": "Demirören Gazetecilik",
+    "DURKN.IS": "Durukan Şekerleme",
+    "KAREL.IS": "Karel Elektronik",
+    "ISGSY.IS": "İş Girişim Sermayesi",
+    "YEOTK.IS": "Yeo Teknoloji",
+    "MIATK.IS": "Mia Teknoloji",
+    "PENTA.IS": "Penta Teknoloji"
 }
 
 # Teknik indikatör konfigürasyonu

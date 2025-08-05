@@ -17,8 +17,7 @@ from modules.simple_ml_predictor import SimpleMLPredictor
 from modules.sentiment_analyzer import SentimentAnalyzer
 from modules.stock_screener import StockScreener
 from modules.pattern_recognition import PatternRecognition
-from modules.risk_calculator import RiskCalculator
-from modules.portfolio_manager import PortfolioManager
+
 
 # Navigation için
 from streamlit_option_menu import option_menu
@@ -34,6 +33,63 @@ st.set_page_config(
 # Custom CSS for clean dark blue borders on expanders
 st.markdown("""
 <style>
+    /* Genel Sayfa Stili */
+    .stApp {
+        background-color: #1E1E1E;
+        color: #FFFFFF;
+    }
+
+    /* Kenar Çubuğu Stili */
+    .css-1d391kg {
+        background-color: #252526;
+    }
+
+    /* Buton Stilleri */
+    .stButton>button {
+        border-radius: 20px;
+        border: 1px solid #4CAF50;
+        background-color: transparent;
+        color: #4CAF50;
+        padding: 10px 24px;
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .stButton>button:active {
+        background-color: #45a049;
+    }
+
+    /* Kart Stilleri */
+    .metric-card {
+        background-color: #2D2D30;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+    .metric-card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    }
+
+    /* Sekme Stilleri */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: transparent;
+        border-radius: 4px 4px 0px 0px;
+        gap: 1px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #2D2D30;
+    }
+
 /* Expander styling with clean dark blue borders */
 div[data-testid="stExpander"] {
     border: 2px solid #2E86AB !important;
@@ -1092,6 +1148,18 @@ def main():
         .stButton > button[kind="primary"]:hover {
             background-color: #2563EB !important;
         }
+
+        /* Tertiary button styling (yellow) */
+        .stButton > button[kind="tertiary"] {
+            background-color: #FFC107 !important;
+            color: #000000 !important;
+        }
+
+        .stButton > button[kind="tertiary"]:hover {
+            background-color: #FFA000 !important;
+        }
+
+
         
         .stButton > button:focus {
             outline: none !important;
@@ -1639,11 +1707,7 @@ def main():
             st.session_state.selected_menu = "pattern"
             st.rerun()
         
-        # Sentiment Analysis
-        if st.button("📰 Duygu Analizi", key="sentiment_btn", use_container_width=True,
-                    type="primary" if current_menu == "sentiment" else "secondary"):
-            st.session_state.selected_menu = "sentiment"
-            st.rerun()
+
         
         # Tools Section
         st.markdown("""
@@ -1654,17 +1718,11 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Portfolio Management
-        if st.button("💼 Portföy Yönetimi", key="portfolio_btn", use_container_width=True,
-                    type="primary" if current_menu == "portfolio" else "secondary"):
-            st.session_state.selected_menu = "portfolio"
-            st.rerun()
+
         
-        # Risk Management
-        if st.button("⚡ Risk Yönetimi", key="risk_btn", use_container_width=True,
-                    type="primary" if current_menu == "risk" else "secondary"):
-            st.session_state.selected_menu = "risk"
-            st.rerun()
+
+
+
     
     # Seçili menüye göre sayfa yönlendirmesi
     current_menu = st.session_state.selected_menu
@@ -1680,12 +1738,9 @@ def main():
         show_stock_screener()
     elif current_menu == "pattern":
         show_pattern_analysis()
-    elif current_menu == "portfolio":
-        show_portfolio_management()
-    elif current_menu == "risk":
-        show_risk_management()
-    elif current_menu == "sentiment":
-        show_sentiment_analysis()
+
+
+
     else:
         # Varsayılan olarak dashboard göster
         show_modern_dashboard()
@@ -4531,9 +4586,11 @@ def show_ai_predictions():
 def show_stock_screener():
     """Hisse tarayıcı sayfası"""
     st.markdown("""
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h1 style="margin: 0;">🔍 Hisse Tarayıcı</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem;">Teknik kriterlere göre hisse taraması</span>
+    <div style="display: flex; justify-content: space-between; align-items: center; background-color: #262730; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center;">
+            <h1 style="margin: 0; font-size: 24px;">🔍 Hisse Tarayıcı</h1>
+        </div>
+        <span style="font-size: 16px; color: #a0a0a0;">Teknik kriterlere göre hisse taraması</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -4551,11 +4608,12 @@ def show_stock_screener():
     }
     
     # Tarama sekmeli yapısı
-    tab1, tab2, tab3, tab4 = st.tabs(["🚀 BOĞA SİNYALLERİ", "⚡ TEKNİK TARAMALAR", "📊 GENEL TARAMALAR", "💰 DAY TRADE FIRSATLARI"])
+    tab1, tab2, tab4 = st.tabs(["🚀 BOĞA SİNYALLERİ", "⚡ TEKNİK TARAMALAR", "💰 DAY TRADE FIRSATLARI"])
     
     with tab1:
         # Boğa sinyali seçimi
         signal_types = {
+            'OTT Buy Signal': '🔵 OTT Alım Sinyali',
             'VWAP Bull Signal': '📈 VWAP Boğa Sinyali',
             'Golden Cross': '🌟 Golden Cross',
             'MACD Bull Signal': '📊 MACD Boğa Sinyali',
@@ -4570,23 +4628,29 @@ def show_stock_screener():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
+            st.markdown("<p style='margin-bottom:0; color:white;'>Sinyal Türü Seç</p>", unsafe_allow_html=True)
             selected_signal = st.selectbox("Sinyal Türü Seç", list(signal_types.keys()),
-                                         format_func=lambda x: signal_types[x], key="signal_type")
+                                         format_func=lambda x: signal_types[x], key="signal_type", label_visibility="collapsed")
         
         with col2:
+            st.markdown("<p style='margin-bottom:0; color:white;'>⏰ Zaman Dilimi</p>", unsafe_allow_html=True)
             selected_interval = st.selectbox(
-                "⏰ Zaman Dilimi", 
+                "⏰ Zaman Dilimi",
                 list(time_intervals.keys()),
                 format_func=lambda x: time_intervals[x],
                 index=0,
-                key="screener_interval"
+                key="screener_interval",
+                label_visibility="collapsed"
             )
         
         with col3:
+            st.markdown("<p style='margin-bottom:0; color:white;'>🎯 Tarama İşlemi</p>", unsafe_allow_html=True)
             if st.button("🔍 Sinyal Taraması Yap", type="primary", key="bull_signal_scan"):
                 with st.spinner(f"{signal_types[selected_signal]} sinyali aranıyor..."):
                     # Seçili sinyale göre tarama fonksiyonu çağır
-                    if selected_signal == 'VWAP Bull Signal':
+                    if selected_signal == 'OTT Buy Signal':
+                        results = screener.screen_by_ott_buy_signal(selected_interval)
+                    elif selected_signal == 'VWAP Bull Signal':
                         results = screener.screen_vwap_bull_signal(selected_interval)
                     elif selected_signal == 'Golden Cross':
                         results = screener.screen_golden_cross(selected_interval)
@@ -4643,7 +4707,8 @@ def show_stock_screener():
                         """, unsafe_allow_html=True)
         
         with col4:
-            if st.button("🚀 Tüm Boğa Sinyallerini Tara", type="secondary", key="all_bull_signals"):
+            st.markdown("<p style='margin-bottom:0; color:white;'>🚀 Toplu Tarama</p>", unsafe_allow_html=True)
+            if st.button("🚀 Tüm Boğa Sinyallerini Tara", type="tertiary", key="all_bull_signals"):
                 with st.spinner("Tüm boğa sinyalleri taranıyor..."):
                     all_results = screener.screen_all_bull_signals(selected_interval)
                     
@@ -4668,12 +4733,7 @@ def show_stock_screener():
                             """, unsafe_allow_html=True)
     
     with tab2:
-        st.markdown("""
-        <div class="metric-card">
-            <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">📋 Teknik Tarama Kriterleri</h2>
-            <p style="color: rgba(255,255,255,0.7);">Hisse senetlerini filtrelemek için kriterlerinizi seçin</p>
-        </div>
-        """, unsafe_allow_html=True)
+
         
         col1, col2, col3 = st.columns(3)
         
@@ -4780,67 +4840,7 @@ def show_stock_screener():
             else:
                 st.markdown("</div>", unsafe_allow_html=True)
     
-    with tab3:
-        st.markdown("""
-        <div class="metric-card">
-            <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">🎯 Çoklu Kriter Taraması</h2>
-            <p style="color: rgba(255,255,255,0.7);">Birden fazla kriteri birleştirerek tarama yapın</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("##### 📊 RSI Kriterleri")
-            use_rsi = st.checkbox("RSI Filtresi Kullan", key="use_rsi_filter")
-            if use_rsi:
-                rsi_min_multi = st.slider("RSI Min", 0, 100, 30, key="rsi_min_multi")
-                rsi_max_multi = st.slider("RSI Max", 0, 100, 70, key="rsi_max_multi")
-        
-        with col2:
-            st.markdown("##### 📈 Fiyat Kriterleri")
-            use_ema = st.checkbox("EMA Üstünde Fiyat", key="use_ema_filter")
-            
-            st.markdown("##### 📊 Hacim Kriterleri")
-            use_volume = st.checkbox("Hacim Filtresi Kullan", key="use_volume_filter")
-            if use_volume:
-                min_volume_ratio = st.slider("Min Hacim Oranı", 1.0, 5.0, 1.2, 0.1, key="min_vol_ratio")
-        
-        if st.button("🔍 Çoklu Kriter Taraması Yap", type="primary", key="multi_criteria_scan"):
-            criteria = {}
-            
-            if use_rsi:
-                criteria['rsi_min'] = rsi_min_multi
-                criteria['rsi_max'] = rsi_max_multi
-            
-            if use_ema:
-                criteria['price_above_ema'] = True
-            
-            if use_volume:
-                criteria['min_volume_ratio'] = min_volume_ratio
-            
-            if criteria:
-                with st.spinner("Çoklu kriter taraması yapılıyor..."):
-                    results = screener.screen_multi_criteria(criteria, selected_interval)
-                    if results:
-                        st.markdown("""
-                        <div class="info-box">
-                            <h4>✅ Çoklu Kriter Tarama Sonuçları</h4>
-                            <p>{} hisse bulundu</p>
-                        </div>
-                        """.format(len(results)), unsafe_allow_html=True)
-                        
-                        df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True)
-                    else:
-                        st.markdown("""
-                        <div class="warning-box">
-                            <h4>⚠️ Sonuç Bulunamadı</h4>
-                            <p>Belirtilen kriterleri karşılayan hisse bulunamadı</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-            else:
-                st.warning("Lütfen en az bir kriter seçin.")
+
     
     with tab4:
         st.markdown("""
@@ -5116,501 +5116,11 @@ def show_pattern_analysis():
                     </div>
                     """, unsafe_allow_html=True)
 
-def show_risk_management():
-    """Risk yönetimi sayfası"""
-    st.markdown("""
-    <div class="page-header">
-        <h1 style="display: inline-block; margin-right: 1rem;">⚡ Risk Yönetimi</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Pozisyon büyüklüğü ve risk hesaplama araçları</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Hesap bilgileri modern kart içinde
-    st.markdown("""
-    <div class="metric-card">
-        <h2 style="margin-top: 0; color: #4ecdc4;">💰 Hesap Bilgileri</h2>
-        <p style="color: rgba(255,255,255,0.7);">Risk hesaplaması için gerekli bilgileri girin</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="metric-card">
-            <h3 style="margin-top: 0; color: #45b7d1;">📊 Hesap Ayarları</h3>
-        """, unsafe_allow_html=True)
-        
-        account_balance = st.number_input("Hesap Bakiyesi (₺)", value=100000, min_value=1000)
-        risk_percentage = st.slider("Risk Yüzdesi (%)", 1.0, 10.0, 2.0, 0.5)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="metric-card">
-            <h3 style="margin-top: 0; color: #f39c12;">⚡ İşlem Parametreleri</h3>
-        """, unsafe_allow_html=True)
-        
-        entry_price = st.number_input("Giriş Fiyatı (₺)", value=10.0, min_value=0.1)
-        stop_loss_price = st.number_input("Stop Loss Fiyatı (₺)", value=9.0, min_value=0.1)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Risk hesaplayıcı
-    risk_calc = RiskCalculator(account_balance)
-    
-    if st.button("📊 Risk Analizi Yap", type="primary"):
-        # Pozisyon büyüklüğü
-        position_calc = risk_calc.calculate_position_size(entry_price, stop_loss_price, risk_percentage)
-        
-        if 'error' not in position_calc:
-            st.markdown("""
-            <div class="metric-card" style="margin-top: 2rem;">
-                <h2 style="margin-top: 0; color: #00ff88;">📈 Pozisyon Analizi</h2>
-                <p style="color: rgba(255,255,255,0.7);">Hesaplanan pozisyon detayları</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.markdown(f"""
-                <div class="metric-card hover-glow">
-                    <h4 style="margin: 0; color: white;">📊 Alınacak Hisse</h4>
-                    <h2 style="margin: 0.5rem 0; color: #4ecdc4;">{position_calc['shares']:,}</h2>
-                    <p style="margin: 0; color: rgba(255,255,255,0.7);">Adet</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown(f"""
-                <div class="metric-card hover-glow">
-                    <h4 style="margin: 0; color: white;">💰 Yatırım Tutarı</h4>
-                    <h2 style="margin: 0.5rem 0; color: #45b7d1;">₺{position_calc['total_investment']:,.0f}</h2>
-                    <p style="margin: 0; color: rgba(255,255,255,0.7);">Toplam</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col3:
-                st.markdown(f"""
-                <div class="metric-card hover-glow">
-                    <h4 style="margin: 0; color: white;">⚠️ Risk Tutarı</h4>
-                    <h2 style="margin: 0.5rem 0; color: #ff4757;">₺{position_calc['risk_amount']:,.0f}</h2>
-                    <p style="margin: 0; color: rgba(255,255,255,0.7);">Maksimum kayıp</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col4:
-                portfolio_color = "#00ff88" if position_calc['portfolio_percentage'] <= 20 else "#f39c12" if position_calc['portfolio_percentage'] <= 50 else "#ff4757"
-                st.markdown(f"""
-                <div class="metric-card hover-glow">
-                    <h4 style="margin: 0; color: white;">📈 Portföy Oranı</h4>
-                    <h2 style="margin: 0.5rem 0; color: {portfolio_color};">{position_calc['portfolio_percentage']:.1f}%</h2>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: {min(position_calc['portfolio_percentage'], 100):.1f}%; background: {portfolio_color};"></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # Hedef fiyatlar
-            targets = risk_calc.calculate_target_prices(entry_price, stop_loss_price)
-            
-            st.markdown("""
-            <div class="metric-card" style="margin-top: 2rem;">
-                <h2 style="margin-top: 0; color: #f9ca24;">🎯 Hedef Fiyatlar</h2>
-                <p style="color: rgba(255,255,255,0.7);">Risk/Reward oranına göre hesaplanan hedefler</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            target_data = []
-            for target_name, data in targets.items():
-                target_data.append({
-                    'Hedef': target_name,
-                    'Fiyat': f"₺{data['price']:.2f}",
-                    'Kar': f"₺{data['profit_amount']:.2f}",
-                    'Kar %': f"{data['profit_percentage']:.1f}%",
-                    'Risk/Reward': f"1:{data['risk_reward_ratio']}"
-                })
-            
-            target_df = pd.DataFrame(target_data)
-            st.dataframe(target_df, use_container_width=True)
-        else:
-            st.markdown(f"""
-            <div class="error-box">
-                <h4>❌ Hesaplama Hatası</h4>
-                <p>{position_calc['error']}</p>
-            </div>
-            """, unsafe_allow_html=True)
 
-def show_sentiment_analysis():
-    """Sentiment analizi sayfası"""
-    st.markdown("""
-    <div class="page-header">
-        <h1 style="display: inline-block; margin-right: 1rem;">📰 Duygu Analizi</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Haber ve sosyal medya sentiment analizi</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    sentiment_analyzer = SentimentAnalyzer()
-    
-    # Hisse seçimi modern kart içinde
-    st.markdown("""
-    <div class="metric-card">
-        <h3 style="margin-top: 0; color: #4ecdc4;">📊 Hisse Seçimi</h3>
-        <p style="color: rgba(255,255,255,0.7);">Sentiment analizi yapılacak hisseyi seçin</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    selected_symbol = st.selectbox(
-        "Hisse Seçin",
-        options=sorted(list(BIST_SYMBOLS.keys())),
-        format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
-        key="sentiment_stock_select"
-    )
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="metric-card hover-glow">
-            <h3 style="margin-top: 0; color: #ff6b6b;">📰 Hisse Sentiment Analizi</h3>
-            <p style="color: rgba(255,255,255,0.7);">Belirli hisse için sentiment analizi</p>
-        """, unsafe_allow_html=True)
-        
-        if st.button("📊 Hisse Sentiment Analizi", type="primary", key="stock_sentiment"):
-            with st.spinner("Sentiment analiz ediliyor..."):
-                sentiment = sentiment_analyzer.get_basic_sentiment_score(selected_symbol)
-                social_sentiment = sentiment_analyzer.analyze_social_media_sentiment(selected_symbol)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                # Sonuçları modern kartlarda göster
-                st.markdown(f"""
-                <div class="metric-card" style="margin-top: 1rem;">
-                    <h2 style="margin-top: 0; color: #45b7d1;">📈 {selected_symbol} Sentiment Analizi</h2>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    sentiment_color = "#00ff88" if sentiment['sentiment_score'] > 0.1 else "#ff4757" if sentiment['sentiment_score'] < -0.1 else "#f39c12"
-                    st.markdown(f"""
-                    <div class="metric-card hover-glow">
-                        <h4 style="margin: 0; color: white;">📰 Haber Sentiment</h4>
-                        <h2 style="margin: 0.5rem 0; color: {sentiment_color};">{sentiment['sentiment_score']:.2f}</h2>
-                        <span class="status-badge" style="background: {sentiment_color};">{sentiment['sentiment_label']}</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col2:
-                    social_color = "#00ff88" if social_sentiment['social_sentiment'] > 0.1 else "#ff4757" if social_sentiment['social_sentiment'] < -0.1 else "#f39c12"
-                    st.markdown(f"""
-                    <div class="metric-card hover-glow">
-                        <h4 style="margin: 0; color: white;">🐦 Sosyal Medya</h4>
-                        <h2 style="margin: 0.5rem 0; color: {social_color};">{social_sentiment['social_sentiment']:.2f}</h2>
-                        <span class="status-badge" style="background: {social_color};">{social_sentiment['social_label']}</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col3:
-                    st.markdown(f"""
-                    <div class="metric-card hover-glow">
-                        <h4 style="margin: 0; color: white;">📊 İstatistikler</h4>
-                        <p style="margin: 0.5rem 0; color: #4ecdc4;">Bahsedilme: {social_sentiment['mention_count']:,}</p>
-                        <span class="status-badge status-neutral">{social_sentiment['trending_status']}</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                # Haber başlıkları
-                news = sentiment_analyzer.get_news_headlines(selected_symbol)
-                if news:
-                    st.markdown("""
-                    <div class="metric-card" style="margin-top: 2rem;">
-                        <h3 style="margin-top: 0; color: #f9ca24;">📰 Son Haberler</h3>
-                        <p style="color: rgba(255,255,255,0.7);">Son haberlerin sentiment skorları</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    for item in news:
-                        sentiment_color = "#00ff88" if item['sentiment'] > 0.1 else "#ff4757" if item['sentiment'] < -0.1 else "#f39c12"
-                        st.markdown(f"""
-                        <div class="info-box">
-                            <h5 style="margin: 0; color: white;">{item['date']}</h5>
-                            <p style="margin: 0.5rem 0;">{item['headline']}</p>
-                            <span class="status-badge" style="background: {sentiment_color};">{item['sentiment']:.2f}</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-        else:
-            st.markdown("</div>", unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="metric-card hover-glow">
-            <h3 style="margin-top: 0; color: #45b7d1;">🌍 Piyasa Sentiment Analizi</h3>
-            <p style="color: rgba(255,255,255,0.7);">Genel piyasa sentiment durumu</p>
-        """, unsafe_allow_html=True)
-        
-        if st.button("🌍 Piyasa Sentiment Analizi", key="market_sentiment"):
-            with st.spinner("Piyasa sentiment analiz ediliyor..."):
-                market_sentiment = sentiment_analyzer.get_market_sentiment(list(BIST_SYMBOLS.keys())[:10])
-                
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                st.markdown("""
-                <div class="metric-card" style="margin-top: 1rem;">
-                    <h2 style="margin-top: 0; color: #6c5ce7;">🌐 Piyasa Genel Sentiment</h2>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    market_color = "#00ff88" if market_sentiment['market_sentiment'] > 0.1 else "#ff4757" if market_sentiment['market_sentiment'] < -0.1 else "#f39c12"
-                    st.markdown(f"""
-                    <div class="metric-card hover-glow">
-                        <h4 style="margin: 0; color: white;">🌍 Genel Sentiment</h4>
-                        <h2 style="margin: 0.5rem 0; color: {market_color};">{market_sentiment['market_sentiment']:.2f}</h2>
-                        <span class="status-badge" style="background: {market_color};">{market_sentiment['market_label']}</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col2:
-                    st.markdown(f"""
-                    <div class="metric-card hover-glow">
-                        <h4 style="margin: 0; color: white;">🟢 Pozitif Hisse</h4>
-                        <h2 style="margin: 0.5rem 0; color: #00ff88;">{market_sentiment['positive_stocks']}</h2>
-                        <p style="margin: 0; color: rgba(255,255,255,0.7);">Adet</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col3:
-                    st.markdown(f"""
-                    <div class="metric-card hover-glow">
-                        <h4 style="margin: 0; color: white;">🔴 Negatif Hisse</h4>
-                        <h2 style="margin: 0.5rem 0; color: #ff4757;">{market_sentiment['negative_stocks']}</h2>
-                        <p style="margin: 0; color: rgba(255,255,255,0.7);">Adet</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col4:
-                    st.markdown(f"""
-                    <div class="metric-card hover-glow">
-                        <h4 style="margin: 0; color: white;">🟡 Nötr Hisse</h4>
-                        <h2 style="margin: 0.5rem 0; color: #f39c12;">{market_sentiment['neutral_stocks']}</h2>
-                        <p style="margin: 0; color: rgba(255,255,255,0.7);">Adet</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-        else:
-            st.markdown("</div>", unsafe_allow_html=True)
 
-def show_portfolio_management():
-    """Portfolio yönetimi sayfası"""
-    st.markdown("""
-    <div class="page-header">
-        <h1 style="display: inline-block; margin-right: 1rem;">💼 Portföy Yönetimi</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Portfolio takibi ve yönetimi</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    portfolio_manager = PortfolioManager()
-    
-    # Portfolio özeti
-    portfolio_status = portfolio_manager.get_portfolio_status()
-    
-    st.markdown("""
-    <div class="metric-card">
-        <h2 style="margin-top: 0; color: #4ecdc4;">📊 Portfolio Özeti</h2>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        total_value_color = "#00ff88" if portfolio_status['total_pnl'] >= 0 else "#ff4757"
-        st.markdown(f"""
-        <div class="metric-card hover-glow">
-            <h4 style="margin: 0; color: white;">💰 Toplam Değer</h4>
-            <h2 style="margin: 0.5rem 0; color: {total_value_color};">₺{portfolio_status['total_value']:,.2f}</h2>
-            <p style="margin: 0; color: rgba(255,255,255,0.7);">Güncel değer</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        pnl_color = "#00ff88" if portfolio_status['total_pnl'] >= 0 else "#ff4757"
-        pnl_symbol = "+" if portfolio_status['total_pnl'] >= 0 else ""
-        st.markdown(f"""
-        <div class="metric-card hover-glow">
-            <h4 style="margin: 0; color: white;">📈 Kar/Zarar</h4>
-            <h2 style="margin: 0.5rem 0; color: {pnl_color};">{pnl_symbol}₺{portfolio_status['total_pnl']:,.2f}</h2>
-            <p style="margin: 0; color: rgba(255,255,255,0.7);">Toplam P&L</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown(f"""
-        <div class="metric-card hover-glow">
-            <h4 style="margin: 0; color: white;">🎯 Pozisyon Sayısı</h4>
-            <h2 style="margin: 0.5rem 0; color: #45b7d1;">{portfolio_status['position_count']}</h2>
-            <p style="margin: 0; color: rgba(255,255,255,0.7);">Aktif pozisyon</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        pnl_pct_color = "#00ff88" if portfolio_status['total_pnl_percentage'] >= 0 else "#ff4757"
-        pnl_pct_symbol = "+" if portfolio_status['total_pnl_percentage'] >= 0 else ""
-        st.markdown(f"""
-        <div class="metric-card hover-glow">
-            <h4 style="margin: 0; color: white;">📊 Getiri %</h4>
-            <h2 style="margin: 0.5rem 0; color: {pnl_pct_color};">{pnl_pct_symbol}{portfolio_status['total_pnl_percentage']:.2f}%</h2>
-            <p style="margin: 0; color: rgba(255,255,255,0.7);">Toplam getiri</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # En iyi ve en kötü performans
-    if portfolio_status['best_performer'] and portfolio_status['worst_performer']:
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            best = portfolio_status['best_performer']
-            st.markdown(f"""
-            <div class="metric-card hover-glow">
-                <h3 style="margin-top: 0; color: #00ff88;">🏆 En İyi Performans</h3>
-                <h4 style="margin: 0.5rem 0; color: white;">{best['symbol']}</h4>
-                <p style="margin: 0; color: #00ff88;">+{best['pnl_percentage']:.2f}% (+₺{best['pnl']:.2f})</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            worst = portfolio_status['worst_performer']
-            st.markdown(f"""
-            <div class="metric-card hover-glow">
-                <h3 style="margin-top: 0; color: #ff4757;">📉 En Kötü Performans</h3>
-                <h4 style="margin: 0.5rem 0; color: white;">{worst['symbol']}</h4>
-                <p style="margin: 0; color: #ff4757;">{worst['pnl_percentage']:.2f}% (₺{worst['pnl']:.2f})</p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # İşlem ekleme bölümü
-    st.markdown("""
-    <div class="metric-card" style="margin-top: 2rem;">
-        <h2 style="margin-top: 0; color: #f9ca24;">➕ Yeni İşlem Ekle</h2>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        transaction_type = st.selectbox("İşlem Türü", ["BUY", "SELL"], key="transaction_type")
-        symbol = st.selectbox(
-            "Hisse Seçin",
-            options=sorted(list(BIST_SYMBOLS.keys())),
-            format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
-            key="portfolio_stock_select"
-        )
-    
-    with col2:
-        quantity = st.number_input("Adet", min_value=1, value=100, key="quantity")
-        price = st.number_input("Fiyat (₺)", min_value=0.01, value=10.0, step=0.01, key="price")
-    
-    if st.button("💼 İşlem Ekle", type="primary", key="add_transaction"):
-        try:
-            result = portfolio_manager.add_transaction(symbol, transaction_type, quantity, price)
-            if result['success']:
-                st.success(f"✅ {transaction_type} işlemi başarıyla eklendi!")
-                st.rerun()
-            else:
-                st.error(f"❌ Hata: {result['message']}")
-        except Exception as e:
-            st.error(f"❌ İşlem eklenirken hata oluştu: {str(e)}")
-    
-    # Mevcut pozisyonlar
-    portfolio_data = portfolio_manager.load_portfolio()
-    if portfolio_data:
-        st.markdown("""
-        <div class="metric-card" style="margin-top: 2rem;">
-            <h2 style="margin-top: 0; color: #6c5ce7;">📋 Mevcut Pozisyonlar</h2>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        positions_data = []
-        for symbol, data in portfolio_data.items():
-             if data['quantity'] > 0:  # Sadece pozitif pozisyonları göster
-                 current_price = data.get('current_price', data['avg_cost'])
-                 pnl = (current_price - data['avg_cost']) * data['quantity']
-                 pnl_pct = ((current_price - data['avg_cost']) / data['avg_cost']) * 100
-                 
-                 positions_data.append({
-                     'Hisse': symbol,
-                     'Adet': f"{data['quantity']:,}",
-                     'Ortalama Fiyat': f"₺{data['avg_cost']:.2f}",
-                     'Güncel Fiyat': f"₺{current_price:.2f}",
-                     'Toplam Değer': f"₺{current_price * data['quantity']:,.2f}",
-                     'Kar/Zarar': f"₺{pnl:,.2f}",
-                     'Kar/Zarar %': f"{pnl_pct:.2f}%"
-                 })
-        
-        if positions_data:
-            positions_df = pd.DataFrame(positions_data)
-            st.dataframe(positions_df, use_container_width=True)
-        else:
-            st.info("📝 Henüz aktif pozisyon bulunmuyor.")
-    
-    # Portfolio geçmişi
-    st.markdown("""
-    <div class="metric-card" style="margin-top: 2rem;">
-        <h2 style="margin-top: 0; color: #e17055;">📈 Portfolio Performans Geçmişi</h2>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    history = portfolio_manager.get_portfolio_history()
-    if history:
-        history_df = pd.DataFrame(history)
-        history_df['date'] = pd.to_datetime(history_df['date'])
-        
-        # Performans grafiği
-        fig = go.Figure()
-        
-        fig.add_trace(go.Scatter(
-            x=history_df['date'],
-            y=history_df['total_value'],
-            mode='lines+markers',
-            name='Portfolio Değeri',
-            line=dict(color='#4ecdc4', width=3),
-            marker=dict(size=6)
-        ))
-        
-        fig.update_layout(
-            title="Portfolio Değer Geçmişi",
-            xaxis_title="Tarih",
-            yaxis_title="Değer (₺)",
-            template="plotly_dark",
-            height=400,
-            showlegend=True
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Son işlemler tablosu
-        st.markdown("""
-        <div class="metric-card" style="margin-top: 1rem;">
-            <h3 style="margin-top: 0; color: #fdcb6e;">📋 Son İşlemler</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        recent_history = history_df.tail(10).copy()
-        recent_history['date'] = recent_history['date'].dt.strftime('%Y-%m-%d %H:%M')
-        recent_history = recent_history.rename(columns={
-            'date': 'Tarih',
-            'total_value': 'Toplam Değer (₺)',
-            'total_pnl': 'Kar/Zarar (₺)',
-            'position_count': 'Pozisyon Sayısı'
-        })
-        
-        st.dataframe(recent_history[['Tarih', 'Toplam Değer (₺)', 'Kar/Zarar (₺)', 'Pozisyon Sayısı']], use_container_width=True)
-    else:
-        st.info("📝 Henüz portfolio geçmişi bulunmuyor.")
+
+
+
 
 if __name__ == "__main__":
     main()

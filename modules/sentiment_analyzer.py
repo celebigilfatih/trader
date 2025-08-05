@@ -14,6 +14,18 @@ class SentimentAnalyzer:
             'bloomberg': 'https://www.bloomberg.com.tr'
         }
         self.sentiment_cache = {}
+        self.symbol_sentiments = {
+            'THYAO': 0.2,   # Türk Hava Yolları - nötr/pozitif
+            'AKBNK': 0.1,   # Akbank - hafif pozitif
+            'GARAN': 0.15,  # Garanti - hafif pozitif
+            'TUPRS': 0.3,   # Tüpraş - pozitif
+            'BIMAS': 0.05,  # BİM - nötr
+            'TKFEN': 0.25,  # Tekfen - pozitif
+            'SAHOL': 0.1,   # Sabancı Holding - hafif pozitif
+            'ISCTR': 0.0,   # İş Bankası - nötr
+            'ASELS': 0.2,   # Aselsan - pozitif
+            'TOASO': 0.15   # Tofaş - hafif pozitif
+        }
     
     def get_basic_sentiment_score(self, symbol: str) -> Dict:
         """Basit sentiment skoru hesaplar"""
@@ -55,20 +67,7 @@ class SentimentAnalyzer:
         # Symbol'e göre basit sentiment skoru
         # Gerçek uygulamada NLP API'leri kullanılır
         
-        symbol_sentiments = {
-            'THYAO': 0.2,   # Türk Hava Yolları - nötr/pozitif
-            'AKBNK': 0.1,   # Akbank - hafif pozitif
-            'GARAN': 0.15,  # Garanti - hafif pozitif
-            'TUPRS': 0.3,   # Tüpraş - pozitif
-            'BIMAS': 0.05,  # BİM - nötr
-            'TKFEN': 0.25,  # Tekfen - pozitif
-            'SAHOL': 0.1,   # Sabancı Holding - hafif pozitif
-            'ISCTR': 0.0,   # İş Bankası - nötr
-            'ASELS': 0.2,   # Aselsan - pozitif
-            'TOASO': 0.15   # Tofaş - hafif pozitif
-        }
-        
-        base_sentiment = symbol_sentiments.get(symbol, 0.0)
+        base_sentiment = self.symbol_sentiments.get(symbol, 0.0)
         
         # Rastgele küçük değişiklik ekle (piyasa koşullarını simüle eder)
         import random
@@ -203,4 +202,4 @@ class SentimentAnalyzer:
                 'social_mentions': random.randint(20, 200)
             })
         
-        return pd.DataFrame(sentiments).sort_values('date') 
+        return pd.DataFrame(sentiments).sort_values('date')

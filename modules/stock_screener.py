@@ -160,6 +160,33 @@ class StockScreener:
         
         return results
     
+    def screen_by_ott_buy_signal(self, interval: str = "1d") -> List[Dict]:
+        """OTT Alım Sinyali veren hisseleri tarar"""
+        results = []
+        period = self._get_period_for_interval(interval)
+
+        for symbol in self.symbols.keys():
+            try:
+                data = self.data_fetcher.get_stock_data(symbol, period=period, interval=interval)
+                if data is not None and len(data) > 20:
+                    analyzer = TechnicalAnalyzer(data)
+                    analyzer.add_indicator('ott')
+                    
+                    # Son sinyalin 'buy' olup olmadığını kontrol et
+                    if analyzer.indicators['ott_signal'].iloc[-1] == 'buy':
+                        results.append({
+                            'symbol': symbol,
+                            'name': self.symbols[symbol],
+                            'current_price': data['Close'].iloc[-1],
+                            'ott_value': analyzer.indicators['ott'].iloc[-1],
+                            'signal': 'OTT Buy',
+                            'interval': interval
+                        })
+            except Exception as e:
+                continue
+        
+        return sorted(results, key=lambda x: x['symbol'])
+
     def screen_vwap_bull_signal(self, interval: str = "1d") -> List[Dict]:
         """VWAP Boğa Sinyali taraması"""
         results = []
@@ -870,4 +897,4 @@ class StockScreener:
         print(f"📈 Bulunan aylık yükselenler: {len(results['gainers'])}")
         print(f"📉 Bulunan aylık düşenler: {len(results['losers'])}")
         
-        return results 
+        return results
