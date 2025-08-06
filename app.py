@@ -5,6 +5,7 @@ from plotly.subplots import make_subplots
 import numpy as np
 from datetime import datetime, timedelta
 import time
+import os
 
 # Kendi modüllerimizi import ediyoruz
 from modules.data_fetcher import BISTDataFetcher
@@ -17,6 +18,8 @@ from modules.simple_ml_predictor import SimpleMLPredictor
 from modules.sentiment_analyzer import SentimentAnalyzer
 from modules.stock_screener import StockScreener
 from modules.pattern_recognition import PatternRecognition
+from fpdf import FPDF
+import base64
 
 
 # Navigation için
@@ -4644,93 +4647,289 @@ def show_stock_screener():
             )
         
         with col3:
-            st.markdown("<p style='margin-bottom:0; color:white;'>🎯 Tarama İşlemi</p>", unsafe_allow_html=True)
-            if st.button("🔍 Sinyal Taraması Yap", type="primary", key="bull_signal_scan"):
-                with st.spinner(f"{signal_types[selected_signal]} sinyali aranıyor..."):
-                    # Seçili sinyale göre tarama fonksiyonu çağır
-                    if selected_signal == 'OTT Buy Signal':
-                        results = screener.screen_by_ott_buy_signal(selected_interval)
-                    elif selected_signal == 'VWAP Bull Signal':
-                        results = screener.screen_vwap_bull_signal(selected_interval)
-                    elif selected_signal == 'Golden Cross':
-                        results = screener.screen_golden_cross(selected_interval)
-                    elif selected_signal == 'MACD Bull Signal':
-                        results = screener.screen_macd_bull_signal(selected_interval)
-                    elif selected_signal == 'RSI Recovery':
-                        results = screener.screen_rsi_recovery(selected_interval)
-                    elif selected_signal == 'Bollinger Breakout':
-                        results = screener.screen_bollinger_breakout(selected_interval)
-                    elif selected_signal == 'Higher High + Higher Low':
-                        results = screener.screen_higher_high_low(selected_interval)
-                    elif selected_signal == 'VWAP Reversal':
-                        results = screener.screen_vwap_reversal(selected_interval)
-                    elif selected_signal == 'Volume Breakout':
-                        results = screener.screen_volume_breakout(selected_interval)
-                    elif selected_signal == 'Gap Up Signal':
-                        results = screener.screen_gap_up_signal(selected_interval)
-                    else:
-                        results = []
+            st.markdown("<p style='margin-bottom:0; color:white;'>&nbsp;</p>", unsafe_allow_html=True)
+            scan_button = st.button("🔍 Sinyal Taraması Yap", type="primary", key="bull_signal_scan", use_container_width=True)
+
+        with col4:
+            st.markdown("<p style='margin-bottom:0; color:white;'>&nbsp;</p>", unsafe_allow_html=True)
+            all_scan_button = st.button("🚀 Tüm Boğa Sinyallerini Tara", key="all_bull_signals", use_container_width=True)
+
+        st.markdown("---_", unsafe_allow_html=True)
+
+        if 'results' not in st.session_state:
+            st.session_state.results = None
+
+        if scan_button:
+            with st.spinner(f"{signal_types[selected_signal]} sinyali aranıyor..."):
+                # Seçili sinyale göre tarama fonksiyonu çağır
+                if selected_signal == 'OTT Buy Signal':
+                    results = screener.screen_by_ott_buy_signal(selected_interval)
+                elif selected_signal == 'VWAP Bull Signal':
+                    results = screener.screen_vwap_bull_signal(selected_interval)
+                elif selected_signal == 'Golden Cross':
+                    results = screener.screen_golden_cross(selected_interval)
+                elif selected_signal == 'MACD Bull Signal':
+                    results = screener.screen_macd_bull_signal(selected_interval)
+                elif selected_signal == 'RSI Recovery':
+                    results = screener.screen_rsi_recovery(selected_interval)
+                elif selected_signal == 'Bollinger Breakout':
+                    results = screener.screen_bollinger_breakout(selected_interval)
+                elif selected_signal == 'Higher High + Higher Low':
+                    results = screener.screen_higher_high_low(selected_interval)
+                elif selected_signal == 'VWAP Reversal':
+                    results = screener.screen_vwap_reversal(selected_interval)
+                elif selected_signal == 'Volume Breakout':
+                    results = screener.screen_volume_breakout(selected_interval)
+                elif selected_signal == 'Gap Up Signal':
+                    results = screener.screen_gap_up_signal(selected_interval)
+                else:
+                    results = []
+                st.session_state.results = results
+
+        if all_scan_button:
+            with st.spinner("Tüm boğa sinyalleri taranıyor..."):
+                all_results = screener.screen_all_bull_signals(selected_interval)
+                st.session_state.results = all_results
+
+        if st.session_state.results is not None:
+            results = st.session_state.results
+            if isinstance(results, list) and results:
+                st.markdown(f"""
+                <div class="info-box">
+                    <h4>✅ {signal_types[selected_signal]} Sonuçları</h4>
+                    <p>{len(results)} hisse bulundu</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Sonuçları güçlü, orta, zayıf olarak grupla
+                strong_signals = [r for r in results if r.get('strength') == 'Çok Güçlü']
+                medium_signals = [r for r in results if r.get('strength') == 'Güçlü']
+                weak_signals = [r for r in results if r.get('strength') == 'Orta']
+                
+                if strong_signals:
+                    st.markdown("### 🟢 Çok Güçlü Sinyaller")
+                    df_strong = pd.DataFrame(strong_signals)
+                    st.dataframe(df_strong, use_container_width=True)
+                
+                if medium_signals:
+                    st.markdown("### 🟡 Güçlü Sinyaller")
+                    df_medium = pd.DataFrame(medium_signals)
+                    st.dataframe(df_medium, use_container_width=True)
+                
+                if weak_signals:
+                    st.markdown("### 🟠 Orta Sinyaller")
+                    df_weak = pd.DataFrame(weak_signals)
+                    st.dataframe(df_weak, use_container_width=True)
+
+                # PDF İndirme Butonu
+                try:
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.add_font('Roboto', '', 'assets/Roboto-Regular.ttf', uni=True)
+                    pdf.add_font('Roboto-Bold', '', 'assets/Roboto-Bold.ttf', uni=True)
                     
-                    if results:
+                    # Başlık
+                    pdf.set_font('Roboto-Bold', '', 16)
+                    pdf.set_text_color(44, 62, 80)
+                    pdf.cell(0, 15, 'HİSSE TARAMA RAPORU', 0, 1, 'C')
+                    pdf.ln(5)
+                    
+                    # Tarih ve saat
+                    from datetime import datetime
+                    pdf.set_font('Roboto', '', 10)
+                    pdf.set_text_color(127, 140, 141)
+                    pdf.cell(0, 8, f'Rapor Tarihi: {datetime.now().strftime("%d.%m.%Y %H:%M")}', 0, 1, 'C')
+                    pdf.ln(10)
+                    
+                    # Sinyal türü başlığı
+                    pdf.set_font('Roboto-Bold', '', 14)
+                    pdf.set_text_color(52, 73, 94)
+                    pdf.cell(0, 12, f'{signal_types.get(selected_signal, "Seçili Sinyal")} Sonuçları', 0, 1, 'L')
+                    pdf.ln(5)
+                    
+                    # Tablo başlıkları
+                    pdf.set_font('Roboto-Bold', '', 10)
+                    pdf.set_fill_color(52, 152, 219)
+                    pdf.set_text_color(255, 255, 255)
+                    
+                    # Başlık satırı
+                    pdf.cell(40, 10, 'Sembol', 1, 0, 'C', True)
+                    pdf.cell(80, 10, 'Şirket Adı', 1, 0, 'C', True)
+                    pdf.cell(30, 10, 'Fiyat (₺)', 1, 0, 'C', True)
+                    pdf.cell(30, 10, 'Sinyal', 1, 1, 'C', True)
+                    
+                    # Veri satırları
+                    pdf.set_font('Roboto', '', 9)
+                    pdf.set_text_color(44, 62, 80)
+                    
+                    for i, result in enumerate(results):
+                        # Alternatif satır renkleri
+                        if i % 2 == 0:
+                            pdf.set_fill_color(236, 240, 241)
+                        else:
+                            pdf.set_fill_color(255, 255, 255)
+                        
+                        # Veri çıkarma
+                        symbol = str(result.get('symbol', 'N/A'))[:8]
+                        name = str(result.get('name', 'N/A'))[:25] + ('...' if len(str(result.get('name', ''))) > 25 else '')
+                        price = f"{float(result.get('current_price', 0)):.2f}" if result.get('current_price') else 'N/A'
+                        signal = str(result.get('signal', 'N/A'))[:8]
+                        
+                        pdf.cell(40, 8, symbol, 1, 0, 'C', True)
+                        pdf.cell(80, 8, name, 1, 0, 'L', True)
+                        pdf.cell(30, 8, price, 1, 0, 'C', True)
+                        pdf.cell(30, 8, signal, 1, 1, 'C', True)
+                    
+                    # Özet bilgiler
+                    pdf.ln(10)
+                    pdf.set_font('Roboto-Bold', '', 12)
+                    pdf.set_text_color(52, 73, 94)
+                    pdf.cell(0, 10, 'RAPOR ÖZETİ', 0, 1, 'L')
+                    pdf.ln(2)
+                    
+                    pdf.set_font('Roboto', '', 10)
+                    pdf.set_text_color(44, 62, 80)
+                    pdf.cell(0, 8, f'• Toplam bulunan hisse sayısı: {len(results)}', 0, 1, 'L')
+                    pdf.cell(0, 8, f'• Tarama kriteri: {signal_types.get(selected_signal, "Bilinmeyen")}', 0, 1, 'L')
+                    pdf.cell(0, 8, f'• Zaman dilimi: {selected_interval}', 0, 1, 'L')
+                    
+                    # Alt bilgi
+                    pdf.ln(15)
+                    pdf.set_font('Roboto', '', 8)
+                    pdf.set_text_color(127, 140, 141)
+                    pdf.cell(0, 6, 'Bu rapor otomatik olarak oluşturulmuştur. Yatırım kararlarınızda dikkatli olunuz.', 0, 1, 'C')
+                    
+                    pdf_output = pdf.output(dest='S')
+                    b64 = base64.b64encode(pdf_output).decode('utf-8')
+                    href = f'<a href="data:application/octet-stream;base64,{b64}" download="tarama_sonuclari.pdf">📄 Modern PDF Raporu İndir</a>'
+                    st.markdown(href, unsafe_allow_html=True)
+                except Exception as e:
+                    st.warning(f"PDF oluşturulamadı: {str(e)}")
+
+            elif isinstance(results, dict):
+                # Her sinyal için sonuçları göster
+                for signal_name, signal_results in results.items():
+                    if signal_results:
                         st.markdown(f"""
-                        <div class="info-box">
-                            <h4>✅ {signal_types[selected_signal]} Sonuçları</h4>
-                            <p>{len(results)} hisse bulundu</p>
+                        <div class="metric-card">
+                            <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">{signal_types[signal_name]}</h3>
+                            <p style="color: rgba(255,255,255,0.7);">{len(signal_results)} hisse bulundu</p>
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Sonuçları güçlü, orta, zayıf olarak grupla
-                        strong_signals = [r for r in results if r.get('strength') == 'Çok Güçlü']
-                        medium_signals = [r for r in results if r.get('strength') == 'Güçlü']
-                        weak_signals = [r for r in results if r.get('strength') == 'Orta']
-                        
-                        if strong_signals:
-                            st.markdown("### 🟢 Çok Güçlü Sinyaller")
-                            df_strong = pd.DataFrame(strong_signals)
-                            st.dataframe(df_strong, use_container_width=True)
-                        
-                        if medium_signals:
-                            st.markdown("### 🟡 Güçlü Sinyaller")
-                            df_medium = pd.DataFrame(medium_signals)
-                            st.dataframe(df_medium, use_container_width=True)
-                        
-                        if weak_signals:
-                            st.markdown("### 🟠 Orta Sinyaller")
-                            df_weak = pd.DataFrame(weak_signals)
-                            st.dataframe(df_weak, use_container_width=True)
+                        df = pd.DataFrame(signal_results)
+                        st.dataframe(df, use_container_width=True)
                     else:
                         st.markdown(f"""
                         <div class="warning-box">
-                            <h4>⚠️ Sonuç Bulunamadı</h4>
-                            <p>{signal_types[selected_signal]} kriteri karşılayan hisse bulunamadı</p>
+                            <h4>{signal_types[signal_name]}</h4>
+                            <p>Sinyal bulunamadı</p>
                         </div>
                         """, unsafe_allow_html=True)
-        
-        with col4:
-            st.markdown("<p style='margin-bottom:0; color:white;'>🚀 Toplu Tarama</p>", unsafe_allow_html=True)
-            if st.button("🚀 Tüm Boğa Sinyallerini Tara", type="tertiary", key="all_bull_signals"):
-                with st.spinner("Tüm boğa sinyalleri taranıyor..."):
-                    all_results = screener.screen_all_bull_signals(selected_interval)
+                # PDF İndirme Butonu - Çoklu Sinyal
+                try:
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.add_font('Roboto', '', 'assets/Roboto-Regular.ttf', uni=True)
+                    pdf.add_font('Roboto-Bold', '', 'assets/Roboto-Bold.ttf', uni=True)
                     
-                    # Her sinyal için sonuçları göster
-                    for signal_name, signal_results in all_results.items():
+                    # Başlık
+                    pdf.set_font('Roboto-Bold', '', 16)
+                    pdf.set_text_color(44, 62, 80)
+                    pdf.cell(0, 15, 'TOPLU HİSSE TARAMA RAPORU', 0, 1, 'C')
+                    pdf.ln(5)
+                    
+                    # Tarih ve saat
+                    from datetime import datetime
+                    pdf.set_font('Roboto', '', 10)
+                    pdf.set_text_color(127, 140, 141)
+                    pdf.cell(0, 8, f'Rapor Tarihi: {datetime.now().strftime("%d.%m.%Y %H:%M")}', 0, 1, 'C')
+                    pdf.ln(10)
+                    
+                    total_found = 0
+                    for signal_name, signal_results in results.items():
                         if signal_results:
-                            st.markdown(f"""
-                            <div class="metric-card">
-                                <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">{signal_types[signal_name]}</h3>
-                                <p style="color: rgba(255,255,255,0.7);">{len(signal_results)} hisse bulundu</p>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            total_found += len(signal_results)
                             
-                            df = pd.DataFrame(signal_results)
-                            st.dataframe(df, use_container_width=True)
-                        else:
-                            st.markdown(f"""
-                            <div class="warning-box">
-                                <h4>{signal_types[signal_name]}</h4>
-                                <p>Sinyal bulunamadı</p>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            # Sinyal başlığı
+                            pdf.set_font('Roboto-Bold', '', 14)
+                            pdf.set_text_color(52, 73, 94)
+                            pdf.cell(0, 12, f'{signal_types[signal_name]} ({len(signal_results)} adet)', 0, 1, 'L')
+                            pdf.ln(3)
+                            
+                            # Tablo başlıkları
+                            pdf.set_font('Roboto-Bold', '', 9)
+                            pdf.set_fill_color(52, 152, 219)
+                            pdf.set_text_color(255, 255, 255)
+                            
+                            pdf.cell(35, 8, 'Sembol', 1, 0, 'C', True)
+                            pdf.cell(70, 8, 'Şirket Adı', 1, 0, 'C', True)
+                            pdf.cell(25, 8, 'Fiyat (₺)', 1, 0, 'C', True)
+                            pdf.cell(25, 8, 'Sinyal', 1, 0, 'C', True)
+                            pdf.cell(25, 8, 'Değişim%', 1, 1, 'C', True)
+                            
+                            # Veri satırları
+                            pdf.set_font('Roboto', '', 8)
+                            pdf.set_text_color(44, 62, 80)
+                            
+                            for i, result in enumerate(signal_results[:10]):  # İlk 10 sonuç
+                                if i % 2 == 0:
+                                    pdf.set_fill_color(236, 240, 241)
+                                else:
+                                    pdf.set_fill_color(255, 255, 255)
+                                
+                                symbol = str(result.get('symbol', 'N/A'))[:7]
+                                name = str(result.get('name', 'N/A'))[:22] + ('...' if len(str(result.get('name', ''))) > 22 else '')
+                                price = f"{float(result.get('current_price', 0)):.2f}" if result.get('current_price') else 'N/A'
+                                signal = str(result.get('signal', 'N/A'))[:6]
+                                change = f"{float(result.get('change_percent', 0)):.1f}" if result.get('change_percent') else 'N/A'
+                                
+                                pdf.cell(35, 7, symbol, 1, 0, 'C', True)
+                                pdf.cell(70, 7, name, 1, 0, 'L', True)
+                                pdf.cell(25, 7, price, 1, 0, 'C', True)
+                                pdf.cell(25, 7, signal, 1, 0, 'C', True)
+                                pdf.cell(25, 7, change, 1, 1, 'C', True)
+                            
+                            if len(signal_results) > 10:
+                                pdf.set_font('Roboto', '', 8)
+                                pdf.set_text_color(127, 140, 141)
+                                pdf.cell(0, 6, f'... ve {len(signal_results) - 10} adet daha', 0, 1, 'C')
+                            
+                            pdf.ln(8)
+                    
+                    # Genel özet
+                    pdf.set_font('Roboto-Bold', '', 12)
+                    pdf.set_text_color(52, 73, 94)
+                    pdf.cell(0, 10, 'GENEL RAPOR ÖZETİ', 0, 1, 'L')
+                    pdf.ln(2)
+                    
+                    pdf.set_font('Roboto', '', 10)
+                    pdf.set_text_color(44, 62, 80)
+                    pdf.cell(0, 8, f'• Toplam bulunan hisse sayısı: {total_found}', 0, 1, 'L')
+                    pdf.cell(0, 8, f'• Taranan sinyal türü sayısı: {len([s for s, r in results.items() if r])}', 0, 1, 'L')
+                    pdf.cell(0, 8, f'• Zaman dilimi: {selected_interval}', 0, 1, 'L')
+                    
+                    # Alt bilgi
+                    pdf.ln(10)
+                    pdf.set_font('Roboto', '', 8)
+                    pdf.set_text_color(127, 140, 141)
+                    pdf.cell(0, 6, 'Bu rapor otomatik olarak oluşturulmuştur. Yatırım kararlarınızda dikkatli olunuz.', 0, 1, 'C')
+                    
+                    pdf_output = pdf.output(dest='S')
+                    b64 = base64.b64encode(pdf_output).decode('utf-8')
+                    href = f'<a href="data:application/octet-stream;base64,{b64}" download="toplu_tarama_sonuclari.pdf">📊 Kapsamlı PDF Raporu İndir</a>'
+                    st.markdown(href, unsafe_allow_html=True)
+                except Exception as e:
+                    st.warning(f"PDF oluşturulamadı: {str(e)}")
+
+            else:
+                st.markdown(f"""
+                <div class="warning-box">
+                    <h4>⚠️ Sonuç Bulunamadı</h4>
+                    <p>{signal_types.get(selected_signal, 'Seçili')} kriteri karşılayan hisse bulunamadı</p>
+                </div>
+                """, unsafe_allow_html=True)
+
     
     with tab2:
 
@@ -4845,87 +5044,6 @@ def show_stock_screener():
     with tab4:
         st.markdown("""
         <div class="metric-card">
-            <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">💰 Day Trade Fırsatları</h2>
-            <p style="color: rgba(255,255,255,0.7);">Teknik göstergelerle dikkat çeken günlük işlem fırsatları</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Refresh button for day trade opportunities
-        refresh_daytrading_tab = st.button("🔄 Fırsatları Tara", type="primary", key="refresh_daytrading_tab")
-        
-        if refresh_daytrading_tab or "daytrading_tab_results" not in st.session_state:
-            with st.spinner("🔍 Day trade fırsatları taranıyor..."):
-                daytrading_opportunities = scan_daytrading_opportunities()
-                st.session_state.daytrading_tab_results = daytrading_opportunities
-        
-        if "daytrading_tab_results" in st.session_state and st.session_state.daytrading_tab_results:
-            opportunities = st.session_state.daytrading_tab_results
-            
-            # Filter and sort opportunities
-            high_score = [op for op in opportunities if op.get('score', 0) >= 7]
-            medium_score = [op for op in opportunities if 5 <= op.get('score', 0) < 7]
-            
-            # High Score Opportunities
-            if high_score:
-                st.markdown("### 🔥 Yüksek Potansiyel Fırsatları")
-                cols = st.columns(min(len(high_score), 3))
-                for i, opportunity in enumerate(high_score[:3]):
-                    with cols[i]:
-                        score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
-                        signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
-                        
-                        st.markdown(f"""
-                        <div class="metric-card hover-glow">
-                            <div style="display: flex; justify-content: space-between;">
-                                <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{opportunity['symbol']}</h4>
-                                <span style="background: {score_color}; color: black; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{opportunity['score']}/10</span>
-                            </div>
-                            <p style="margin: 0.25rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">{opportunity['name']}</p>
-                            <div style="margin: 0.5rem 0;">
-                                <span style="color: {signal_color}; font-weight: bold; font-size: 1.1rem;">{opportunity['signal']}</span>
-                                <span style="color: rgba(255,255,255,0.6); margin-left: 0.5rem;">₺{opportunity['price']:.2f}</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
-                                <div>📊 Volatilite: {opportunity['volatility']:.1f}%</div>
-                                <div>📈 Hacim: {opportunity['volume_ratio']:.1f}x</div>
-                                <div>⚡ RSI: {opportunity['rsi']:.0f}</div>
-                            </div>
-                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
-                                {opportunity['reason']}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-            
-            # Medium Score Opportunities 
-            if medium_score:
-                st.markdown("### 💡 Orta Seviye Fırsatlar")
-                df_medium = pd.DataFrame(medium_score)
-                df_display = df_medium[['symbol', 'name', 'signal', 'price', 'volatility', 'volume_ratio', 'rsi', 'score']].copy()
-                df_display.columns = ['Kod', 'Hisse', 'Sinyal', 'Fiyat (₺)', 'Volatilite (%)', 'Hacim Oranı', 'RSI', 'Puan']
-                st.dataframe(df_display, use_container_width=True)
-            
-            # Summary stats
-            st.markdown("### 📈 Tarama Özeti")
-            col1, col2, col3, col4 = st.columns(4)
-            
-            total_scanned = len(BIST_SYMBOLS)
-            total_opportunities = len(opportunities)
-            high_potential = len(high_score)
-            avg_score = sum(op['score'] for op in opportunities) / len(opportunities) if opportunities else 0
-            
-            with col1:
-                st.metric("Taranan Hisse", total_scanned)
-            with col2:
-                st.metric("Toplam Fırsat", total_opportunities)
-            with col3:
-                st.metric("Yüksek Potansiyel", high_potential)
-            with col4:
-                st.metric("Ortalama Puan", f"{avg_score:.1f}/10")
-        
-        else:
-            st.info("🔍 Day trade fırsatlarını görmek için 'Fırsatları Tara' butonuna tıklayın.")
-        st.markdown("""
-        <div class="metric-card">
             <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">🚀 Day Trade Fırsatları</h2>
             <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Teknik göstergelerle dikkat çeken day trade fırsatları</p>
         </div>
@@ -4941,57 +5059,64 @@ def show_stock_screener():
         
         if "daytrading_results" in st.session_state and st.session_state.daytrading_results:
             opportunities = st.session_state.daytrading_results
-            
-            # Filter and sort opportunities
-            high_score = [op for op in opportunities if op.get('score', 0) >= 7]
-            medium_score = [op for op in opportunities if 5 <= op.get('score', 0) < 7]
-            
-            # High Score Opportunities
-            if high_score:
-                st.markdown("### 🔥 Yüksek Potansiyel Fırsatları")
-                cols = st.columns(min(len(high_score), 3))
-                for i, opportunity in enumerate(high_score[:3]):
-                    with cols[i]:
-                        score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
-                        signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
-                        
-                        st.markdown(f"""
-                        <div class="metric-card hover-glow">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{opportunity['symbol']}</h4>
-                                <span style="background: {score_color}; color: black; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{opportunity['score']}/10</span>
+
+            st.markdown("#### Filtreleme Seçenekleri")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                min_score = st.slider("Minimum Puan", 0, 10, 5, key="min_score_slider_v2")
+            with col2:
+                min_volatility = st.slider("Minimum Volatilite (%)", 0.0, 15.0, 2.0, 0.1, key="min_volatility_slider_v2")
+            with col3:
+                min_volume_ratio = st.slider("Minimum Hacim Oranı", 0.0, 10.0, 1.5, 0.1, key="min_volume_ratio_slider_v2")
+
+            filtered_ops = [
+                op for op in opportunities 
+                if op['score'] >= min_score and 
+                   op['volatility'] >= min_volatility and 
+                   op['volume_ratio'] >= min_volume_ratio
+            ]
+
+            st.markdown(f"**{len(filtered_ops)}** adet fırsat bulundu.")
+
+            # Display opportunities in a more structured way
+            for i in range(0, len(filtered_ops), 2):
+                cols = st.columns(2)
+                for j in range(2):
+                    if i + j < len(filtered_ops):
+                        with cols[j]:
+                            opportunity = filtered_ops[i+j]
+                            score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
+                            signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
+                            
+                            st.markdown(f"""
+                            <div class="metric-card hover-glow">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{opportunity['symbol']}</h4>
+                                    <span style="background: {score_color}; color: black; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{opportunity['score']}/10</span>
+                                </div>
+                                <p style="margin: 0.25rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">{opportunity['name']}</p>
+                                <div style="margin: 0.5rem 0;">
+                                    <span style="color: {signal_color}; font-weight: bold; font-size: 1.1rem;">{opportunity['signal']}</span>
+                                    <span style="color: rgba(255,255,255,0.6); margin-left: 0.5rem;">₺{opportunity['price']:.2f}</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
+                                    <div>📊 Volatilite: {opportunity['volatility']:.1f}%</div>
+                                    <div>📈 Hacim: {opportunity['volume_ratio']:.1f}x</div>
+                                    <div>⚡ RSI: {opportunity['rsi']:.0f}</div>
+                                </div>
+                                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                                    {opportunity['reason']}
+                                </div>
                             </div>
-                            <p style="margin: 0.25rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">{opportunity['name']}</p>
-                            <div style="margin: 0.5rem 0;">
-                                <span style="color: {signal_color}; font-weight: bold; font-size: 1.1rem;">{opportunity['signal']}</span>
-                                <span style="color: rgba(255,255,255,0.6); margin-left: 0.5rem;">₺{opportunity['price']:.2f}</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
-                                <div>📊 Volatilite: {opportunity['volatility']:.1f}%</div>
-                                <div>📈 Hacim: {opportunity['volume_ratio']:.1f}x</div>
-                                <div>⚡ RSI: {opportunity['rsi']:.0f}</div>
-                            </div>
-                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
-                                {opportunity['reason']}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-            
-            # Medium Score Opportunities 
-            if medium_score:
-                st.markdown("### 💡 Orta Seviye Fırsatlar")
-                df_medium = pd.DataFrame(medium_score)
-                df_display = df_medium[['symbol', 'name', 'signal', 'price', 'volatility', 'volume_ratio', 'rsi', 'score']].copy()
-                df_display.columns = ['Kod', 'Hisse', 'Sinyal', 'Fiyat (₺)', 'Volatilite (%)', 'Hacim Oranı', 'RSI', 'Puan']
-                st.dataframe(df_display, use_container_width=True)
-            
+                            """, unsafe_allow_html=True)
+
             # Summary stats
             st.markdown("### 📈 Tarama Özeti")
             col1, col2, col3, col4 = st.columns(4)
             
-            total_scanned = len(BIST_SYMBOLS)
+            total_scanned = 50 # Assuming first 50 BIST symbols are scanned
             total_opportunities = len(opportunities)
-            high_potential = len(high_score)
+            high_potential = len([op for op in opportunities if op.get('score', 0) >= 7])
             avg_score = sum(op['score'] for op in opportunities) / len(opportunities) if opportunities else 0
             
             with col1:
@@ -5011,110 +5136,122 @@ def show_pattern_analysis():
     st.markdown("""
     <div class="page-header">
         <h1 style="display: inline-block; margin-right: 1rem;">🎯 Patern Analizi</h1>
-        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Candlestick pattern tespiti ve sinyal analizi</span>
+        <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem; display: inline-block; vertical-align: middle;">Gelişmiş formasyon tespiti ve sinyal analizi</span>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Hisse seçimi modern kart içinde
+
+    # --- Ayarlar Paneli ---
     st.markdown("""
     <div class="metric-card">
-        <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">📊 Hisse Seçimi</h3>
-        <p style="color: rgba(255,255,255,0.7);">Analiz edilecek hisseyi seçin</p>
+        <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">⚙️ Analiz Ayarları</h3>
+        <p style="color: rgba(255,255,255,0.7);">Hisse, zaman dilimi ve veri periyodu seçerek analizi başlatın.</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    selected_symbol = st.selectbox(
-        "Hisse Seçin",
-        options=sorted(list(BIST_SYMBOLS.keys())),
-        format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
-        key="pattern_stock_select"
-    )
-    
-    if st.button("🔍 Pattern Analizi Yap", type="primary"):
-        with st.spinner("Formasyonlar analiz ediliyor..."):
-            # Veri çek
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        selected_symbol = st.selectbox(
+            "📊 Hisse Senedi",
+            options=sorted(list(BIST_SYMBOLS.keys())),
+            format_func=lambda x: f"{x} - {BIST_SYMBOLS[x]}",
+            key="pattern_stock_select_v2"
+        )
+
+    with col2:
+        time_interval = st.selectbox(
+            "⏰ Zaman Dilimi",
+            options=["5m", "15m", "1h", "4h", "1d"],
+            index=4,  # Varsayılan: 1d
+            key="pattern_time_interval_v2"
+        )
+
+    with col3:
+        if time_interval in ["5m", "15m"]:
+            period_options = {"1d": "1 Gün", "5d": "5 Gün", "1mo": "1 Ay"}
+            default_period = "5d"
+        elif time_interval in ["1h", "4h"]:
+            period_options = {"1mo": "1 Ay", "3mo": "3 Ay", "6mo": "6 Ay"}
+            default_period = "3mo"
+        else:  # 1d
+            period_options = {"6mo": "6 Ay", "1y": "1 Yıl", "2y": "2 Yıl", "5y": "5 Yıl"}
+            default_period = "1y"
+
+        time_period = st.selectbox(
+            "📅 Veri Periyodu",
+            options=list(period_options.keys()),
+            format_func=lambda x: period_options[x],
+            index=list(period_options.keys()).index(default_period),
+            key="pattern_time_period_v2"
+        )
+
+    with st.expander("🔧 Gelişmiş Ayarlar"):
+        col1, col2 = st.columns(2)
+        with col1:
+            lookback_period = st.slider("Formasyon Arama Periyodu (Bar Sayısı)", 5, 100, 30, key="pattern_lookback_v2")
+        with col2:
+            sensitivity = st.slider("Tespit Hassasiyeti", 0.5, 1.5, 1.0, 0.1, key="pattern_sensitivity_v2")
+
+    if st.button("🔍 Analizi Başlat", type="primary", use_container_width=True):
+        with st.spinner(f"{selected_symbol} için formasyonlar analiz ediliyor..."):
             fetcher = BISTDataFetcher()
-            data = fetcher.get_stock_data(selected_symbol, period="1y", interval="1d")
-            
-            if data is not None:
-                # Pattern recognition
+            data = fetcher.get_stock_data(selected_symbol, period=time_period, interval=time_interval)
+
+            if data is not None and not data.empty:
+                st.success(f"{selected_symbol} için {len(data)} adet bar verisi başarıyla çekildi.")
+                
+                # --- Candlestick Patternleri ---
+                st.markdown("### 🕯️ Candlestick Formasyonları")
                 pattern_analyzer = PatternRecognition(data)
-                patterns = pattern_analyzer.analyze_all_patterns()
-                latest_patterns = pattern_analyzer.get_latest_patterns()
-                signals = pattern_analyzer.get_pattern_signals()
+                latest_patterns = pattern_analyzer.get_latest_patterns(lookback=lookback_period)
                 
-                # Sonuçları modern kartlarda göster
-                st.markdown("""
-                <div class="metric-card" style="margin-top: 2rem;">
-                    <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">🕯️ Tespit Edilen Formasyonlar</h2>
-                    <p style="color: rgba(255,255,255,0.7);">Son işlem gününde tespit edilen candlestick patternleri</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                pattern_cols = st.columns(4)
-                pattern_names = {
-                    'doji': '⭐ Doji',
-                    'hammer': '🔨 Çekiç',
-                    'shooting_star': '⭐ Kayan Yıldız',
-                    'bullish_engulfing': '🟢 Yükseliş Saran',
-                    'bearish_engulfing': '🔴 Düşüş Saran',
-                    'morning_star': '🌅 Sabah Yıldızı',
-                    'evening_star': '🌆 Akşam Yıldızı'
+                candlestick_names = {
+                    'doji': '⭐ Doji', 'hammer': '🔨 Çekiç', 'shooting_star': '🌠 Kayan Yıldız',
+                    'bullish_engulfing': '🟢 Yükseliş Saran', 'bearish_engulfing': '🔴 Düşüş Saran',
+                    'morning_star': '🌅 Sabah Yıldızı', 'evening_star': '🌆 Akşam Yıldızı'
                 }
                 
-                for i, (pattern, detected) in enumerate(latest_patterns.items()):
-                    with pattern_cols[i % 4]:
-                        if detected:
-                            st.markdown(f"""
-                            <div class="metric-card hover-glow" style="border: 2px solid #00ff88;">
-                                <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{pattern_names.get(pattern, pattern)}</h4>
-                                <div style="text-align: center; margin: 1rem 0;">
-                                    <span class="status-positive">✅ TESPİT EDİLDİ</span>
-                                </div>
-                                <p style="margin: 0; color: #00ff88; font-weight: bold; text-align: center;">AKTIF</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"""
-                            <div class="metric-card">
-                                <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{pattern_names.get(pattern, pattern)}</h4>
-                                <div style="text-align: center; margin: 1rem 0;">
-                                    <span class="status-neutral">❌ TESPİT EDİLMEDİ</span>
-                                </div>
-                                <p style="margin: 0; color: rgba(255,255,255,0.5); text-align: center;">PASİF</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                
-                # Sinyaller
-                if signals:
-                    st.markdown("""
-                    <div class="metric-card" style="margin-top: 2rem;">
-                        <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">📈 Pattern Sinyalleri</h2>
-                        <p style="color: rgba(255,255,255,0.7);">Tespit edilen patternlerden çıkarılan işlem sinyalleri</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    signal_cols = st.columns(len(signals) if len(signals) <= 4 else 4)
-                    for i, (pattern, signal) in enumerate(signals.items()):
-                        with signal_cols[i % 4]:
-                            signal_color = "#00ff88" if signal == "BUY" else "#ff4757"
-                            signal_text = "ALIM" if signal == "BUY" else "SATIM"
-                            signal_icon = "🚀" if signal == "BUY" else "📉"
-                            
-                            st.markdown(f"""
-                            <div class="metric-card hover-glow">
-                                <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{pattern_names.get(pattern, pattern)}</h4>
-                                <h2 style="margin: 0.5rem 0; color: {signal_color};">{signal_icon} {signal_text}</h2>
-                                <span class="status-badge" style="background: {signal_color};">{signal}</span>
-                            </div>
-                            """, unsafe_allow_html=True)
+                detected_candlesticks = {k: v for k, v in latest_patterns.items() if v is not None}
+                if detected_candlesticks:
+                    cols = st.columns(len(detected_candlesticks))
+                    for i, (pattern, date) in enumerate(detected_candlesticks.items()):
+                        with cols[i]:
+                            st.metric(label=candlestick_names.get(pattern, pattern.replace('_', ' ').title()), 
+                                      value="Tespit Edildi", 
+                                      help=f"Tarih: {date.strftime('%Y-%m-%d')}" if date else "Tarih bulunamadı")
                 else:
-                    st.markdown("""
-                    <div class="info-box">
-                        <h4>ℹ️ Bilgi</h4>
-                        <p>Şu anda aktif pattern sinyali bulunmamaktadır.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.info("Belirtilen periyotta belirgin bir candlestick formasyonu bulunamadı.")
+
+                # --- Chart Patternleri (Gelişmiş) ---
+                st.markdown("### 📈 Grafik Formasyonları")
+                try:
+                    from modules.pattern_recognition_advanced import AdvancedPatternRecognition
+                    advanced_analyzer = AdvancedPatternRecognition(data, sensitivity=sensitivity)
+                    chart_patterns = advanced_analyzer.detect_all_patterns(lookback=lookback_period)
+                    
+                    chart_names = {
+                        'flag': '🚩 Bayrak', 'pennant': '🔺 Flama', 'triangle': '📐 Üçgen',
+                        'head_shoulders': '👤 OBO/TOBO', 'double_top': '⛰️ Çift Tepe', 'double_bottom': '🏔️ Çift Dip'
+                    }
+
+                    detected_charts = {k: v for k, v in chart_patterns.items() if v}
+                    if detected_charts:
+                        cols = st.columns(len(detected_charts))
+                        for i, (pattern, details) in enumerate(detected_charts.items()):
+                            with cols[i]:
+                                st.metric(label=chart_names.get(pattern, pattern.replace('_', ' ').title()),
+                                          value=f"{details['type']}",
+                                          help=f"Periyot: {details['start_date']} - {details['end_date']}")
+                    else:
+                        st.info("Belirtilen periyotta belirgin bir grafik formasyonu bulunamadı.")
+
+                except ImportError:
+                    st.warning("Gelişmiş formasyon modülü bulunamadı.")
+                except Exception as e:
+                    st.error(f"Grafik formasyon analizi sırasında bir hata oluştu: {e}")
+
+            else:
+                st.error("Veri alınamadı. Lütfen farklı bir hisse veya zaman aralığı deneyin.")
 
 
 

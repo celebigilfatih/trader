@@ -109,15 +109,20 @@ class PatternRecognition:
         self.patterns = patterns
         return patterns
     
-    def get_latest_patterns(self, lookback: int = 5) -> Dict[str, bool]:
-        """Son N günde tespit edilen formasyonlar"""
+    def get_latest_patterns(self, lookback: int = 5) -> Dict[str, Optional[pd.Timestamp]]:
+        """Son N günde tespit edilen formasyonların son tarihini döndürür"""
         if not self.patterns:
             self.analyze_all_patterns()
         
         latest_patterns = {}
         for pattern_name, pattern_series in self.patterns.items():
             # Son N günde formasyon var mı?
-            latest_patterns[pattern_name] = pattern_series.iloc[-lookback:].any()
+            recent_detections = pattern_series.iloc[-lookback:]
+            if recent_detections.any():
+                # Son tespitin tarihini al
+                latest_patterns[pattern_name] = recent_detections[recent_detections].index[-1]
+            else:
+                latest_patterns[pattern_name] = None
         
         return latest_patterns
     
@@ -136,4 +141,4 @@ class PatternRecognition:
                 elif pattern in bearish_patterns:
                     signals[pattern] = 'SELL'
         
-        return signals 
+        return signals
