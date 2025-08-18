@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -6,6 +7,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import time
 import os
+import pandas as pd
 
 # Kendi modüllerimizi import ediyoruz
 from modules.data_fetcher import BISTDataFetcher
@@ -1114,6 +1116,132 @@ def main():
             font-weight: 500;
         }
         
+        /* Multiselect styling */
+        .stMultiSelect > div > div {
+            background: hsl(220, 45%, 12%);
+            border: 1px solid hsl(215, 35%, 18%);
+            border-radius: 0.5rem;
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stMultiSelect > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stMultiSelect > div > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        /* Slider styling */
+        .stSlider > div > div {
+            background: hsl(220, 45%, 12%);
+            border: 1px solid hsl(215, 35%, 18%);
+            border-radius: 0.5rem;
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stSlider > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stSlider > div > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        /* Dataframe styling */
+        .stDataFrame > div {
+            background: hsl(220, 45%, 12%);
+            border: 1px solid hsl(215, 35%, 18%);
+            border-radius: 0.5rem;
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stDataFrame > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stDataFrame > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        /* Plotly chart styling */
+        .stPlotlyChart > div {
+            background: hsl(220, 45%, 12%);
+            border: 1px solid hsl(215, 35%, 18%);
+            border-radius: 0.5rem;
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stPlotlyChart > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stPlotlyChart > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        /* Spinner styling */
+        .stSpinner > div {
+            background: hsl(220, 45%, 12%);
+            border: 1px solid hsl(215, 35%, 18%);
+            border-radius: 0.5rem;
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stSpinner > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stSpinner > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        /* Metric styling */
+        .stMetric > div {
+            background: hsl(220, 45%, 12%);
+            border: 1px solid hsl(215, 35%, 18%);
+            border-radius: 0.5rem;
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stMetric > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stMetric > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        /* Download button styling */
+        .stDownloadButton > div {
+            background: hsl(220, 45%, 12%);
+            border: 1px solid hsl(215, 35%, 18%);
+            border-radius: 0.5rem;
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stDownloadButton > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
+        .stDownloadButton > div > div > div {
+            background: hsl(220, 45%, 12%);
+            color: hsl(210, 40%, 98%);
+        }
+        
         /* Modern Sidebar Button Styling */
         .stButton > button {
             width: 100% !important;
@@ -1748,6 +1876,250 @@ def main():
         # Varsayılan olarak dashboard göster
         show_modern_dashboard()
 
+def generate_technical_analysis_pdf(symbol, interval, period):
+    """Teknik analiz PDF raporu oluşturur"""
+    try:
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+        from reportlab.lib.colors import HexColor
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        from datetime import datetime
+        import io
+        import base64
+        import os
+        
+        # PDF buffer oluştur
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=36,
+            leftMargin=36,
+            topMargin=36,
+            bottomMargin=36,
+        )
+        story = []
+        
+        # Türkçe karakter desteği için TTF font kaydı (öncelik: Roboto, yoksa DejaVuSans)
+        assets_dir = os.path.join(os.path.dirname(__file__), 'assets')
+        roboto_regular = os.path.join(assets_dir, 'Roboto-Regular.ttf')
+        roboto_bold = os.path.join(assets_dir, 'Roboto-Bold.ttf')
+        dejavu_regular = os.path.join(assets_dir, 'DejaVuSans.ttf')
+        dejavu_bold = os.path.join(assets_dir, 'DejaVuSans-Bold.ttf')
+        primary_font_name = 'Helvetica'
+        bold_font_name = 'Helvetica-Bold'
+        try:
+            if os.path.isfile(roboto_regular) and os.path.isfile(roboto_bold):
+                pdfmetrics.registerFont(TTFont('Roboto', roboto_regular))
+                pdfmetrics.registerFont(TTFont('Roboto-Bold', roboto_bold))
+                primary_font_name = 'Roboto'
+                bold_font_name = 'Roboto-Bold'
+            elif os.path.isfile(dejavu_regular) and os.path.isfile(dejavu_bold):
+                pdfmetrics.registerFont(TTFont('DejaVuSans', dejavu_regular))
+                pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', dejavu_bold))
+                primary_font_name = 'DejaVuSans'
+                bold_font_name = 'DejaVuSans-Bold'
+        except Exception:
+            # Roboto yoksa varsayılanlara düşülür; yine de PDF üretimi sürer
+            pass
+
+        # Stil tanımlamaları (tarama raporuna benzer modern görünüm)
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontName=bold_font_name,
+            fontSize=18,
+            leading=22,
+            spaceAfter=16,
+            textColor=HexColor('#2c3e50')
+        )
+        meta_style = ParagraphStyle(
+            'Meta',
+            parent=styles['Normal'],
+            fontName=primary_font_name,
+            fontSize=10,
+            leading=14,
+            textColor=HexColor('#7f8c8d')
+        )
+        heading2_style = ParagraphStyle(
+            'H2', parent=styles['Heading2'], fontName=bold_font_name, textColor=HexColor('#2c3e50')
+        )
+        heading3_style = ParagraphStyle(
+            'H3', parent=styles['Heading3'], fontName=bold_font_name, textColor=HexColor('#2c3e50'), spaceBefore=6
+        )
+        body_style = ParagraphStyle(
+            'Body', parent=styles['Normal'], fontName=primary_font_name, fontSize=10, leading=14
+        )
+        
+        # Başlık
+        story.append(Paragraph("📈 HİSSE TEKNİK ANALİZ RAPORU", title_style))
+        story.append(Paragraph(f"Hisse: {symbol} - {BIST_SYMBOLS.get(symbol, symbol)}", heading2_style))
+        story.append(Paragraph(f"Tarih: {datetime.now().strftime('%d.%m.%Y %H:%M')}", meta_style))
+        story.append(Paragraph(f"Zaman Aralığı: {interval} | Dönem: {period}", meta_style))
+        story.append(Spacer(1, 12))
+        story.append(Paragraph(
+            "Bu rapor, seçili hisse için temel teknik göstergeler ve genel sinyal değerlendirmesini içerir.",
+            body_style,
+        ))
+        story.append(Spacer(1, 16))
+        
+        # Veri çek ve analiz yap
+        with st.spinner("PDF raporu oluşturuluyor..."):
+            fetcher = BISTDataFetcher()
+            df = fetcher.get_stock_data(symbol, period=period, interval=interval)
+            
+            if df is not None and not df.empty:
+                # Teknik analiz hesaplamaları
+                analyzer = TechnicalAnalyzer(df)
+                
+                # Temel indikatörleri hesapla
+                basic_indicators = ['rsi', 'macd', 'ema_21', 'ema_50', 'vwap', 'bollinger']
+                for indicator in basic_indicators:
+                    try:
+                        analyzer.add_indicator(indicator)
+                    except:
+                        pass
+                
+                # Mevcut fiyat bilgileri
+                latest = df.iloc[-1]
+                prev = df.iloc[-2]
+                change = latest['Close'] - prev['Close']
+                change_pct = (change / prev['Close']) * 100
+                
+                # Fiyat bilgileri tablosu
+                price_data = [
+                    ['Mevcut Fiyat', f"₺{latest['Close']:.2f}"],
+                    ['Değişim', f"{change:+.2f} ({change_pct:+.2f}%)"],
+                    ['Yüksek', f"₺{latest['High']:.2f}"],
+                    ['Düşük', f"₺{latest['Low']:.2f}"],
+                    ['Hacim', f"{latest['Volume']:,.0f}"]
+                ]
+                
+                price_table = Table(price_data, colWidths=[2*inch, 2.5*inch])
+                price_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, -1), primary_font_name),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('TEXTCOLOR', (0, 0), (-1, -1), HexColor('#2c3e50')),
+                    ('BACKGROUND', (0, 0), (-1, -1), HexColor('#ecf0f1')),
+                    ('ROWBACKGROUNDS', (0, 0), (-1, -1), [HexColor('#ecf0f1'), HexColor('#ffffff')]),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#bdc3c7')),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ]))
+                
+                story.append(Paragraph("💰 Fiyat Bilgileri", heading3_style))
+                story.append(price_table)
+                story.append(Spacer(1, 16))
+                
+                # Teknik indikatörler
+                latest_indicators = analyzer.get_latest_indicators()
+                
+                indicator_data = [['İndikatör', 'Değer', 'Durum']]
+                
+                # RSI
+                rsi_value = latest_indicators.get('rsi', 0)
+                rsi_status = "Aşırı Alım" if rsi_value > 70 else "Aşırı Satım" if rsi_value < 30 else "Normal"
+                indicator_data.append(['RSI (14)', f"{rsi_value:.1f}", rsi_status])
+                
+                # MACD
+                macd_value = latest_indicators.get('macd', 0)
+                macd_signal = latest_indicators.get('macd_signal', 0)
+                macd_status = "Pozitif" if macd_value > macd_signal else "Negatif"
+                indicator_data.append(['MACD', f"{macd_value:.3f}", macd_status])
+                
+                # VWAP
+                vwap_value = latest_indicators.get('vwap', latest['Close'])
+                vwap_status = "Üzeri" if latest['Close'] > vwap_value else "Altı"
+                indicator_data.append(['VWAP', f"₺{vwap_value:.2f}", f"Fiyat {vwap_status}"])
+                
+                # EMA 21
+                ema21_value = latest_indicators.get('ema_21', latest['Close'])
+                ema21_status = "Üzeri" if latest['Close'] > ema21_value else "Altı"
+                indicator_data.append(['EMA 21', f"₺{ema21_value:.2f}", f"Fiyat {ema21_status}"])
+                
+                indicator_table = Table(indicator_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])
+                indicator_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#3498db')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), bold_font_name),
+                    ('FONTSIZE', (0, 0), (-1, 0), 11),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+
+                    ('FONTNAME', (0, 1), (-1, -1), primary_font_name),
+                    ('TEXTCOLOR', (0, 1), (-1, -1), HexColor('#2c3e50')),
+                    ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
+                    ('BACKGROUND', (0, 1), (-1, -1), HexColor('#ffffff')),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [HexColor('#ffffff'), HexColor('#f7fbff')]),
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#bdc3c7')),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ]))
+                
+                story.append(Paragraph("📊 Teknik İndikatörler", heading3_style))
+                story.append(indicator_table)
+                story.append(Spacer(1, 16))
+                
+                # Sinyal analizi
+                from modules.alert_system import AlertSystem
+                alert_system = AlertSystem()
+                signal = alert_system.generate_signal(analyzer)
+                
+                signal_descriptions = {
+                    "AL": "Güçlü Alış Sinyali - Pozisyon açmak için uygun",
+                    "SAT": "Güçlü Satış Sinyali - Pozisyon kapatmak için uygun", 
+                    "BEKLE": "Pozisyon Bekle - Piyasa belirsiz"
+                }
+                
+                story.append(Paragraph("🚨 Sinyal Analizi", heading3_style))
+                story.append(Paragraph(f"Genel Sinyal: {signal}", body_style))
+                story.append(Paragraph(signal_descriptions.get(signal, "Belirsiz sinyal"), body_style))
+                story.append(Spacer(1, 16))
+                
+                # Risk uyarısı
+                story.append(Paragraph("⚠️ Risk Uyarısı", heading3_style))
+                story.append(Paragraph("Bu analiz sadece teknik göstergelere dayanmaktadır. Yatırım kararları vermeden önce fundamentel analiz yapmanız ve risk yönetimi kurallarınızı uygulamanız önerilir.", body_style))
+                
+                # Alt bilgi
+                story.append(Spacer(1, 24))
+                story.append(Paragraph(
+                    "Not: Bu rapor otomatik olarak oluşturulmuştur. Yatırım kararları risk içerir.",
+                    meta_style,
+                ))
+
+                # PDF'i oluştur
+                doc.build(story)
+                
+                # PDF'i indirilebilir hale getir
+                buffer.seek(0)
+                pdf_data = buffer.getvalue()
+                buffer.close()
+                
+                # Streamlit download button
+                st.download_button(
+                    label="📄 PDF Raporu İndir",
+                    data=pdf_data,
+                    file_name=f"{symbol}_teknik_analiz_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf"
+                )
+                
+                st.success("✅ PDF raporu başarıyla oluşturuldu!")
+                
+            else:
+                st.error("❌ Veri alınamadı, PDF raporu oluşturulamadı.")
+                
+    except ImportError:
+        st.error("❌ PDF oluşturma için reportlab kütüphanesi gerekli. Lütfen 'pip install reportlab' komutunu çalıştırın.")
+    except Exception as e:
+        st.error(f"❌ PDF oluşturulurken hata: {str(e)}")
+
 def show_technical_analysis():
     """Teknik analiz sayfası - Modern Shadcn stil"""
     
@@ -1759,8 +2131,8 @@ def show_technical_analysis():
     
 
 
-    # Hisse seçimi, zaman aralığı, dönem ve uyarı kontrolleri - Üst bölüm
-    control_col1, control_col2, control_col3, control_col4 = st.columns([2, 1, 1, 1])
+    # Hisse seçimi, zaman aralığı, dönem, uyarı kontrolleri ve PDF raporu - Üst bölüm
+    control_col1, control_col2, control_col3, control_col4, control_col5 = st.columns([2, 1, 1, 1, 1])
         
     with control_col1:
             st.markdown("""
@@ -1839,6 +2211,16 @@ def show_technical_analysis():
                 key="alert_methods",
                 label_visibility="collapsed"
             )
+    
+    with control_col5:
+            # PDF Raporu
+            st.markdown("""
+            <div style="background: hsl(220, 100%, 5%); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid hsl(215, 28%, 18%);">
+                <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📄 Rapor</div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("PDF İndir", type="secondary", use_container_width=True, key="pdf_report_btn"):
+                generate_technical_analysis_pdf(selected_symbol, time_interval, time_period)
         
     st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
     
@@ -1960,43 +2342,78 @@ def show_technical_analysis():
                     month_ago_price = df['Close'].iloc[-30]
                     monthly_performance = ((latest['Close'] - month_ago_price) / month_ago_price) * 100
             except:
-                pass  # Hata durumunda 0 olarak kalacak
+                pass
             
-            # Piyasa bilgilerini header altında tek satır halinde göster
-            st.markdown(f"""
-            <div style='background: hsl(220, 100%, 6%); padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0; border: 1px solid hsl(215, 28%, 20%);'>
-                <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;'>
-                    <div style='display: flex; align-items: center; gap: 0.5rem;'>
-                        <span style='color: hsl(215, 20%, 70%); font-size: 1.1rem;'>📊 {selected_symbol}</span>
-                        <span style='color: hsl(210, 40%, 98%); font-weight: 600; font-size: 1.3rem;'>₺{latest['Close']:.2f}</span>
-                        <span style='color: {'hsl(142, 76%, 36%)' if change >= 0 else 'hsl(0, 84%, 60%)'}; font-size: 1.1rem;'>{change:+.2f} ({change_pct:+.2f}%)</span>
+            # Piyasa bilgileri kartı (HTML olarak render)
+            html_market_info = f"""
+            <div style='
+                background: linear-gradient(135deg, hsl(220, 45%, 12%) 0%, hsl(215, 35%, 18%) 100%);
+                border: 1px solid hsl(215, 28%, 20%);
+                border-radius: 0.75rem;
+                padding: 1.5rem;
+                margin: 1rem 0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                font-variant-numeric: tabular-nums;
+            '>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;'>
+                    <h3 style='
+                        color: hsl(210, 40%, 98%);
+                        margin: 0;
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        font-family: inherit;
+                        letter-spacing: 0.1px;
+                    '>
+                        {selected_symbol} - {BIST_SYMBOLS.get(selected_symbol, selected_symbol)}
+                    </h3>
+                    <div style='color: hsl(215, 20%, 70%); font-size: 0.875rem; font-family: inherit;'>
+                        {latest.name.strftime('%d.%m.%Y %H:%M')}
                     </div>
-                    <div style='display: flex; gap: 1.5rem; font-size: 1rem;'>
-                        <div>
-                            <span style='color: hsl(215, 20%, 70%);'>Yüksek: </span>
-                            <span style='color: hsl(210, 40%, 98%);'>₺{latest['High']:.2f}</span>
+                </div>
+                
+                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;'>
+                    <div style='text-align: center;'>
+                        <div style='color: hsl(215, 20%, 70%); font-size: 0.875rem; margin-bottom: 0.25rem; font-family: inherit;'>Fiyat</div>
+                        <div style='color: hsl(210, 40%, 98%); font-size: 1.5rem; font-weight: 700; font-family: inherit;'>₺{latest['Close']:.2f}</div>
+                        <div style='color: {"hsl(142, 76%, 36%)" if change >= 0 else "hsl(0, 84%, 60%)"}; font-size: 0.875rem; font-family: inherit;'>
+                            {change:+.2f} ({change_pct:+.1f}%)
                         </div>
-                        <div>
-                            <span style='color: hsl(215, 20%, 70%);'>Düşük: </span>
-                            <span style='color: hsl(210, 40%, 98%);'>₺{latest['Low']:.2f}</span>
+                    </div>
+                    
+                    <div style='text-align: center;'>
+                        <div style='color: hsl(215, 20%, 70%); font-size: 0.875rem; margin-bottom: 0.25rem; font-family: inherit;'>Yüksek/Düşük</div>
+                        <div style='color: hsl(210, 40%, 98%); font-size: 1rem; font-weight: 600; font-family: inherit;'>₺{latest['High']:.2f}</div>
+                        <div style='color: hsl(210, 40%, 98%); font-size: 1rem; font-weight: 600; font-family: inherit;'>₺{latest['Low']:.2f}</div>
+                    </div>
+                    
+                    <div style='text-align: center;'>
+                        <div style='color: hsl(215, 20%, 70%); font-size: 0.875rem; margin-bottom: 0.25rem; font-family: inherit;'>Hacim</div>
+                        <div style='color: hsl(210, 40%, 98%); font-size: 1rem; font-weight: 600; font-family: inherit;'>{latest['Volume']:,.0f}</div>
+                        <div style='color: {"hsl(142, 76%, 36%)" if volume_change >= 0 else "hsl(0, 84%, 60%)"}; font-size: 0.875rem; font-family: inherit;'>
+                            {volume_change:+.1f}% ort.
                         </div>
-                        <div>
-                            <span style='color: hsl(215, 20%, 70%);'>Hacim: </span>
-                            <span style='color: hsl(210, 40%, 98%);'>{latest['Volume']:,.0f}</span>
-                            <span style='color: {'hsl(142, 76%, 36%)' if volume_change >= 0 else 'hsl(0, 84%, 60%)'}; margin-left: 0.25rem;'>({volume_change:+.1f}%)</span>
+                    </div>
+                    
+                    <div style='text-align: center;'>
+                        <div style='color: hsl(215, 20%, 70%); font-size: 0.875rem; margin-bottom: 0.25rem; font-family: inherit;'>Haftalık</div>
+                        <div style='color: {"hsl(142, 76%, 36%)" if weekly_performance >= 0 else "hsl(0, 84%, 60%)"}; font-size: 1rem; font-weight: 600; font-family: inherit;'>
+                            {weekly_performance:+.1f}%
                         </div>
-                        <div>
-                            <span style='color: hsl(215, 20%, 70%);'>Haftalık: </span>
-                            <span style='color: {'hsl(142, 76%, 36%)' if weekly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{weekly_performance:+.1f}%</span>
-                        </div>
-                        <div>
-                            <span style='color: hsl(215, 20%, 70%);'>Aylık: </span>
-                            <span style='color: {'hsl(142, 76%, 36%)' if monthly_performance >= 0 else 'hsl(0, 84%, 60%)'};'>{monthly_performance:+.1f}%</span>
+                    </div>
+                    
+                    <div style='text-align: center;'>
+                        <div style='color: hsl(215, 20%, 70%); font-size: 0.875rem; margin-bottom: 0.25rem; font-family: inherit;'>Aylık</div>
+                        <div style='color: {"hsl(142, 76%, 36%)" if monthly_performance >= 0 else "hsl(0, 84%, 60%)"}; font-size: 1rem; font-weight: 600; font-family: inherit;'>
+                            {monthly_performance:+.1f}%
                         </div>
                     </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """
+            components.html(html_market_info, height=260)
             
             analyzer = TechnicalAnalyzer(df)
             
@@ -2027,9 +2444,17 @@ def show_technical_analysis():
                 except:
                     pass
             
-            # Grafik
-            fig = create_chart(df, analyzer, selected_indicators)
-            st.plotly_chart(fig, use_container_width=True)
+            # Grafik oluştur ve göster
+            if any(selected_indicators.values()):
+                fig = create_chart(df, analyzer, selected_indicators)
+                if 'technical_chart_counter' not in st.session_state:
+                    st.session_state['technical_chart_counter'] = 0
+                st.session_state['technical_chart_counter'] += 1
+                unique_key = (
+                    f"technical_analysis_chart_{selected_symbol}_{time_interval}_{time_period}_"
+                    f"{st.session_state['technical_chart_counter']}"
+                )
+                st.plotly_chart(fig, use_container_width=True, key=unique_key)
             
             # İndikatör Değerleri - Grafik Altında
             if any(selected_indicators.values()):
@@ -3294,32 +3719,32 @@ def show_technical_analysis():
                 # Risk Analizi & Pozisyon Önerileri bölümü kaldırıldı
                 
         else:
-                    st.markdown("""
-                    <div style='
-                        background: hsl(220, 45%, 12%);
-                        border: 1px solid hsl(0, 84%, 60%);
-                        border-radius: 0.5rem;
-                        padding: 1.5rem;
-                        margin: 1rem 0;
-                        text-align: center;
-                    '>
-                        <div style='
-                            color: hsl(0, 84%, 60%);
-                            font-size: 1.5rem;
-                            margin-bottom: 0.5rem;
-                        '>⚠️</div>
-                        <h4 style='
-                            color: hsl(210, 40%, 98%);
-                            margin: 0 0 0.5rem 0;
-                            font-size: 1.1rem;
-                        '>Veri Yüklenemedi</h4>
-                        <p style='
-                            color: hsl(215, 20%, 70%);
-                            margin: 0;
-                            font-size: 0.9rem;
-                        '>Seçilen hisse için veri bulunamadı. Lütfen farklı bir hisse seçin veya daha sonra tekrar deneyin.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+            st.markdown("""
+            <div style='
+                background: hsl(220, 45%, 12%);
+                border: 1px solid hsl(0, 84%, 60%);
+                border-radius: 0.5rem;
+                padding: 1.5rem;
+                margin: 1rem 0;
+                text-align: center;
+            '>
+                <div style='
+                    color: hsl(0, 84%, 60%);
+                    font-size: 1.5rem;
+                    margin-bottom: 0.5rem;
+                '>⚠️</div>
+                <h4 style='
+                    color: hsl(210, 40%, 98%);
+                    margin: 0 0 0.5rem 0;
+                    font-size: 1.1rem;
+                '>Veri Yüklenemedi</h4>
+                <p style='
+                    color: hsl(215, 20%, 70%);
+                    margin: 0;
+                    font-size: 0.9rem;
+                '>Seçilen hisse için veri bulunamadı. Lütfen farklı bir hisse seçin veya daha sonra tekrar deneyin.</p>
+            </div>
+            """, unsafe_allow_html=True)
                 
     except Exception as e:
         st.markdown(f"""
@@ -3818,7 +4243,7 @@ def show_modern_dashboard():
         
         # Load performance data (cache'de yoksa hesapla)
         if "performance_data_loaded_v9" not in st.session_state:
-            with st.spinner("�� Performans verileri yükleniyor..."):
+            with st.spinner("📊 Performans verileri yükleniyor..."):
                 weekly_results = screener.screen_weekly_performance(top_count=15)
                 monthly_results = screener.screen_monthly_performance(top_count=15)
                 st.session_state.weekly_results = weekly_results
@@ -4447,7 +4872,8 @@ def show_ai_predictions():
                     font=dict(family="Arial, sans-serif", size=12)
                 )
                 
-                st.plotly_chart(fig, use_container_width=True)
+                unique_key = f"ai_predictions_chart_{selected_symbol}_{prediction_horizon}_{model_type}"
+                st.plotly_chart(fig, use_container_width=True, key=unique_key)
                 
                 # === FEATURE IMPORTANCE ===
                 importance_df = ml_predictor.get_feature_importance('random_forest')
@@ -4616,8 +5042,8 @@ def show_stock_screener():
     with tab1:
         # Boğa sinyali seçimi
         signal_types = {
-            'OTT Buy Signal': '🔵 OTT Alım Sinyali',
             'VWAP Bull Signal': '📈 VWAP Boğa Sinyali',
+            'OTT Buy Signal': '🔵 OTT Alım Sinyali',
             'Golden Cross': '🌟 Golden Cross',
             'MACD Bull Signal': '📊 MACD Boğa Sinyali',
             'RSI Recovery': '🔄 RSI Toparlanma',
@@ -4652,9 +5078,9 @@ def show_stock_screener():
 
         with col4:
             st.markdown("<p style='margin-bottom:0; color:white;'>&nbsp;</p>", unsafe_allow_html=True)
-            all_scan_button = st.button("🚀 Tüm Boğa Sinyallerini Tara", key="all_bull_signals", use_container_width=True)
+            all_scan_button = st.button("🚀 Tüm Boğa Sinyallerini Tara", key="all_bull_signals", use_container_width=True, type="tertiary")
 
-        st.markdown("---_", unsafe_allow_html=True)
+        st.markdown("---")
 
         if 'results' not in st.session_state:
             st.session_state.results = None
@@ -5142,10 +5568,7 @@ def show_pattern_analysis():
 
     # --- Ayarlar Paneli ---
     st.markdown("""
-    <div class="metric-card">
-        <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">⚙️ Analiz Ayarları</h3>
-        <p style="color: rgba(255,255,255,0.7);">Hisse, zaman dilimi ve veri periyodu seçerek analizi başlatın.</p>
-    </div>
+
     """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
@@ -5201,7 +5624,7 @@ def show_pattern_analysis():
                 st.success(f"{selected_symbol} için {len(data)} adet bar verisi başarıyla çekildi.")
                 
                 # --- Candlestick Patternleri ---
-                st.markdown("### 🕯️ Candlestick Formasyonları")
+                st.markdown("### 🕯️ <span style='color: white;'>Candlestick Formasyonları</span>", unsafe_allow_html=True)
                 pattern_analyzer = PatternRecognition(data)
                 latest_patterns = pattern_analyzer.get_latest_patterns(lookback=lookback_period)
                 
@@ -5216,46 +5639,149 @@ def show_pattern_analysis():
                     cols = st.columns(len(detected_candlesticks))
                     for i, (pattern, date) in enumerate(detected_candlesticks.items()):
                         with cols[i]:
-                            st.metric(label=candlestick_names.get(pattern, pattern.replace('_', ' ').title()), 
-                                      value="Tespit Edildi", 
-                                      help=f"Tarih: {date.strftime('%Y-%m-%d')}" if date else "Tarih bulunamadı")
+                            pattern_name = candlestick_names.get(pattern, pattern.replace('_', ' ').title())
+                            date_text = f"Tarih: {date.strftime('%Y-%m-%d')}" if date else "Tarih bulunamadı"
+                            
+                            st.markdown(f"""
+                            <div class="metric-card" style="text-align: center; padding: 15px; border-radius: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                                <div style="color: white; font-size: 14px; margin-bottom: 8px;">{pattern_name}</div>
+                                <div style="color: #2ed573; font-size: 18px; font-weight: bold; margin-bottom: 5px;">Tespit Edildi</div>
+                                <div style="color: rgba(255,255,255,0.7); font-size: 12px;">{date_text}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
                 else:
                     st.info("Belirtilen periyotta belirgin bir candlestick formasyonu bulunamadı.")
-
-                # --- Chart Patternleri (Gelişmiş) ---
-                st.markdown("### 📈 Grafik Formasyonları")
-                try:
-                    from modules.pattern_recognition_advanced import AdvancedPatternRecognition
-                    advanced_analyzer = AdvancedPatternRecognition(data, sensitivity=sensitivity)
-                    chart_patterns = advanced_analyzer.detect_all_patterns(lookback=lookback_period)
+                
+                # --- Teknik Analiz ---
+                st.markdown("### 📊 Teknik Analiz")
+                analyzer = TechnicalAnalyzer(data)
+                
+                # Temel indikatörleri ekle
+                indicators_to_add = ['rsi', 'ema_21', 'ema_50', 'macd', 'bollinger', 'vwap']
+                for indicator in indicators_to_add:
+                    try:
+                        analyzer.add_indicator(indicator)
+                    except Exception as e:
+                        st.warning(f"⚠️ {indicator} indikatörü eklenemedi: {str(e)}")
+                
+                # Mevcut değerleri göster
+                latest_values = analyzer.get_latest_indicators()
+                current_price = data['Close'].iloc[-1]
+                
+                # Teknik indikatör kartları
+                tech_cols = st.columns(3)
+                
+                with tech_cols[0]:
+                    rsi_value = latest_values.get('rsi', 50)
+                    rsi_status = "Aşırı Alım" if rsi_value > 70 else "Aşırı Satım" if rsi_value < 30 else "Normal"
+                    rsi_color = "#ff4757" if rsi_value > 70 or rsi_value < 30 else "#2ed573"
                     
-                    chart_names = {
-                        'flag': '🚩 Bayrak', 'pennant': '🔺 Flama', 'triangle': '📐 Üçgen',
-                        'head_shoulders': '👤 OBO/TOBO', 'double_top': '⛰️ Çift Tepe', 'double_bottom': '🏔️ Çift Dip'
-                    }
-
-                    detected_charts = {k: v for k, v in chart_patterns.items() if v}
-                    if detected_charts:
-                        cols = st.columns(len(detected_charts))
-                        for i, (pattern, details) in enumerate(detected_charts.items()):
-                            with cols[i]:
-                                st.metric(label=chart_names.get(pattern, pattern.replace('_', ' ').title()),
-                                          value=f"{details['type']}",
-                                          help=f"Periyot: {details['start_date']} - {details['end_date']}")
-                    else:
-                        st.info("Belirtilen periyotta belirgin bir grafik formasyonu bulunamadı.")
-
-                except ImportError:
-                    st.warning("Gelişmiş formasyon modülü bulunamadı.")
-                except Exception as e:
-                    st.error(f"Grafik formasyon analizi sırasında bir hata oluştu: {e}")
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">📊 RSI (14)</div>
+                        <div class="metric-value">{rsi_value:.1f}</div>
+                        <div class="metric-change" style="color: {rsi_color};">{rsi_status}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with tech_cols[1]:
+                    macd_value = latest_values.get('macd', 0)
+                    macd_signal = latest_values.get('macd_signal', 0)
+                    macd_status = "Pozitif" if macd_value > macd_signal else "Negatif"
+                    macd_color = "#2ed573" if macd_value > macd_signal else "#ff4757"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">📈 MACD</div>
+                        <div class="metric-value">{macd_value:.3f}</div>
+                        <div class="metric-change" style="color: {macd_color};">{macd_status}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with tech_cols[2]:
+                    vwap_value = latest_values.get('vwap', current_price)
+                    vwap_status = "Üzeri" if current_price > vwap_value else "Altı"
+                    vwap_color = "#2ed573" if current_price > vwap_value else "#ff4757"
+                    
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-title">📊 VWAP</div>
+                        <div class="metric-value">₺{vwap_value:.2f}</div>
+                        <div class="metric-change" style="color: {vwap_color};">Fiyat {vwap_status}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # --- Sinyal Analizi ---
+                st.markdown("### 🚨 Sinyal Analizi")
+                
+                # Alert system kullanarak sinyal üret
+                from modules.alert_system import AlertSystem
+                alert_system = AlertSystem()
+                signal = alert_system.generate_signal(analyzer)
+                
+                # Sinyal kartı
+                signal_colors = {
+                    "AL": ("#2ed573", "🚀", "Güçlü Alış Sinyali"),
+                    "SAT": ("#ff4757", "📉", "Güçlü Satış Sinyali"),
+                    "BEKLE": ("#ffa502", "⏳", "Pozisyon Bekle")
+                }
+                
+                color, icon, description = signal_colors.get(signal, ("#747d8c", "❓", "Belirsiz"))
+                
+                st.markdown(f"""
+                <div class="signal-card" style="background: {color}20; border: 2px solid {color}; border-radius: 10px; padding: 20px; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">{icon}</div>
+                    <h3 style="color: {color}; margin: 0;">{signal}</h3>
+                    <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">{description}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # --- Grafik Görselleştirme ---
+                st.markdown("### 📈 Grafik Analizi")
+                
+                # Seçili indikatörler için grafik oluştur
+                selected_indicators = {
+                    'rsi': True,
+                    'ema_21': True,
+                    'ema_50': True,
+                    'bollinger': True,
+                    'vwap': True
+                }
+                
+                # Grafik oluştur
+                fig = create_chart(data, analyzer, selected_indicators)
+                unique_key = f"pattern_analysis_chart_{selected_symbol}_{time_interval}_{time_period}"
+                st.plotly_chart(fig, use_container_width=True, key=unique_key)
+                
+                # --- Özet Rapor ---
+                st.markdown("### 📋 Analiz Özeti")
+                
+                # Özet bilgiler
+                summary_data = {
+                    "Hisse": selected_symbol,
+                    "Mevcut Fiyat": f"₺{current_price:.2f}",
+                    "RSI": f"{rsi_value:.1f} ({rsi_status})",
+                    "MACD": f"{macd_value:.3f} ({macd_status})",
+                    "VWAP Durumu": f"Fiyat {vwap_status}",
+                    "Genel Sinyal": f"{signal} - {description}",
+                    "Analiz Tarihi": datetime.now().strftime("%Y-%m-%d %H:%M")
+                }
+                
+                # Özet tablosu
+                summary_df = pd.DataFrame(list(summary_data.items()), columns=["Kriter", "Değer"])
+                st.dataframe(summary_df, use_container_width=True, hide_index=True)
+                
+                # Risk Uyarısı
+                st.markdown("""
+                <div class="info-box warning">
+                    <h4>⚠️ Risk Uyarısı</h4>
+                    <p>Bu analiz sadece teknik göstergelere dayanmaktadır. Yatırım kararları vermeden önce 
+                    fundamentel analiz yapmanız ve risk yönetimi kurallarınızı uygulamanız önerilir.</p>
+                </div>
+                """, unsafe_allow_html=True)
 
             else:
                 st.error("Veri alınamadı. Lütfen farklı bir hisse veya zaman aralığı deneyin.")
-
-
-
-
 
 
 
