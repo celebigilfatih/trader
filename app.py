@@ -1779,7 +1779,6 @@ def main():
             </div>
             <div>
                 <div style="color: #ffffff; font-weight: 600; font-size: 1rem; line-height: 1.2;">TraderLand</div>
-                <div style="color: #8B8B8B; font-size: 0.75rem;">Dashboard + Analytics</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1838,6 +1837,12 @@ def main():
             st.session_state.selected_menu = "pattern"
             st.rerun()
         
+        # News Feed
+        if st.button("📰 Haber Akışı", key="news_btn", use_container_width=True,
+                    type="primary" if current_menu == "news" else "secondary"):
+            st.session_state.selected_menu = "news"
+            st.rerun()
+        
 
         
         # Tools Section
@@ -1869,9 +1874,8 @@ def main():
         show_stock_screener()
     elif current_menu == "pattern":
         show_pattern_analysis()
-
-
-
+    elif current_menu == "news":
+        show_news_feed()
     else:
         # Varsayılan olarak dashboard göster
         show_modern_dashboard()
@@ -2219,7 +2223,21 @@ def show_technical_analysis():
                 <div style="color: hsl(210, 40%, 98%); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">📄 Rapor</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("PDF İndir", type="secondary", use_container_width=True, key="pdf_report_btn"):
+            if st.button("PDF İndir", type="primary", use_container_width=True, key="pdf_report_btn", help="Teknik analiz raporunu PDF olarak indir"):
+                st.markdown("""
+                <style>
+                [data-testid="stButton"] button[kind="primary"] {
+                    background-color: #FFD700 !important;
+                    color: #000000 !important;
+                    border-color: #E6C200 !important;
+                }
+                [data-testid="stButton"] button[kind="primary"]:hover {
+                    background-color: #E6C200 !important;
+                    color: #000000 !important;
+                    border-color: #CCAC00 !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
                 generate_technical_analysis_pdf(selected_symbol, time_interval, time_period)
         
     st.markdown("<br>", unsafe_allow_html=True)  # Boşluk ekle
@@ -3933,15 +3951,7 @@ def show_modern_dashboard():
                 key="dashboard_time_interval"
             )
     
-    # Tab Navigation
-    st.markdown("""
-    <div class="tab-navigation">
-        <div class="tab-item active">📊 Overview</div>
-        <div class="tab-item">📈 Analytics</div>
-        <div class="tab-item">📄 Reports</div>
-        <div class="tab-item">🔔 Notifications</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Tab Navigation kaldırıldı
     
     # Get data
     try:
@@ -5358,40 +5368,61 @@ def show_stock_screener():
 
     
     with tab2:
-
+        st.markdown("""
+        <div style="background-color: #1E1E2E; padding: 20px; border-radius: 10px; border: 1px solid #2E3440; margin-bottom: 20px;">
+            <h2 style="color: #81A1C1; margin-top: 0;">⚡ Teknik Taramalar</h2>
+            <p style="color: #D8DEE9; margin-bottom: 15px;">Çeşitli teknik göstergelere göre hisseleri filtreleyebilirsiniz.</p>
+        </div>
+        """, unsafe_allow_html=True)
         
+        # Tarama kartları için 3 sütun oluştur
         col1, col2, col3 = st.columns(3)
         
         with col1:
             st.markdown("""
-            <div class="metric-card hover-glow">
-                <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">⚡ RSI Taraması</h3>
-                <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Göreceli güç endeksi bazlı filtreleme</p>
+            <div class="metric-card hover-glow" style="background: linear-gradient(135deg, #2E3440 0%, #3B4252 100%); padding: 20px; border-radius: 10px; border: 1px solid #4C566A; height: 100%;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="background-color: #5E81AC; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
+                        <span style="color: white; font-size: 20px;">📊</span>
+                    </div>
+                    <h3 style="margin: 0; color: #ECEFF4; font-size: 18px;">RSI Taraması</h3>
+                </div>
+                <p style="color: #D8DEE9; margin-bottom: 20px; font-size: 14px;">Aşırı alım/satım bölgelerini tespit edin</p>
             """, unsafe_allow_html=True)
             
-            rsi_min = st.slider("RSI Min", 0, 100, 30, key="rsi_min")
-            rsi_max = st.slider("RSI Max", 0, 100, 70, key="rsi_max")
+            rsi_min = st.slider("RSI Alt Limit", 0, 100, 30, key="rsi_min")
+            rsi_max = st.slider("RSI Üst Limit", 0, 100, 70, key="rsi_max")
             
-            if st.button("🔍 RSI Taraması Yap", key="rsi_scan"):
+            if st.button("🔍 RSI Taraması Yap", key="rsi_scan", type="primary"):
                 with st.spinner("Hisseler taranıyor..."):
                     results = screener.screen_by_rsi(rsi_min, rsi_max, selected_interval)
                     if results:
                         st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown("""
-                        <div class="info-box">
-                            <h4>✅ RSI Tarama Sonuçları</h4>
-                            <p>{} hisse bulundu</p>
+                        st.markdown(f"""
+                        <div style="background-color: #2E7D32; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="font-size: 24px; margin-right: 10px;">✅</span>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 16px;">RSI Tarama Sonuçları</h4>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">{len(results)} hisse bulundu</p>
+                                </div>
+                            </div>
                         </div>
-                        """.format(len(results)), unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
                         
                         df = pd.DataFrame(results)
                         st.dataframe(df, use_container_width=True)
                     else:
                         st.markdown("</div>", unsafe_allow_html=True)
                         st.markdown("""
-                        <div class="warning-box">
-                            <h4>⚠️ Sonuç Bulunamadı</h4>
-                            <p>Belirtilen RSI aralığında hisse bulunamadı</p>
+                        <div style="background-color: #C62828; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 16px;">Sonuç Bulunamadı</h4>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">Belirtilen RSI aralığında hisse bulunamadı</p>
+                                </div>
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
             else:
@@ -5399,33 +5430,48 @@ def show_stock_screener():
         
         with col2:
             st.markdown("""
-            <div class="metric-card hover-glow">
-                <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">📊 Hacim Artışı</h3>
-                <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Ortalama hacmin üzerindeki hisseler</p>
+            <div class="metric-card hover-glow" style="background: linear-gradient(135deg, #2E3440 0%, #3B4252 100%); padding: 20px; border-radius: 10px; border: 1px solid #4C566A; height: 100%;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="background-color: #88C0D0; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
+                        <span style="color: white; font-size: 20px;">📊</span>
+                    </div>
+                    <h3 style="margin: 0; color: #ECEFF4; font-size: 18px;">Hacim Artışı</h3>
+                </div>
+                <p style="color: #D8DEE9; margin-bottom: 20px; font-size: 14px;">Ortalama hacmin üzerindeki hisseleri bulun</p>
             """, unsafe_allow_html=True)
             
             volume_multiplier = st.slider("Hacim Çarpanı", 1.0, 5.0, 1.5, 0.1, key="volume_mult")
             
-            if st.button("📈 Hacim Taraması Yap", key="volume_scan"):
+            if st.button("📈 Hacim Taraması Yap", key="volume_scan", type="primary"):
                 with st.spinner("Hacim artışları aranıyor..."):
                     results = screener.screen_by_volume(volume_multiplier, selected_interval)
                     if results:
                         st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown("""
-                        <div class="info-box">
-                            <h4>✅ Hacim Tarama Sonuçları</h4>
-                            <p>{} hisse bulundu</p>
+                        st.markdown(f"""
+                        <div style="background-color: #2E7D32; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="font-size: 24px; margin-right: 10px;">✅</span>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 16px;">Hacim Tarama Sonuçları</h4>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">{len(results)} hisse bulundu</p>
+                                </div>
+                            </div>
                         </div>
-                        """.format(len(results)), unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
                         
                         df = pd.DataFrame(results)
                         st.dataframe(df, use_container_width=True)
                     else:
                         st.markdown("</div>", unsafe_allow_html=True)
                         st.markdown("""
-                        <div class="warning-box">
-                            <h4>⚠️ Sonuç Bulunamadı</h4>
-                            <p>Belirtilen hacim çarpanında hisse bulunamadı</p>
+                        <div style="background-color: #C62828; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 16px;">Sonuç Bulunamadı</h4>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">Belirtilen hacim çarpanında hisse bulunamadı</p>
+                                </div>
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
             else:
@@ -5433,33 +5479,48 @@ def show_stock_screener():
         
         with col3:
             st.markdown("""
-            <div class="metric-card hover-glow">
-                <h3 style="margin-top: 0; color: hsl(210, 40%, 98%);">🚀 Fiyat Kırılımları</h3>
-                <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Destek/direnç kırılımları</p>
+            <div class="metric-card hover-glow" style="background: linear-gradient(135deg, #2E3440 0%, #3B4252 100%); padding: 20px; border-radius: 10px; border: 1px solid #4C566A; height: 100%;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="background-color: #B48EAD; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
+                        <span style="color: white; font-size: 20px;">🚀</span>
+                    </div>
+                    <h3 style="margin: 0; color: #ECEFF4; font-size: 18px;">Fiyat Kırılımları</h3>
+                </div>
+                <p style="color: #D8DEE9; margin-bottom: 20px; font-size: 14px;">Destek/direnç kırılımlarını tespit edin</p>
             """, unsafe_allow_html=True)
             
             lookback = st.slider("Geriye Bakış (Gün)", 10, 50, 20, key="lookback_days")
             
-            if st.button("⚡ Kırılım Taraması Yap", key="breakout_scan"):
+            if st.button("⚡ Kırılım Taraması Yap", key="breakout_scan", type="primary"):
                 with st.spinner("Kırılımlar aranıyor..."):
                     results = screener.screen_by_price_breakout(lookback, selected_interval)
                     if results:
                         st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown("""
-                        <div class="info-box">
-                            <h4>✅ Kırılım Tarama Sonuçları</h4>
-                            <p>{} hisse bulundu</p>
+                        st.markdown(f"""
+                        <div style="background-color: #2E7D32; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="font-size: 24px; margin-right: 10px;">✅</span>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 16px;">Kırılım Tarama Sonuçları</h4>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">{len(results)} hisse bulundu</p>
+                                </div>
+                            </div>
                         </div>
-                        """.format(len(results)), unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
                         
                         df = pd.DataFrame(results)
                         st.dataframe(df, use_container_width=True)
                     else:
                         st.markdown("</div>", unsafe_allow_html=True)
                         st.markdown("""
-                        <div class="warning-box">
-                            <h4>⚠️ Sonuç Bulunamadı</h4>
-                            <p>Belirtilen sürede kırılım bulunamadı</p>
+                        <div style="background-color: #C62828; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 16px;">Sonuç Bulunamadı</h4>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">Belirtilen sürede kırılım bulunamadı</p>
+                                </div>
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
             else:
@@ -5556,6 +5617,232 @@ def show_stock_screener():
         
         else:
             st.info("🔍 Day trade fırsatlarını görmek için 'Fırsatları Tara' butonuna tıklayın.")
+
+def show_news_feed():
+    """Haber akışı sayfası"""
+    st.markdown("""
+    <div class="page-header">
+        <h1>📰 Haber Akışı</h1>
+        <p>Gerçek zamanlı finans haberleri ve sentiment analizi</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Sentiment analyzer'ı başlat
+    from modules.sentiment_analyzer import SentimentAnalyzer
+    sentiment_analyzer = SentimentAnalyzer()
+    
+    # Sidebar filtreleri
+    with st.sidebar:
+        st.markdown("### 🔍 Haber Filtreleri")
+        
+        # Haber sayısı seçimi
+        news_limit = st.selectbox(
+            "Haber Sayısı",
+            [10, 20, 30, 50],
+            index=1
+        )
+        
+        # Sentiment filtresi
+        sentiment_filter = st.selectbox(
+            "Sentiment Filtresi",
+            ["Tümü", "Pozitif", "Negatif", "Nötr"]
+        )
+        
+        # Hisse sembolü filtresi
+        from modules.config import BIST_SYMBOLS
+        symbol_options = ["Tümü"] + list(BIST_SYMBOLS.keys())
+        selected_symbol = st.selectbox(
+            "Hisse Filtresi",
+            symbol_options
+        )
+        
+        # Yenile butonu
+        if st.button("🔄 Haberleri Yenile", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+    
+    # Ana içerik alanı
+    col1, col2 = st.columns([2, 1])
+    
+    with col2:
+        # Piyasa sentiment özeti
+        st.markdown("### 📊 Piyasa Sentiment Özeti")
+        
+        try:
+            market_summary = sentiment_analyzer.get_market_news_summary()
+            
+            if 'error' not in market_summary:
+                # Sentiment kartları
+                sentiment_score = market_summary['avg_sentiment']
+                sentiment_label = market_summary['sentiment_label']
+                
+                # Sentiment rengini belirle
+                if sentiment_score > 0.1:
+                    sentiment_color = "#00C851"  # Yeşil
+                elif sentiment_score < -0.1:
+                    sentiment_color = "#FF4444"  # Kırmızı
+                else:
+                    sentiment_color = "#FFA500"  # Turuncu
+                
+                st.markdown(f"""
+                <div style="
+                    background: linear-gradient(135deg, {sentiment_color}20, {sentiment_color}10);
+                    border-left: 4px solid {sentiment_color};
+                    padding: 1rem;
+                    border-radius: 8px;
+                    margin-bottom: 1rem;
+                ">
+                    <h4 style="margin: 0; color: {sentiment_color};">Genel Sentiment</h4>
+                    <h2 style="margin: 0.5rem 0; color: {sentiment_color};">{sentiment_label}</h2>
+                    <p style="margin: 0; opacity: 0.8;">Skor: {sentiment_score:.3f}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # İstatistikler
+                col_pos, col_neg, col_neu = st.columns(3)
+                
+                with col_pos:
+                    st.metric(
+                        "Pozitif",
+                        market_summary['positive_news'],
+                        delta=None
+                    )
+                
+                with col_neg:
+                    st.metric(
+                        "Negatif",
+                        market_summary['negative_news'],
+                        delta=None
+                    )
+                
+                with col_neu:
+                    st.metric(
+                        "Nötr",
+                        market_summary['neutral_news'],
+                        delta=None
+                    )
+                
+                # En çok bahsedilen hisseler
+                if market_summary['top_symbols']:
+                    st.markdown("#### 🔥 Trend Hisseler")
+                    for symbol_data in market_summary['top_symbols']:
+                        symbol = symbol_data['symbol']
+                        mentions = symbol_data['mentions']
+                        company_name = BIST_SYMBOLS.get(symbol, symbol)
+                        
+                        st.markdown(f"""
+                        <div style="
+                            background: hsl(215, 28%, 17%);
+                            padding: 0.5rem;
+                            border-radius: 6px;
+                            margin-bottom: 0.5rem;
+                            border-left: 3px solid hsl(217, 91%, 60%);
+                        ">
+                            <strong style="color: hsl(210, 40%, 98%);">{symbol}</strong> - <span style="color: hsl(215, 20%, 65%);">{company_name}</span><br>
+                            <small style="color: hsl(215, 20%, 65%);">{mentions} haber</small>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                st.markdown(f"<small>Son güncelleme: {market_summary['last_updated']}</small>", unsafe_allow_html=True)
+            
+            else:
+                st.error(f"Haber özeti alınamadı: {market_summary['error']}")
+                
+        except Exception as e:
+            st.error(f"Haber özeti hatası: {str(e)}")
+    
+    with col1:
+        # Haber listesi
+        st.markdown("### 📰 Son Haberler")
+        
+        try:
+            # Haberleri çek
+            if selected_symbol != "Tümü":
+                news_list = sentiment_analyzer.get_symbol_specific_news(selected_symbol, news_limit)
+            else:
+                news_list = sentiment_analyzer.fetch_real_news(news_limit)
+            
+            # Sentiment filtresini uygula
+            if sentiment_filter != "Tümü":
+                if sentiment_filter == "Pozitif":
+                    news_list = [n for n in news_list if n['sentiment_score'] > 0.1]
+                elif sentiment_filter == "Negatif":
+                    news_list = [n for n in news_list if n['sentiment_score'] < -0.1]
+                elif sentiment_filter == "Nötr":
+                    news_list = [n for n in news_list if -0.1 <= n['sentiment_score'] <= 0.1]
+            
+            if news_list:
+                for news in news_list:
+                    # Sentiment rengini belirle
+                    sentiment_score = news['sentiment_score']
+                    if sentiment_score > 0.1:
+                        sentiment_color = "#00C851"
+                        sentiment_icon = "📈"
+                    elif sentiment_score < -0.1:
+                        sentiment_color = "#FF4444"
+                        sentiment_icon = "📉"
+                    else:
+                        sentiment_color = "#FFA500"
+                        sentiment_icon = "➖"
+                    
+                    # Minimal haber kartı - Streamlit native components ile
+                    # Kısa açıklama (sadece ilk 120 karakter)
+                    description = news['description'][:120] + ('...' if len(news['description']) > 120 else '')
+                    
+                    # Alt bilgiler tek satırda
+                    meta_info = f"📰 {news['source']} • {news['date']}"
+                    if news['detected_symbols']:
+                        symbols = ', '.join(news['detected_symbols'][:2])  # Sadece ilk 2 sembol
+                        if len(news['detected_symbols']) > 2:
+                            symbols += f" +{len(news['detected_symbols'])-2}"
+                        meta_info += f" • 🏷️ {symbols}"
+                    
+                    # Basit background ile haber kartı
+                    # Background div başlangıcı
+                    st.markdown("""
+                    <div style="
+                        background: linear-gradient(135deg, #2d3748 0%, #374151 100%);
+                        border: 1px solid #4a5568;
+                        border-radius: 12px;
+                        padding: 16px;
+                        margin-bottom: 12px;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    ">
+                    """, unsafe_allow_html=True)
+                    
+                    # İçerik
+                    col_main, col_sentiment = st.columns([5, 1])
+                    
+                    with col_main:
+                        # Başlık
+                        st.markdown(f"**[{news['title']}]({news['link']})**")
+                        
+                        # Açıklama
+                        st.caption(description)
+                        
+                        # Meta bilgiler
+                        st.caption(meta_info)
+                    
+                    with col_sentiment:
+                        # Sentiment badge
+                        sentiment_text = f"{sentiment_icon} {news['sentiment_label']}"
+                        if sentiment_score > 0.1:
+                            st.success(sentiment_text)
+                        elif sentiment_score < -0.1:
+                            st.error(sentiment_text)
+                        else:
+                            st.warning(sentiment_text)
+                    
+                    # Background div sonu
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown("<br>", unsafe_allow_html=True)
+            
+            else:
+                st.info("Seçilen kriterlere uygun haber bulunamadı.")
+                
+        except Exception as e:
+            st.error(f"Haberler yüklenirken hata oluştu: {str(e)}")
+            st.info("Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.")
 
 def show_pattern_analysis():
     """Pattern analizi sayfası"""

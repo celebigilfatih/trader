@@ -3,17 +3,25 @@ import requests
 from typing import Dict, List, Optional
 import time
 from datetime import datetime, timedelta
+import feedparser
+from bs4 import BeautifulSoup
+import re
+from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 class SentimentAnalyzer:
     """Haber ve sosyal medya duygu analizi"""
     
     def __init__(self):
         self.news_sources = {
-            'investing': 'https://tr.investing.com/news/stock-market-news',
-            'finans': 'https://www.finansgundem.com',
-            'bloomberg': 'https://www.bloomberg.com.tr'
+            'investing_rss': 'https://tr.investing.com/rss/news.rss',
+            'finans_rss': 'https://www.finansgundem.com/rss.xml',
+            'bloomberg_rss': 'https://www.bloomberg.com.tr/rss',
+            'aa_finans': 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi',
+            'hurriyet_ekonomi': 'https://www.hurriyet.com.tr/rss/ekonomi'
         }
         self.sentiment_cache = {}
+        self.vader_analyzer = SentimentIntensityAnalyzer()
         self.symbol_sentiments = {
             'THYAO': 0.2,   # Türk Hava Yolları - nötr/pozitif
             'AKBNK': 0.1,   # Akbank - hafif pozitif
@@ -24,7 +32,15 @@ class SentimentAnalyzer:
             'SAHOL': 0.1,   # Sabancı Holding - hafif pozitif
             'ISCTR': 0.0,   # İş Bankası - nötr
             'ASELS': 0.2,   # Aselsan - pozitif
-            'TOASO': 0.15   # Tofaş - hafif pozitif
+            'TOASO': 0.15,  # Tofaş - hafif pozitif
+            'USAK': 0.1,    # Uşak Seramik
+            'OZSUB': 0.05,  # Özsu Boya
+            'YIGIT': 0.15,  # Yiğit Yatırım
+            'ACSEL': 0.1,   # Acıselsan
+            'OBAMS': 0.05,  # Obams
+            'GSRAY': 0.2,   # Galatasaray
+            'DMRDG': 0.1,   # Demirdöküm
+            'TEHOL': 0.15   # Teknosa
         }
     
     def get_basic_sentiment_score(self, symbol: str) -> Dict:
@@ -203,3 +219,158 @@ class SentimentAnalyzer:
             })
         
         return pd.DataFrame(sentiments).sort_values('date')
+    
+    def fetch_real_news(self, limit: int = 20) -> List[Dict]:
+        """Gerçek RSS feed'lerden haber çeker"""
+        all_news = []
+        
+        for source_name, rss_url in self.news_sources.items():
+            try:
+                # RSS feed'i parse et
+                feed = feedparser.parse(rss_url)
+                
+                for entry in feed.entries[:limit//len(self.news_sources)]:
+                    # Haber detaylarını al
+                    title = entry.get('title', '')
+                    description = entry.get('description', '')
+                    link = entry.get('link', '')
+                    published = entry.get('published', '')
+                    
+                    # Tarih formatını düzenle
+                    try:
+                        if published:
+                            pub_date = datetime.strptime(published, '%a, %d %b %Y %H:%M:%S %z')
+                            formatted_date = pub_date.strftime('%Y-%m-%d %H:%M')
+                        else:
+                            formatted_date = datetime.now().strftime('%Y-%m-%d %H:%M')
+                    except:
+                        formatted_date = datetime.now().strftime('%Y-%m-%d %H:%M')
+                    
+                    # Sentiment analizi yap
+                    text_for_analysis = f"{title} {description}"
+                    sentiment_score = self._analyze_text_sentiment(text_for_analysis)
+                    
+                    # Hisse sembolü tespit et
+                    detected_symbols = self._detect_symbols_in_text(text_for_analysis)
+                    
+                    news_item = {
+                        'title': title,
+                        'description': description,
+                        'link': link,
+                        'date': formatted_date,
+                        'source': source_name.replace('_', ' ').title(),
+                        'sentiment_score': sentiment_score,
+                        'sentiment_label': self._get_sentiment_label(sentiment_score),
+                        'detected_symbols': detected_symbols
+                    }
+                    
+                    all_news.append(news_item)
+                    
+            except Exception as e:
+                print(f"RSS feed hatası ({source_name}): {str(e)}")
+                continue
+        
+        # Tarihe göre sırala (en yeni önce)
+        all_news.sort(key=lambda x: x['date'], reverse=True)
+        return all_news[:limit]
+    
+    def _analyze_text_sentiment(self, text: str) -> float:
+        """Metin sentiment analizi yapar"""
+        try:
+            # VADER sentiment analizi (İngilizce metinler için)
+            vader_scores = self.vader_analyzer.polarity_scores(text)
+            vader_compound = vader_scores['compound']
+            
+            # TextBlob sentiment analizi
+            blob = TextBlob(text)
+            textblob_polarity = blob.sentiment.polarity
+            
+            # İki yöntemin ortalamasını al
+            final_sentiment = (vader_compound + textblob_polarity) / 2
+            
+            return round(final_sentiment, 3)
+            
+        except Exception as e:
+            print(f"Sentiment analizi hatası: {str(e)}")
+            return 0.0
+    
+    def _detect_symbols_in_text(self, text: str) -> List[str]:
+        """Metinde hisse sembollerini tespit eder"""
+        detected = []
+        text_upper = text.upper()
+        
+        for symbol in self.symbol_sentiments.keys():
+            # Sembol adını ve şirket adını ara
+            if symbol in text_upper:
+                detected.append(symbol)
+        
+        return detected
+    
+    def get_symbol_specific_news(self, symbol: str, limit: int = 10) -> List[Dict]:
+        """Belirli bir hisse için haberleri filtreler"""
+        all_news = self.fetch_real_news(limit=50)
+        symbol_news = []
+        
+        for news in all_news:
+            # Haber başlığında veya açıklamasında sembol geçiyor mu?
+            text_to_search = f"{news['title']} {news['description']}".upper()
+            
+            if symbol.upper() in text_to_search or symbol in news['detected_symbols']:
+                symbol_news.append(news)
+                
+            if len(symbol_news) >= limit:
+                break
+        
+        return symbol_news
+    
+    def get_market_news_summary(self) -> Dict:
+        """Piyasa geneli haber özeti"""
+        try:
+            news = self.fetch_real_news(limit=30)
+            
+            if not news:
+                return {
+                    'total_news': 0,
+                    'avg_sentiment': 0.0,
+                    'positive_news': 0,
+                    'negative_news': 0,
+                    'neutral_news': 0,
+                    'top_symbols': [],
+                    'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+            
+            # Sentiment istatistikleri
+            sentiments = [n['sentiment_score'] for n in news]
+            avg_sentiment = sum(sentiments) / len(sentiments)
+            
+            positive_count = len([s for s in sentiments if s > 0.1])
+            negative_count = len([s for s in sentiments if s < -0.1])
+            neutral_count = len(sentiments) - positive_count - negative_count
+            
+            # En çok geçen semboller
+            symbol_mentions = {}
+            for news_item in news:
+                for symbol in news_item['detected_symbols']:
+                    symbol_mentions[symbol] = symbol_mentions.get(symbol, 0) + 1
+            
+            top_symbols = sorted(symbol_mentions.items(), key=lambda x: x[1], reverse=True)[:5]
+            
+            return {
+                'total_news': len(news),
+                'avg_sentiment': round(avg_sentiment, 3),
+                'sentiment_label': self._get_sentiment_label(avg_sentiment),
+                'positive_news': positive_count,
+                'negative_news': negative_count,
+                'neutral_news': neutral_count,
+                'top_symbols': [{'symbol': s[0], 'mentions': s[1]} for s in top_symbols],
+                'recent_news': news[:5],
+                'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+        except Exception as e:
+            return {
+                'error': str(e),
+                'total_news': 0,
+                'avg_sentiment': 0.0,
+                'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }

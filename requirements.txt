@@ -23,6 +23,7 @@ scipy>=1.11.0
 textblob>=0.17.1
 vaderSentiment>=3.3.2
 newsapi-python>=0.2.6
+feedparser>=6.0.10
 
 # Backtesting ve Risk Analizi
 backtrader>=1.9.76
