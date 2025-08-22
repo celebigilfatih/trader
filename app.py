@@ -5368,173 +5368,195 @@ def show_stock_screener():
 
     
     with tab2:
+
+        
+        # Tarama kontrolleri - Streamlit sütunları ile düzenli layout
+        
+        # Modern kart tasarımı ile tarama bölümleri
         st.markdown("""
-        <div style="background-color: #1E1E2E; padding: 20px; border-radius: 10px; border: 1px solid #2E3440; margin-bottom: 20px;">
-            <h2 style="color: #81A1C1; margin-top: 0;">⚡ Teknik Taramalar</h2>
-            <p style="color: #D8DEE9; margin-bottom: 15px;">Çeşitli teknik göstergelere göre hisseleri filtreleyebilirsiniz.</p>
-        </div>
+        <style>
+        .scanner-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .scanner-card h3 {
+            color: white;
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .scanner-card p {
+            color: rgba(255,255,255,0.8);
+            margin: 0 0 1rem 0;
+            font-size: 0.9rem;
+        }
+        .volume-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .breakout-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        </style>
         """, unsafe_allow_html=True)
         
-        # Tarama kartları için 3 sütun oluştur
-        col1, col2, col3 = st.columns(3)
+        # 3 sütunlu modern tasarım
+        col1, col2, col3 = st.columns(3, gap="large")
         
         with col1:
             st.markdown("""
-            <div class="metric-card hover-glow" style="background: linear-gradient(135deg, #2E3440 0%, #3B4252 100%); padding: 20px; border-radius: 10px; border: 1px solid #4C566A; height: 100%;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="background-color: #5E81AC; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
-                        <span style="color: white; font-size: 20px;">📊</span>
-                    </div>
-                    <h3 style="margin: 0; color: #ECEFF4; font-size: 18px;">RSI Taraması</h3>
-                </div>
-                <p style="color: #D8DEE9; margin-bottom: 20px; font-size: 14px;">Aşırı alım/satım bölgelerini tespit edin</p>
+            <div class="scanner-card">
+                <h3>📊 RSI Taraması</h3>
+                <p>Aşırı alım/satım seviyelerindeki hisseleri keşfedin</p>
+            </div>
             """, unsafe_allow_html=True)
             
-            rsi_min = st.slider("RSI Alt Limit", 0, 100, 30, key="rsi_min")
-            rsi_max = st.slider("RSI Üst Limit", 0, 100, 70, key="rsi_max")
+            # RSI değer aralığı seçimi
+            st.markdown("**📊 RSI Değer Aralığı**")
+            rsi_range = st.select_slider(
+                "",
+                options=["Aşırı Satım (0-30)", "Düşük (30-40)", "Nötr (40-60)", "Yüksek (60-70)", "Aşırı Alım (70-100)", "Özel Aralık"],
+                value="Aşırı Satım (0-30)",
+                key="rsi_range_select",
+                help="Hangi RSI seviyesindeki hisseleri aramak istiyorsunuz?"
+            )
             
-            if st.button("🔍 RSI Taraması Yap", key="rsi_scan", type="primary"):
-                with st.spinner("Hisseler taranıyor..."):
+            # Özel aralık seçilirse slider'ları göster
+            if rsi_range == "Özel Aralık":
+                st.markdown("<br>", unsafe_allow_html=True)
+                col_rsi1, col_rsi2 = st.columns(2)
+                with col_rsi1:
+                    rsi_min = st.number_input("🔻 Alt Limit", 0, 100, 30, key="rsi_min_custom", help="RSI alt sınırı")
+                with col_rsi2:
+                    rsi_max = st.number_input("🔺 Üst Limit", 0, 100, 70, key="rsi_max_custom", help="RSI üst sınırı")
+                st.markdown("<br>", unsafe_allow_html=True)
+            else:
+                # Önceden tanımlı aralıklar
+                rsi_ranges = {
+                    "Aşırı Satım (0-30)": (0, 30),
+                    "Düşük (30-40)": (30, 40),
+                    "Nötr (40-60)": (40, 60),
+                    "Yüksek (60-70)": (60, 70),
+                    "Aşırı Alım (70-100)": (70, 100)
+                }
+                rsi_min, rsi_max = rsi_ranges[rsi_range]
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🎯 RSI Taraması Başlat", key="rsi_scan", type="primary", use_container_width=True):
+                with st.spinner("🔍 RSI değerleri analiz ediliyor..."):
                     results = screener.screen_by_rsi(rsi_min, rsi_max, selected_interval)
                     if results:
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown(f"""
-                        <div style="background-color: #2E7D32; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-size: 24px; margin-right: 10px;">✅</span>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 16px;">RSI Tarama Sonuçları</h4>
-                                    <p style="margin: 5px 0 0 0; font-size: 14px;">{len(results)} hisse bulundu</p>
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
+                        st.success(f"🎉 {len(results)} hisse bulundu!")
                         df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
                     else:
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown("""
-                        <div style="background-color: #C62828; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 16px;">Sonuç Bulunamadı</h4>
-                                    <p style="margin: 5px 0 0 0; font-size: 14px;">Belirtilen RSI aralığında hisse bulunamadı</p>
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-            else:
-                st.markdown("</div>", unsafe_allow_html=True)
+                        st.info("🔍 Belirtilen RSI aralığında hisse bulunamadı")
         
         with col2:
             st.markdown("""
-            <div class="metric-card hover-glow" style="background: linear-gradient(135deg, #2E3440 0%, #3B4252 100%); padding: 20px; border-radius: 10px; border: 1px solid #4C566A; height: 100%;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="background-color: #88C0D0; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
-                        <span style="color: white; font-size: 20px;">📊</span>
-                    </div>
-                    <h3 style="margin: 0; color: #ECEFF4; font-size: 18px;">Hacim Artışı</h3>
-                </div>
-                <p style="color: #D8DEE9; margin-bottom: 20px; font-size: 14px;">Ortalama hacmin üzerindeki hisseleri bulun</p>
+            <div class="volume-card">
+                <h3>📈 Hacim Artışı</h3>
+                <p>Yüksek hacimle işlem gören hisseleri bulun</p>
+            </div>
             """, unsafe_allow_html=True)
             
-            volume_multiplier = st.slider("Hacim Çarpanı", 1.0, 5.0, 1.5, 0.1, key="volume_mult")
+            # Hacim artışı seçimi
+            st.markdown("**📈 Hacim Artışı Seviyesi**")
+            volume_option = st.selectbox(
+                "Hacim Artışı Türü",
+                ["Hafif Artış (1.2x)", "Orta Artış (1.5x)", "Güçlü Artış (2.0x)", "Çok Güçlü (3.0x)", "Patlama (5.0x)", "Özel Değer"],
+                index=1,
+                key="volume_option_select",
+                help="Ne kadar hacim artışı arıyorsunuz?"
+            )
             
-            if st.button("📈 Hacim Taraması Yap", key="volume_scan", type="primary"):
-                with st.spinner("Hacim artışları aranıyor..."):
+            if volume_option == "Özel Değer":
+                volume_multiplier = st.slider("Hacim Çarpanı", 1.0, 10.0, 1.5, 0.1, key="volume_mult_custom")
+            else:
+                volume_values = {
+                    "Hafif Artış (1.2x)": 1.2,
+                    "Orta Artış (1.5x)": 1.5,
+                    "Güçlü Artış (2.0x)": 2.0,
+                    "Çok Güçlü (3.0x)": 3.0,
+                    "Patlama (5.0x)": 5.0
+                }
+                volume_multiplier = volume_values[volume_option]
+            
+            st.info(f"🎯 Seçilen hacim çarpanı: **{volume_multiplier}x**")
+            
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            if st.button("🔥 Hacim Taraması Başlat", key="volume_scan", type="primary", use_container_width=True):
+                with st.spinner("📊 Hacim patlamaları aranıyor..."):
                     results = screener.screen_by_volume(volume_multiplier, selected_interval)
                     if results:
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown(f"""
-                        <div style="background-color: #2E7D32; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-size: 24px; margin-right: 10px;">✅</span>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 16px;">Hacim Tarama Sonuçları</h4>
-                                    <p style="margin: 5px 0 0 0; font-size: 14px;">{len(results)} hisse bulundu</p>
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
+                        st.success(f"🎉 {len(results)} hisse bulundu!")
                         df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
                     else:
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown("""
-                        <div style="background-color: #C62828; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 16px;">Sonuç Bulunamadı</h4>
-                                    <p style="margin: 5px 0 0 0; font-size: 14px;">Belirtilen hacim çarpanında hisse bulunamadı</p>
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-            else:
-                st.markdown("</div>", unsafe_allow_html=True)
+                        st.info("📊 Belirtilen hacim çarpanında hisse bulunamadı")
         
         with col3:
             st.markdown("""
-            <div class="metric-card hover-glow" style="background: linear-gradient(135deg, #2E3440 0%, #3B4252 100%); padding: 20px; border-radius: 10px; border: 1px solid #4C566A; height: 100%;">
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <div style="background-color: #B48EAD; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
-                        <span style="color: white; font-size: 20px;">🚀</span>
-                    </div>
-                    <h3 style="margin: 0; color: #ECEFF4; font-size: 18px;">Fiyat Kırılımları</h3>
-                </div>
-                <p style="color: #D8DEE9; margin-bottom: 20px; font-size: 14px;">Destek/direnç kırılımlarını tespit edin</p>
+            <div class="breakout-card">
+                <h3>⚡ Fiyat Kırılımları</h3>
+                <p>Direnç ve destek seviyelerini kıran hisseler</p>
+            </div>
             """, unsafe_allow_html=True)
             
-            lookback = st.slider("Geriye Bakış (Gün)", 10, 50, 20, key="lookback_days")
+            # Geriye bakış süresi seçimi
+            st.markdown("**📅 Analiz Süresi**")
+            lookback_option = st.selectbox(
+                "Geriye Bakış Süresi",
+                ["Kısa Vade (10 gün)", "Orta Vade (20 gün)", "Uzun Vade (30 gün)", "Çok Uzun (50 gün)", "Özel Süre"],
+                index=1,
+                key="lookback_option_select",
+                help="Direnç ve destek seviyelerini hesaplamak için kaç günlük veri kullanılacak?"
+            )
             
-            if st.button("⚡ Kırılım Taraması Yap", key="breakout_scan", type="primary"):
-                with st.spinner("Kırılımlar aranıyor..."):
+            if lookback_option == "Özel Süre":
+                lookback = st.slider("Gün Sayısı", 5, 100, 20, key="lookback_custom")
+            else:
+                lookback_values = {
+                    "Kısa Vade (10 gün)": 10,
+                    "Orta Vade (20 gün)": 20,
+                    "Uzun Vade (30 gün)": 30,
+                    "Çok Uzun (50 gün)": 50
+                }
+                lookback = lookback_values[lookback_option]
+            
+            st.info(f"📊 Analiz süresi: **{lookback} gün**")
+            
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            if st.button("💥 Kırılım Taraması Başlat", key="breakout_scan", type="primary", use_container_width=True):
+                with st.spinner("⚡ Fiyat kırılımları analiz ediliyor..."):
                     results = screener.screen_by_price_breakout(lookback, selected_interval)
                     if results:
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown(f"""
-                        <div style="background-color: #2E7D32; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-size: 24px; margin-right: 10px;">✅</span>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 16px;">Kırılım Tarama Sonuçları</h4>
-                                    <p style="margin: 5px 0 0 0; font-size: 14px;">{len(results)} hisse bulundu</p>
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
+                        st.success(f"🎉 {len(results)} kırılım bulundu!")
                         df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
                     else:
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown("""
-                        <div style="background-color: #C62828; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                            <div style="display: flex; align-items: center;">
-                                <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
-                                <div>
-                                    <h4 style="margin: 0; font-size: 16px;">Sonuç Bulunamadı</h4>
-                                    <p style="margin: 5px 0 0 0; font-size: 14px;">Belirtilen sürede kırılım bulunamadı</p>
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-            else:
-                st.markdown("</div>", unsafe_allow_html=True)
+                        st.info("⚡ Belirtilen sürede kırılım bulunamadı")
     
 
     
     with tab4:
-        st.markdown("""
-        <div class="metric-card">
-            <h2 style="margin-top: 0; color: hsl(210, 40%, 98%);">🚀 Day Trade Fırsatları</h2>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Teknik göstergelerle dikkat çeken day trade fırsatları</p>
-        </div>
-        """, unsafe_allow_html=True)
+
         
         # Refresh button for day trade opportunities
         refresh_daytrading = st.button("🔄 Fırsatları Tara", type="primary", key="refresh_daytrading")
@@ -5547,14 +5569,137 @@ def show_stock_screener():
         if "daytrading_results" in st.session_state and st.session_state.daytrading_results:
             opportunities = st.session_state.daytrading_results
 
-            st.markdown("#### Filtreleme Seçenekleri")
-            col1, col2, col3 = st.columns(3)
+            # Modern filtreleme seçenekleri tasarımı
+            st.markdown("""
+            <style>
+            /* Slider stilleri */
+            .stSlider > div > div > div > div {
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+                height: 8px !important;
+                border-radius: 10px !important;
+            }
+            
+            .stSlider > div > div > div > div > div {
+                background: white !important;
+                border: 3px solid #667eea !important;
+                width: 20px !important;
+                height: 20px !important;
+                border-radius: 50% !important;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+            }
+            
+            .stSlider > div > div > div > div > div:hover {
+                transform: scale(1.2) !important;
+                transition: all 0.2s ease !important;
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+            }
+            
+            /* Slider track renkleri */
+            div[data-testid="stSlider"] > div > div > div > div {
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+            }
+            </style>
+            
+            <div style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+                border-radius: 15px;
+                margin: 20px 0;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            ">
+                <h3 style="
+                    color: white;
+                    text-align: center;
+                    margin-bottom: 20px;
+                    font-weight: 600;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                ">🎯 Akıllı Filtreleme Sistemi</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Filtreleme kartları
+            st.markdown("<div style='padding: 0 10px;'>", unsafe_allow_html=True)
+            col1, col2, col3 = st.columns(3, gap="large")
+            
             with col1:
-                min_score = st.slider("Minimum Puan", 0, 10, 5, key="min_score_slider_v2")
+                st.markdown("""
+                <div style="
+                    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+                    padding: 20px 15px;
+                    border-radius: 12px;
+                    margin: 10px 5px 15px 5px;
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+                    overflow: hidden;
+                ">
+                    <h4 style="color: white; margin: 0; font-size: 16px; white-space: nowrap;">🏆 Puan Filtresi</h4>
+                </div>
+                <style>
+                div[data-testid="stSlider"][data-baseweb="slider"]:has([key="min_score_slider_v2"]) .stSlider > div > div > div > div {
+                    background: linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%) !important;
+                }
+                div[data-testid="stSlider"][data-baseweb="slider"]:has([key="min_score_slider_v2"]) .stSlider > div > div > div > div > div {
+                    border: 3px solid #ff6b6b !important;
+                    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4) !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                min_score = st.slider("", 0, 10, 5, key="min_score_slider_v2", help="Minimum kalite puanı (0-10)")
+                st.markdown(f"<p style='text-align: center; color: #ff6b6b; font-weight: bold; margin: 15px 5px 10px 5px;'>Seçilen: {min_score}/10</p>", unsafe_allow_html=True)
+            
             with col2:
-                min_volatility = st.slider("Minimum Volatilite (%)", 0.0, 15.0, 2.0, 0.1, key="min_volatility_slider_v2")
+                st.markdown("""
+                <div style="
+                    background: linear-gradient(45deg, #4834d4, #686de0);
+                    padding: 20px 15px;
+                    border-radius: 12px;
+                    margin: 10px 5px 15px 5px;
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(72,52,212,0.3);
+                    overflow: hidden;
+                ">
+                    <h4 style="color: white; margin: 0; font-size: 16px; white-space: nowrap;">📈 Volatilite Filtresi</h4>
+                </div>
+                <style>
+                .stSlider:has([key="min_volatility_slider_v2"]) > div > div > div > div {
+                    background: linear-gradient(90deg, #4834d4 0%, #686de0 100%) !important;
+                }
+                .stSlider:has([key="min_volatility_slider_v2"]) > div > div > div > div > div {
+                    border: 3px solid #4834d4 !important;
+                    box-shadow: 0 4px 12px rgba(72, 52, 212, 0.4) !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                min_volatility = st.slider("", 0.0, 15.0, 2.0, 0.1, key="min_volatility_slider_v2", help="Minimum volatilite yüzdesi")
+                st.markdown(f"<p style='text-align: center; color: #4834d4; font-weight: bold; margin: 15px 5px 10px 5px;'>Seçilen: {min_volatility:.1f}%</p>", unsafe_allow_html=True)
+            
             with col3:
-                min_volume_ratio = st.slider("Minimum Hacim Oranı", 0.0, 10.0, 1.5, 0.1, key="min_volume_ratio_slider_v2")
+                st.markdown("""
+                <div style="
+                    background: linear-gradient(45deg, #00d2d3, #54a0ff);
+                    padding: 20px 15px;
+                    border-radius: 12px;
+                    margin: 10px 5px 15px 5px;
+                    text-align: center;
+                    box-shadow: 0 4px 15px rgba(0,210,211,0.3);
+                    overflow: hidden;
+                ">
+                    <h4 style="color: white; margin: 0; font-size: 16px; white-space: nowrap;">📊 Hacim Filtresi</h4>
+                </div>
+                <style>
+                .stSlider:has([key="min_volume_ratio_slider_v2"]) > div > div > div > div {
+                    background: linear-gradient(90deg, #00d2d3 0%, #54a0ff 100%) !important;
+                }
+                .stSlider:has([key="min_volume_ratio_slider_v2"]) > div > div > div > div > div {
+                    border: 3px solid #00d2d3 !important;
+                    box-shadow: 0 4px 12px rgba(0, 210, 211, 0.4) !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                min_volume_ratio = st.slider("", 0.0, 10.0, 1.5, 0.1, key="min_volume_ratio_slider_v2", help="Minimum hacim oranı")
+                st.markdown(f"<p style='text-align: center; color: #00d2d3; font-weight: bold; margin: 15px 5px 10px 5px;'>Seçilen: {min_volume_ratio:.1f}x</p>", unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
 
             filtered_ops = [
                 op for op in opportunities 
@@ -5563,39 +5708,93 @@ def show_stock_screener():
                    op['volume_ratio'] >= min_volume_ratio
             ]
 
-            st.markdown(f"**{len(filtered_ops)}** adet fırsat bulundu.")
+            # Sonuç başlığı ve container
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 15px 20px;
+                border-radius: 15px;
+                margin: 20px 0;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.1);
+            ">
+                <h3 style="
+                    color: white;
+                    margin: 0;
+                    text-align: center;
+                    font-weight: bold;
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                ">🎯 Bulunan Fırsatlar: {len(filtered_ops)} Adet</h3>
+            </div>
+            """, unsafe_allow_html=True)
 
-            # Display opportunities in a more structured way
-            for i in range(0, len(filtered_ops), 2):
-                cols = st.columns(2)
-                for j in range(2):
-                    if i + j < len(filtered_ops):
-                        with cols[j]:
-                            opportunity = filtered_ops[i+j]
-                            score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
-                            signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
-                            
-                            st.markdown(f"""
-                            <div class="metric-card hover-glow">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h4 style="margin: 0; color: hsl(210, 40%, 98%);">{opportunity['symbol']}</h4>
-                                    <span style="background: {score_color}; color: black; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{opportunity['score']}/10</span>
+            if filtered_ops:
+                # Fırsatları container içinde göster
+                st.markdown("""
+                <div style="
+                    background: rgba(255,255,255,0.05);
+                    border-radius: 15px;
+                    padding: 20px;
+                    margin: 15px 0;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    backdrop-filter: blur(10px);
+                ">
+                """, unsafe_allow_html=True)
+                
+                # Display opportunities in a more structured way
+                for i in range(0, len(filtered_ops), 2):
+                    cols = st.columns(2, gap="medium")
+                    for j in range(2):
+                        if i + j < len(filtered_ops):
+                            with cols[j]:
+                                opportunity = filtered_ops[i+j]
+                                score_color = "#00ff88" if opportunity['score'] >= 8 else "#f39c12"
+                                signal_color = "#00ff88" if opportunity['signal'] == "AL" else "#ff4757" if opportunity['signal'] == "SAT" else "#f39c12"
+                                
+                                st.markdown(f"""
+                                <div style="
+                                    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+                                    border-radius: 12px;
+                                    padding: 15px;
+                                    margin: 10px 0;
+                                    border: 1px solid rgba(255,255,255,0.15);
+                                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                                    transition: all 0.3s ease;
+                                    backdrop-filter: blur(5px);
+                                ">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <h4 style="margin: 0; color: #ffffff; font-size: 1.1rem; font-weight: bold;">{opportunity['symbol']}</h4>
+                                        <span style="background: {score_color}; color: black; padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: bold;">{opportunity['score']}/10</span>
+                                    </div>
+                                    <p style="margin: 5px 0; color: rgba(255,255,255,0.8); font-size: 0.85rem;">{opportunity['name']}</p>
+                                    <div style="margin: 8px 0; display: flex; align-items: center; gap: 10px;">
+                                        <span style="color: {signal_color}; font-weight: bold; font-size: 1rem;">{opportunity['signal']}</span>
+                                        <span style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">₺{opportunity['price']:.2f}</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); display: flex; gap: 15px; margin: 8px 0;">
+                                        <span>📊 {opportunity['volatility']:.1f}%</span>
+                                        <span>📈 {opportunity['volume_ratio']:.1f}x</span>
+                                        <span>⚡ {opportunity['rsi']:.0f}</span>
+                                    </div>
+                                    <div style="margin-top: 8px; font-size: 0.7rem; color: rgba(255,255,255,0.6); font-style: italic;">
+                                        {opportunity['reason']}
+                                    </div>
                                 </div>
-                                <p style="margin: 0.25rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">{opportunity['name']}</p>
-                                <div style="margin: 0.5rem 0;">
-                                    <span style="color: {signal_color}; font-weight: bold; font-size: 1.1rem;">{opportunity['signal']}</span>
-                                    <span style="color: rgba(255,255,255,0.6); margin-left: 0.5rem;">₺{opportunity['price']:.2f}</span>
-                                </div>
-                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">
-                                    <div>📊 Volatilite: {opportunity['volatility']:.1f}%</div>
-                                    <div>📈 Hacim: {opportunity['volume_ratio']:.1f}x</div>
-                                    <div>⚡ RSI: {opportunity['rsi']:.0f}</div>
-                                </div>
-                                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
-                                    {opportunity['reason']}
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="
+                    text-align: center;
+                    padding: 40px 20px;
+                    color: rgba(255,255,255,0.6);
+                    font-style: italic;
+                ">
+                    <h4>🔍 Seçilen kriterlere uygun fırsat bulunamadı</h4>
+                    <p>Filtre değerlerini düşürmeyi deneyin</p>
+                </div>
+                """, unsafe_allow_html=True)
 
             # Summary stats
             st.markdown("### 📈 Tarama Özeti")
@@ -5797,9 +5996,26 @@ def show_news_feed():
                             symbols += f" +{len(news['detected_symbols'])-2}"
                         meta_info += f" • 🏷️ {symbols}"
                     
-                    # Basit background ile haber kartı
-                    # Background div başlangıcı
-                    st.markdown("""
+                    # Haber kartı - Tam HTML ile
+                    # Sentiment rengi belirleme
+                    if sentiment_score > 0.1:
+                        sentiment_color = "#28a745"
+                        sentiment_bg = "rgba(40, 167, 69, 0.1)"
+                    elif sentiment_score < -0.1:
+                        sentiment_color = "#dc3545"
+                        sentiment_bg = "rgba(220, 53, 69, 0.1)"
+                    else:
+                        sentiment_color = "#ffc107"
+                        sentiment_bg = "rgba(255, 193, 7, 0.1)"
+                    
+                    # HTML escape
+                    safe_title = news['title'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+                    safe_description = description.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+                    safe_meta = meta_info.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+                    safe_link = news['link'].replace('"', '&quot;')
+                    
+                    # Tam HTML kart
+                    card_html = f"""
                     <div style="
                         background: linear-gradient(135deg, #2d3748 0%, #374151 100%);
                         border: 1px solid #4a5568;
@@ -5807,35 +6023,48 @@ def show_news_feed():
                         padding: 16px;
                         margin-bottom: 12px;
                         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                        color: white;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     ">
-                    """, unsafe_allow_html=True)
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                            <div style="flex: 1;">
+                                <div style="margin-bottom: 8px;">
+                                    <a href="{safe_link}" target="_blank" style="
+                                        color: #e2e8f0;
+                                        text-decoration: none;
+                                        font-weight: 600;
+                                        font-size: 16px;
+                                        line-height: 1.4;
+                                    ">{safe_title}</a>
+                                </div>
+                                <div style="
+                                    color: #a0aec0;
+                                    font-size: 14px;
+                                    line-height: 1.5;
+                                    margin-bottom: 8px;
+                                ">{safe_description}</div>
+                                <div style="
+                                    color: #718096;
+                                    font-size: 12px;
+                                    line-height: 1.4;
+                                ">{safe_meta}</div>
+                            </div>
+                            <div style="
+                                background: {sentiment_bg};
+                                border: 1px solid {sentiment_color};
+                                color: {sentiment_color};
+                                padding: 6px 12px;
+                                border-radius: 20px;
+                                font-size: 12px;
+                                font-weight: 500;
+                                white-space: nowrap;
+                                flex-shrink: 0;
+                            ">{sentiment_icon} {news['sentiment_label']}</div>
+                        </div>
+                    </div>
+                    """
                     
-                    # İçerik
-                    col_main, col_sentiment = st.columns([5, 1])
-                    
-                    with col_main:
-                        # Başlık
-                        st.markdown(f"**[{news['title']}]({news['link']})**")
-                        
-                        # Açıklama
-                        st.caption(description)
-                        
-                        # Meta bilgiler
-                        st.caption(meta_info)
-                    
-                    with col_sentiment:
-                        # Sentiment badge
-                        sentiment_text = f"{sentiment_icon} {news['sentiment_label']}"
-                        if sentiment_score > 0.1:
-                            st.success(sentiment_text)
-                        elif sentiment_score < -0.1:
-                            st.error(sentiment_text)
-                        else:
-                            st.warning(sentiment_text)
-                    
-                    # Background div sonu
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(card_html, unsafe_allow_html=True)
             
             else:
                 st.info("Seçilen kriterlere uygun haber bulunamadı.")
