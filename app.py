@@ -3576,6 +3576,151 @@ def show_technical_analysis():
                 </div>
                 """, unsafe_allow_html=True)
                 
+                # Hacim Artışı ve Fiyat Kırılımları - Boğa Sinyalleri Tabına Taşındı
+                st.markdown("""
+                <div style='
+                    border: 1px solid hsl(215, 28%, 20%); 
+                    border-radius: 0.75rem; 
+                    padding: 1.5rem; 
+                    margin: 1.5rem 0; 
+                    background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(215, 40%, 10%) 100%);
+                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+                '>
+                    <div style='
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 1rem;
+                        padding-bottom: 0.75rem;
+                        border-bottom: 1px solid hsl(215, 28%, 20%);
+                    '>
+                        <span style='
+                            font-size: 1.5rem;
+                            margin-right: 0.75rem;
+                        '>📊</span>
+                        <h3 style='
+                            color: hsl(210, 40%, 98%); 
+                            margin: 0; 
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                        '>Hacim & Kırılım Taramaları</h3>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Hacim Artışı ve Fiyat Kırılımları - 2 Sütunlu Layout
+                scan_col1, scan_col2 = st.columns(2, gap="large")
+                
+                with scan_col1:
+                    st.markdown("""
+                    <div class="scan-card fade-in" style="animation-delay: 0.1s;">
+                        <div class="scan-title">
+                            📈 Hacim Artışı
+                            <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">İşlem Hacmi Analizi</span>
+                        </div>
+                        <div class="scan-description">
+                            Yüksek hacimle işlem gören hisseleri bulun. Anormal hacim artışları genellikle önemli fiyat hareketlerinin habercisidir.
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Hacim artışı seçimi
+                    volume_option = st.selectbox(
+                        "Seviye Seçin",
+                        ["Hafif Artış (1.2x)", "Orta Artış (1.5x)", "Güçlü Artış (2.0x)", "Çok Güçlü (3.0x)", "Patlama (5.0x)", "Özel Değer"],
+                        index=1,
+                        key="volume_option_select_bull",
+                        label_visibility="collapsed"
+                    )
+                    
+                    if volume_option == "Özel Değer":
+                        st.markdown("""
+                        <div class="control-group">
+                            <label class="control-label">Özel Değer</label>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        volume_multiplier = st.slider("Hacim Çarpanı", 1.0, 10.0, 1.5, 0.1, key="volume_mult_custom_bull")
+                    else:
+                        volume_values = {
+                            "Hafif Artış (1.2x)": 1.2,
+                            "Orta Artış (1.5x)": 1.5,
+                            "Güçlü Artış (2.0x)": 2.0,
+                            "Çok Güçlü (3.0x)": 3.0,
+                            "Patlama (5.0x)": 5.0
+                        }
+                        volume_multiplier = volume_values[volume_option]
+                        
+                        # Seçilen değeri göster
+                        st.markdown(f'<div class="value-display">Seçilen: {volume_multiplier}x</div>', unsafe_allow_html=True)
+                    
+                    if st.button("🔥 Hacim Taraması Başlat", key="volume_scan_bull", use_container_width=True):
+                        with st.spinner("📊 Hacim patlamaları aranıyor..."):
+                            results = screener.screen_by_volume(volume_multiplier, selected_interval)
+                            if results:
+                                st.success(f"🎉 {len(results)} hisse bulundu!", icon="🔥")
+                                df = pd.DataFrame(results)
+                                st.markdown('<div class="slide-in">', unsafe_allow_html=True)
+                                st.dataframe(df, use_container_width=True, hide_index=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            else:
+                                st.info("📊 Belirtilen hacim çarpanında hisse bulunamadı", icon="📊")
+                
+                with scan_col2:
+                    st.markdown("""
+                    <div class="scan-card fade-in" style="animation-delay: 0.2s;">
+                        <div class="scan-title">
+                            ⚡ Fiyat Kırılımları
+                            <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Teknik Seviyeler</span>
+                        </div>
+                        <div class="scan-description">
+                            Direnç ve destek seviyelerini kıran hisseler. Kırılımlar genellikle trend değişimlerinin sinyalidir.
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Geriye bakış süresi seçimi
+                    if "lookback_option_select_bull" not in st.session_state:
+                        st.session_state.lookback_option_select_bull = "Orta Vade (20 gün)"
+                    
+                    # Seçilen değeri hesapla
+                    lookback_values = {
+                        "Kısa Vade (10 gün)": 10,
+                        "Orta Vade (20 gün)": 20,
+                        "Uzun Vade (30 gün)": 30,
+                        "Çok Uzun (50 gün)": 50,
+                        "Özel Süre": "Özel"
+                    }
+                    
+                    lookback_option = st.selectbox(
+                        "Süre Seçin",
+                        ["Kısa Vade (10 gün)", "Orta Vade (20 gün)", "Uzun Vade (30 gün)", "Çok Uzun (50 gün)", "Özel Süre"],
+                        key="lookback_option_select_bull",
+                        label_visibility="collapsed"
+                    )
+                    
+                    if lookback_option == "Özel Süre":
+                        st.markdown("""
+                        <div class="control-group">
+                            <label class="control-label">Özel Gün Sayısı</label>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        lookback = st.slider("Gün Sayısı", 5, 100, 20, key="lookback_custom_bull")
+                    else:
+                        lookback = lookback_values[lookback_option]
+                        st.markdown(f'<div class="value-display">Seçilen: {lookback} gün</div>', unsafe_allow_html=True)
+                    
+                    if st.button("💥 Kırılım Taraması Başlat", key="breakout_scan_bull", use_container_width=True):
+                        with st.spinner("⚡ Fiyat kırılımları analiz ediliyor..."):
+                            results = screener.screen_by_price_breakout(lookback, selected_interval)
+                            if results:
+                                st.success(f"🎉 {len(results)} kırılım bulundu!", icon="💥")
+                                df = pd.DataFrame(results)
+                                st.markdown('<div class="slide-in">', unsafe_allow_html=True)
+                                st.dataframe(df, use_container_width=True, hide_index=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            else:
+                                st.info("⚡ Belirtilen sürede kırılım bulunamadı", icon="⚡")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+                
                 # Ayı Sinyalleri - Modern ve Kompakt Tasarım
                 st.markdown("""
                 <div style='
@@ -5370,190 +5515,805 @@ def show_stock_screener():
     with tab2:
 
         
-        # Tarama kontrolleri - Streamlit sütunları ile düzenli layout
-        
-        # Modern kart tasarımı ile tarama bölümleri
+        # Modern teknik tarama arayüzü
         st.markdown("""
         <style>
-        .scanner-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        /* Modern kart tasarımı */
+        .scan-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
             border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .scanner-card h3 {
-            color: white;
-            margin: 0 0 1rem 0;
+        
+        .scan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .scan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .scan-card:hover::before {
+            opacity: 1;
+        }
+        
+        .scan-title {
             font-size: 1.2rem;
             font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 8px;
         }
-        .scanner-card p {
-            color: rgba(255,255,255,0.8);
-            margin: 0 0 1rem 0;
+        
+        .scan-description {
+            color: rgba(255,255,255,0.7);
             font-size: 0.9rem;
+            margin-bottom: 20px;
         }
-        .volume-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.1);
+        
+        .control-group {
+            margin: 16px 0;
         }
-        .breakout-card {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        
+        .control-label {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .value-display {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.8);
+            margin-top: 8px;
+        }
+        
+        /* Responsive grid düzeni */
+        .scan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin: 24px 0;
+        }
+        
+        /* Modern button stili */
+        .scan-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 16px;
+        }
+        
+        .scan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Custom selectbox stili */
+        .stSelectbox > div > div {
+            background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        /* Custom slider stili */
+        .stSlider > div > div > div > div {
+            background: linear-gradient(90deg, #667eea, #764ba2) !important;
+            height: 6px !important;
+            border-radius: 3px !important;
+        }
+        
+        .stSlider > div > div > div > div > div {
+            background: white !important;
+            border: 2px solid #667eea !important;
+            width: 16px !important;
+            height: 16px !important;
+            border-radius: 50% !important;
+        }
+        
+        @media (max-width: 768px) {
+            .scan-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .scan-card {
+                padding: 20px;
+                margin: 12px 0;
+            }
+        }
+        }
+            
+            /* Loading animasyonları */
+            .loading-spinner {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid rgba(102, 126, 234, 0.3);
+                border-radius: 50%;
+                border-top-color: #667eea;
+                animation: spin 1s ease-in-out infinite;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            
+            .pulse {
+                animation: pulse 2s infinite;
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            /* Smooth transitions */
+            .scan-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .scan-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            }
+            
+            /* Button hover effects */
+            .stButton > button {
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .stButton > button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            }
+            
+            .stButton > button:active {
+                transform: translateY(0);
+            }
+            
+            /* Fade in animation */
+            .fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            /* Slide in animation */
+            .slide-in {
+                animation: slideIn 0.5s ease-out;
+            }
+            
+            @keyframes slideIn {
+                from { transform: translateX(-20px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            /* Hover effects for results */
+            .dataframe {
+                transition: all 0.3s ease;
+            }
+            
+            .dataframe:hover {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            }
+            
+            /* Success/error animations */
+            .success-animation {
+                animation: successPulse 0.6s ease-in-out;
+            }
+            
+            @keyframes successPulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
         }
         </style>
         """, unsafe_allow_html=True)
         
-        # 3 sütunlu modern tasarım
-        col1, col2, col3 = st.columns(3, gap="large")
-        
-        with col1:
-            st.markdown("""
-            <div class="scanner-card">
-                <h3>📊 RSI Taraması</h3>
-                <p>Aşırı alım/satım seviyelerindeki hisseleri keşfedin</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # RSI değer aralığı seçimi
-            st.markdown("**📊 RSI Değer Aralığı**")
-            rsi_range = st.select_slider(
-                "",
-                options=["Aşırı Satım (0-30)", "Düşük (30-40)", "Nötr (40-60)", "Yüksek (60-70)", "Aşırı Alım (70-100)", "Özel Aralık"],
-                value="Aşırı Satım (0-30)",
-                key="rsi_range_select",
-                help="Hangi RSI seviyesindeki hisseleri aramak istiyorsunuz?"
-            )
-            
-            # Özel aralık seçilirse slider'ları göster
-            if rsi_range == "Özel Aralık":
-                st.markdown("<br>", unsafe_allow_html=True)
-                col_rsi1, col_rsi2 = st.columns(2)
-                with col_rsi1:
-                    rsi_min = st.number_input("🔻 Alt Limit", 0, 100, 30, key="rsi_min_custom", help="RSI alt sınırı")
-                with col_rsi2:
-                    rsi_max = st.number_input("🔺 Üst Limit", 0, 100, 70, key="rsi_max_custom", help="RSI üst sınırı")
-                st.markdown("<br>", unsafe_allow_html=True)
-            else:
-                # Önceden tanımlı aralıklar
-                rsi_ranges = {
-                    "Aşırı Satım (0-30)": (0, 30),
-                    "Düşük (30-40)": (30, 40),
-                    "Nötr (40-60)": (40, 60),
-                    "Yüksek (60-70)": (60, 70),
-                    "Aşırı Alım (70-100)": (70, 100)
-                }
-                rsi_min, rsi_max = rsi_ranges[rsi_range]
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🎯 RSI Taraması Başlat", key="rsi_scan", type="primary", use_container_width=True):
-                with st.spinner("🔍 RSI değerleri analiz ediliyor..."):
-                    results = screener.screen_by_rsi(rsi_min, rsi_max, selected_interval)
-                    if results:
-                        st.success(f"🎉 {len(results)} hisse bulundu!")
-                        df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("🔍 Belirtilen RSI aralığında hisse bulunamadı")
-        
-        with col2:
-            st.markdown("""
-            <div class="volume-card">
-                <h3>📈 Hacim Artışı</h3>
-                <p>Yüksek hacimle işlem gören hisseleri bulun</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Hacim artışı seçimi
-            st.markdown("**📈 Hacim Artışı Seviyesi**")
-            volume_option = st.selectbox(
-                "Hacim Artışı Türü",
-                ["Hafif Artış (1.2x)", "Orta Artış (1.5x)", "Güçlü Artış (2.0x)", "Çok Güçlü (3.0x)", "Patlama (5.0x)", "Özel Değer"],
-                index=1,
-                key="volume_option_select",
-                help="Ne kadar hacim artışı arıyorsunuz?"
-            )
-            
-            if volume_option == "Özel Değer":
-                volume_multiplier = st.slider("Hacim Çarpanı", 1.0, 10.0, 1.5, 0.1, key="volume_mult_custom")
-            else:
-                volume_values = {
-                    "Hafif Artış (1.2x)": 1.2,
-                    "Orta Artış (1.5x)": 1.5,
-                    "Güçlü Artış (2.0x)": 2.0,
-                    "Çok Güçlü (3.0x)": 3.0,
-                    "Patlama (5.0x)": 5.0
-                }
-                volume_multiplier = volume_values[volume_option]
-            
-            st.info(f"🎯 Seçilen hacim çarpanı: **{volume_multiplier}x**")
-            
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            if st.button("🔥 Hacim Taraması Başlat", key="volume_scan", type="primary", use_container_width=True):
-                with st.spinner("📊 Hacim patlamaları aranıyor..."):
-                    results = screener.screen_by_volume(volume_multiplier, selected_interval)
-                    if results:
-                        st.success(f"🎉 {len(results)} hisse bulundu!")
-                        df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("📊 Belirtilen hacim çarpanında hisse bulunamadı")
-        
-        with col3:
-            st.markdown("""
-            <div class="breakout-card">
-                <h3>⚡ Fiyat Kırılımları</h3>
-                <p>Direnç ve destek seviyelerini kıran hisseler</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Geriye bakış süresi seçimi
-            st.markdown("**📅 Analiz Süresi**")
-            lookback_option = st.selectbox(
-                "Geriye Bakış Süresi",
-                ["Kısa Vade (10 gün)", "Orta Vade (20 gün)", "Uzun Vade (30 gün)", "Çok Uzun (50 gün)", "Özel Süre"],
-                index=1,
-                key="lookback_option_select",
-                help="Direnç ve destek seviyelerini hesaplamak için kaç günlük veri kullanılacak?"
-            )
-            
-            if lookback_option == "Özel Süre":
-                lookback = st.slider("Gün Sayısı", 5, 100, 20, key="lookback_custom")
-            else:
-                lookback_values = {
-                    "Kısa Vade (10 gün)": 10,
-                    "Orta Vade (20 gün)": 20,
-                    "Uzun Vade (30 gün)": 30,
-                    "Çok Uzun (50 gün)": 50
-                }
-                lookback = lookback_values[lookback_option]
-            
-            st.info(f"📊 Analiz süresi: **{lookback} gün**")
-            
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            if st.button("💥 Kırılım Taraması Başlat", key="breakout_scan", type="primary", use_container_width=True):
-                with st.spinner("⚡ Fiyat kırılımları analiz ediliyor..."):
-                    results = screener.screen_by_price_breakout(lookback, selected_interval)
-                    if results:
-                        st.success(f"🎉 {len(results)} kırılım bulundu!")
-                        df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("⚡ Belirtilen sürede kırılım bulunamadı")
-    
 
+
+        # Modern grid düzeni
+        st.markdown('<div class="scan-grid">', unsafe_allow_html=True)
+        
+        # RSI Tarama Kartı
+        st.markdown("""
+        <div class="scan-card fade-in">
+            <div class="scan-title">
+                📊 RSI Taraması
+                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Momentum Göstergesi</span>
+            </div>
+            <div class="scan-description">
+                Aşırı alım/satım seviyelerindeki hisseleri keşfedin. RSI göstergesi, fiyat hareketlerinin aşırı olup olmadığını belirlemenize yardımcı olur.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # RSI Aralık Seçimi
+        st.markdown('<div class="control-group">', unsafe_allow_html=True)
+        st.markdown('<div class="control-label">RSI Seviyesi</div>', unsafe_allow_html=True)
+        
+        rsi_preset = st.selectbox(
+            "",
+            ["Aşırı Satım (0-30)", "Düşük (30-40)", "Nötr (40-60)", "Yüksek (60-70)", "Aşırı Alım (70-100)", "Özel Aralık"],
+            key="rsi_range_select_v2",
+            help="Hangi RSI seviyesindeki hisseleri aramak istiyorsunuz?"
+        )
+        
+        rsi_ranges = {
+            "Aşırı Satım (0-30)": (0, 30),
+            "Düşük (30-40)": (30, 40),
+            "Nötr (40-60)": (40, 60),
+            "Yüksek (60-70)": (60, 70),
+            "Aşırı Alım (70-100)": (70, 100)
+        }
+        
+        if rsi_preset != "Özel Aralık":
+            rsi_min, rsi_max = rsi_ranges[rsi_preset]
+            st.markdown(f'<div class="value-display">Seçilen Aralık: {rsi_min} - {rsi_max}</div>', unsafe_allow_html=True)
+        else:
+            col_rsi1, col_rsi2 = st.columns(2)
+            with col_rsi1:
+                rsi_min = st.number_input("Alt Limit", 0, 100, 30, key="rsi_min_custom_v2")
+            with col_rsi2:
+                rsi_max = st.number_input("Üst Limit", 0, 100, 70, key="rsi_max_custom_v2")
+            st.markdown(f'<div class="value-display">Özel Aralık: {rsi_min} - {rsi_max}</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        if st.button("🎯 RSI Taramasını Başlat", key="rsi_scan_v2", use_container_width=True):
+            with st.spinner("🔍 RSI analizi yapılıyor..."):
+                if rsi_preset == "Özel Aralık":
+                    results = screener.screen_by_rsi(rsi_min, rsi_max, selected_interval)
+                else:
+                    results = screener.screen_by_rsi(*rsi_ranges[rsi_preset], selected_interval)
+                
+                if results:
+                    st.success(f"🎉 {len(results)} hisse bulundu!", icon="✅")
+                    df = pd.DataFrame(results)
+                    st.markdown('<div class="slide-in">', unsafe_allow_html=True)
+                    st.dataframe(df, use_container_width=True, hide_index=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.info("🔍 Belirtilen RSI aralığında hisse bulunamadı", icon="ℹ️")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Teknik İndikatör Taramaları
+        st.markdown("""
+        <div class="scan-card fade-in">
+            <div class="scan-title">
+                📈 Teknik İndikatör Taraması
+                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Çoklu Gösterge Analizi</span>
+            </div>
+            <div class="scan-description">
+                Birden fazla teknik indikatörü aynı anda kullanarak güçlü sinyal veren hisseleri bulun. MACD, Bollinger, VWAP gibi popüler göstergelerle kapsamlı analiz.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # İndikatör seçenekleri
+        technical_indicators = {
+            'MACD': '📊 MACD Sinyali',
+            'Bollinger': '🎯 Bollinger Bantları',
+            'VWAP': '📊 VWAP Kırılımı',
+            'Golden Cross': '🌟 Golden Cross',
+            'RSI Divergence': '🔄 RSI Divergence',
+            'Volume Spike': '💥 Hacim Patlaması'
+        }
+        
+        col_tech1, col_tech2 = st.columns(2)
+        with col_tech1:
+            selected_tech_indicator = st.selectbox(
+                "İndikatör Türü",
+                list(technical_indicators.keys()),
+                format_func=lambda x: technical_indicators[x],
+                key="tech_indicator_select"
+            )
+        
+        with col_tech2:
+            tech_interval = st.selectbox(
+                "Zaman Dilimi",
+                list(time_intervals.keys()),
+                format_func=lambda x: time_intervals[x],
+                index=0,
+                key="tech_interval"
+            )
+        
+        if st.button("🔍 Teknik İndikatör Tara", key="tech_scan", use_container_width=True):
+            with st.spinner(f"{technical_indicators[selected_tech_indicator]} aranıyor..."):
+                try:
+                    if selected_tech_indicator == 'MACD':
+                        results = screener.screen_macd_bull_signal(tech_interval)
+                    elif selected_tech_indicator == 'Bollinger':
+                        results = screener.screen_bollinger_breakout(tech_interval)
+                    elif selected_tech_indicator == 'VWAP':
+                        results = screener.screen_vwap_bull_signal(tech_interval)
+                    elif selected_tech_indicator == 'Golden Cross':
+                        results = screener.screen_golden_cross(tech_interval)
+                    elif selected_tech_indicator == 'RSI Divergence':
+                        results = screener.screen_rsi_recovery(tech_interval)
+                    elif selected_tech_indicator == 'Volume Spike':
+                        results = screener.screen_volume_breakout(tech_interval)
+                    
+                    if results:
+                        st.success(f"✅ {len(results)} hisse bulundu!", icon="🎉")
+                        df = pd.DataFrame(results)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("🔍 Belirtilen kriterde hisse bulunamadı", icon="ℹ️")
+                        
+                except Exception as e:
+                    st.error(f"Tarama sırasında hata oluştu: {str(e)}")
+        
+        # AI Tahmin Taraması
+        st.markdown("""
+        <div class="scan-card fade-in">
+            <div class="scan-title">
+                🤖 AI Tahmin Taraması
+                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Yapay Zeka Destekli</span>
+            </div>
+            <div class="scan-description">
+                Yapay zeka modelleri ile gelecek fiyat tahminleri yapan hisseleri keşfedin. Ensemble, Random Forest ve Gradyan Artırma modelleri ile tahmin analizi.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col_ai1, col_ai2, col_ai3 = st.columns(3)
+        with col_ai1:
+            ai_horizon = st.selectbox(
+                "Tahmin Süresi",
+                [3, 7, 14, 30],
+                format_func=lambda x: f"{x} gün sonra",
+                key="ai_horizon"
+            )
+        
+        with col_ai2:
+            ai_model = st.selectbox(
+                "Model Türü",
+                ["ensemble", "random_forest", "gradient_boosting"],
+                format_func=lambda x: {
+                    "ensemble": "🎯 Ensemble",
+                    "random_forest": "🌲 Random Forest",
+                    "gradient_boosting": "⚡ Gradyan Artırma"
+                }[x],
+                key="ai_model_screener"
+            )
+        
+        with col_ai3:
+            min_confidence = st.slider("Minimum Güven Skoru", 0.6, 0.95, 0.8, 0.05, key="min_confidence_screener")
+        
+        if st.button("🚀 AI Tahmin Tara", key="ai_scan_screener", use_container_width=True):
+            with st.spinner("🧠 AI modelleri analiz ediyor..."):
+                try:
+                    from modules.ml_predictor import MLPredictor
+                    from modules.technical_analyzer import TechnicalAnalyzer
+                    
+                    # Tüm hisseleri tara
+                    ai_results = []
+                    for symbol in list(BIST_SYMBOLS.keys())[:25]:  # İlk 25 hisse ile sınırlı
+                        try:
+                            fetcher = BISTDataFetcher()
+                            data = fetcher.get_stock_data(symbol, period="1y", interval="1d")
+                            
+                            if data is not None and len(data) > 100:
+                                analyzer = TechnicalAnalyzer(data)
+                                indicators_to_add = ['rsi', 'ema_5', 'ema_8', 'ema_21', 'vwap', 'macd']
+                                
+                                for indicator in indicators_to_add:
+                                    try:
+                                        analyzer.add_indicator(indicator)
+                                    except:
+                                        pass
+                                
+                                ml_predictor = MLPredictor()
+                                predictions = ml_predictor.predict_price(data, analyzer.indicators, ai_horizon)
+                                
+                                if 'error' not in predictions:
+                                    current_price = data['Close'].iloc[-1]
+                                    model_predictions = [v for v in predictions.values() if isinstance(v, (int, float))]
+                                    
+                                    if model_predictions:
+                                        predicted_price = np.mean(model_predictions)
+                                        confidence = max(0.6, min(0.95, 1 - (np.std(model_predictions) / current_price)))
+                                        expected_return = ((predicted_price - current_price) / current_price) * 100
+                                        
+                                        if abs(expected_return) > 1 and confidence >= min_confidence:
+                                            ai_results.append({
+                                                'symbol': symbol,
+                                                'name': BIST_SYMBOLS[symbol],
+                                                'current_price': current_price,
+                                                'predicted_price': predicted_price,
+                                                'expected_return': expected_return,
+                                                'confidence': confidence,
+                                                'signal': 'AL' if expected_return > 0 else 'SAT'
+                                            })
+                        except:
+                            continue
+                    
+                    if ai_results:
+                        st.success(f"🎯 {len(ai_results)} AI tahmini bulundu!", icon="✨")
+                        df_ai = pd.DataFrame(ai_results)
+                        st.dataframe(df_ai, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("🔍 Yeterli güven skoruna sahip AI tahmini bulunamadı", icon="ℹ️")
+                        
+                except ImportError:
+                    st.warning("🤖 AI modülü henüz aktif değil", icon="⚠️")
+        
+        # Formasyon Taraması
+        st.markdown("""
+        <div class="scan-card fade-in">
+            <div class="scan-title">
+                🕯️ Formasyon Taraması
+                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Candlestick Patternler</span>
+            </div>
+            <div class="scan-description">
+                Klasik candlestick formasyonlarını tespit ederek trend dönüşümlerini önceden yakalayın. Doji, Hammer, Engulfing gibi güçlü sinyalleri bulun.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        pattern_types = {
+            'doji': '⭐ Doji',
+            'hammer': '🔨 Hammer',
+            'bullish_engulfing': '🟢 Bullish Engulfing',
+            'bearish_engulfing': '🔴 Bearish Engulfing',
+            'morning_star': '🌅 Morning Star',
+            'evening_star': '🌆 Evening Star'
+        }
+        
+        col_pat1, col_pat2 = st.columns(2)
+        with col_pat1:
+            selected_pattern = st.selectbox(
+                "Formasyon Türü",
+                list(pattern_types.keys()),
+                format_func=lambda x: pattern_types[x],
+                key="pattern_select_screener"
+            )
+        
+        with col_pat2:
+            pattern_interval = st.selectbox(
+                "Zaman Dilimi",
+                list(time_intervals.keys()),
+                format_func=lambda x: time_intervals[x],
+                index=4,  # 1d
+                key="pattern_interval_screener"
+            )
+        
+        pattern_lookback = st.slider("Arama Periyodu (gün)", 1, 30, 5, key="pattern_lookback_screener")
+        
+        if st.button("🔍 Formasyon Tara", key="pattern_scan_screener", use_container_width=True):
+            with st.spinner("🕯️ Candlestick formasyonları aranıyor..."):
+                try:
+                    from modules.pattern_recognition import PatternRecognition
+                    
+                    pattern_results = []
+                    
+                    for symbol in list(BIST_SYMBOLS.keys())[:40]:  # İlk 40 hisse
+                        try:
+                            fetcher = BISTDataFetcher()
+                            data = fetcher.get_stock_data(symbol, period="6mo", interval=pattern_interval)
+                            
+                            if data is not None and len(data) > 20:
+                                pattern_analyzer = PatternRecognition(data)
+                                latest_patterns = pattern_analyzer.get_latest_patterns(lookback=pattern_lookback)
+                                
+                                if selected_pattern in latest_patterns and latest_patterns[selected_pattern] is not None:
+                                    pattern_date = latest_patterns[selected_pattern]
+                                    current_price = data['Close'].iloc[-1]
+                                    
+                                    pattern_results.append({
+                                        'symbol': symbol,
+                                        'name': BIST_SYMBOLS[symbol],
+                                        'current_price': current_price,
+                                        'pattern': pattern_types[selected_pattern],
+                                        'date': pattern_date.strftime('%Y-%m-%d'),
+                                        'days_ago': (datetime.now() - pattern_date).days
+                                    })
+                        except:
+                            continue
+                    
+                    if pattern_results:
+                        st.success(f"🎭 {len(pattern_results)} formasyon bulundu!", icon="🎪")
+                        df_pattern = pd.DataFrame(pattern_results)
+                        st.dataframe(df_pattern, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("🔍 Belirtilen formasyon bulunamadı", icon="ℹ️")
+                        
+                except ImportError:
+                    st.warning("🕯️ Formasyon modülü henüz aktif değil", icon="⚠️")
+        
+        # News Sentiment Taraması
+        st.markdown("""
+        <div class="scan-card fade-in">
+            <div class="scan-title">
+                📰 Haber Sentiment
+                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Medya Analizi</span>
+            </div>
+            <div class="scan-description">
+                Finansal haberlerin hisse senetleri üzerindeki etkisini analiz edin. Pozitif/negatif sentiment taraması ile piyasa duygusunu ölçün.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Sentiment Ayarları
+        sentiment_types = {
+            'all': 'Tüm Haberler',
+            'positive': 'Pozitif Haberler',
+            'negative': 'Negatif Haberler',
+            'neutral': 'Nötr Haberler'
+        }
+        
+        col_sent1, col_sent2 = st.columns(2)
+        with col_sent1:
+            selected_sentiment = st.selectbox(
+                "Sentiment Türü",
+                list(sentiment_types.keys()),
+                format_func=lambda x: sentiment_types[x],
+                key="sentiment_select"
+            )
+        
+        with col_sent2:
+            sentiment_days = st.slider("Arama Günü", 1, 7, 3, key="sentiment_days")
+        
+        if st.button("📊 Sentiment Analizi", key="sentiment_scan", use_container_width=True):
+            with st.spinner("📰 Haber sentiment analizi yapılıyor..."):
+                try:
+                    from modules.sentiment_analyzer import SentimentAnalyzer
+                    
+                    sentiment_analyzer = SentimentAnalyzer()
+                    sentiment_results = []
+                    
+                    for symbol in list(BIST_SYMBOLS.keys())[:30]:  # İlk 30 hisse
+                        try:
+                            news_data = sentiment_analyzer.get_stock_news(symbol, limit=sentiment_days * 3)
+                            
+                            if news_data and 'articles' in news_data:
+                                sentiments = []
+                                for article in news_data['articles'][:sentiment_days]:
+                                    sentiment = sentiment_analyzer.analyze_sentiment(article.get('title', ''))
+                                    sentiments.append(sentiment)
+                                
+                                if sentiments:
+                                    avg_sentiment = sum(sentiments) / len(sentiments)
+                                    
+                                    # Filtreleme
+                                    if selected_sentiment == 'all' or \
+                                       (selected_sentiment == 'positive' and avg_sentiment > 0.1) or \
+                                       (selected_sentiment == 'negative' and avg_sentiment < -0.1) or \
+                                       (selected_sentiment == 'neutral' and -0.1 <= avg_sentiment <= 0.1):
+                                        
+                                        sentiment_results.append({
+                                            'symbol': symbol,
+                                            'name': BIST_SYMBOLS[symbol],
+                                            'sentiment_score': f"{avg_sentiment:.3f}",
+                                            'sentiment': 'Pozitif' if avg_sentiment > 0.1 else 'Negatif' if avg_sentiment < -0.1 else 'Nötr',
+                                            'news_count': len(sentiments),
+                                            'last_update': datetime.now().strftime('%Y-%m-%d')
+                                        })
+                        except:
+                            continue
+                    
+                    if sentiment_results:
+                        # Sentiment'e göre sırala
+                        sentiment_results.sort(key=lambda x: float(x['sentiment_score']), reverse=True)
+                        st.success(f"📰 {len(sentiment_results)} sentiment analizi hazır!", icon="✅")
+                        df_sentiment = pd.DataFrame(sentiment_results)
+                        st.dataframe(df_sentiment, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("🔍 Belirtilen kriterlerde haber bulunamadı", icon="ℹ️")
+                        
+                except ImportError:
+                    st.warning("📰 Sentiment analizi modülü bulunamadı. Lütfen gerekli bağımlılıkları kontrol edin.")
+                except Exception as e:
+                    st.error(f"🔍 Sentiment analizi hatası: {str(e)}")
+        
+        # AI Tahmin Taraması
+        st.markdown("""
+        <div class="scan-card fade-in">
+            <div class="scan-title">
+                🤖 AI Tahmin Taraması
+                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Yapay Zeka Destekli</span>
+            </div>
+            <div class="scan-description">
+                Yapay zeka modelleri ile gelecek fiyat tahminleri yapan hisseleri keşfedin. Ensemble, Random Forest ve Gradyan Artırma modelleri ile tahmin analizi.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col_ai1, col_ai2, col_ai3 = st.columns(3)
+        with col_ai1:
+            ai_horizon = st.selectbox(
+                "Tahmin Süresi",
+                [3, 7, 14],
+                format_func=lambda x: f"{x} gün sonra",
+                key="ai_horizon_screener"
+            )
+        
+        with col_ai2:
+            ai_model = st.selectbox(
+                "Model Türü",
+                ["ensemble", "random_forest", "gradient_boosting"],
+                format_func=lambda x: {
+                    "ensemble": "🎯 Ensemble",
+                    "random_forest": "🌲 Random Forest",
+                    "gradient_boosting": "⚡ Gradyan Artırma"
+                }[x],
+                key="ai_model"
+            )
+        
+        with col_ai3:
+            min_confidence = st.slider("Minimum Güven Skoru", 0.6, 0.95, 0.8, 0.05, key="min_confidence")
+        
+        if st.button("🚀 AI Tahmin Tara", key="ai_scan", use_container_width=True):
+            with st.spinner("🧠 AI modelleri analiz ediyor..."):
+                try:
+                    from modules.ml_predictor import MLPredictor
+                    
+                    # Tüm hisseleri tara
+                    ai_results = []
+                    for symbol in list(BIST_SYMBOLS.keys())[:20]:  # İlk 20 hisse ile sınırlı
+                        try:
+                            fetcher = BISTDataFetcher()
+                            data = fetcher.get_stock_data(symbol, period="1y", interval="1d")
+                            
+                            if data is not None and len(data) > 100:
+                                analyzer = TechnicalAnalyzer(data)
+                                indicators_to_add = ['rsi', 'ema_5', 'ema_8', 'ema_21', 'vwap', 'macd']
+                                
+                                for indicator in indicators_to_add:
+                                    try:
+                                        analyzer.add_indicator(indicator)
+                                    except:
+                                        pass
+                                
+                                ml_predictor = MLPredictor()
+                                predictions = ml_predictor.predict_price(data, analyzer.indicators, ai_horizon)
+                                
+                                if 'error' not in predictions:
+                                    current_price = data['Close'].iloc[-1]
+                                    predicted_price = np.mean([v for v in predictions.values() if isinstance(v, (int, float))])
+                                    confidence = 0.85  # Örnek güven skoru
+                                    
+                                    if abs(predicted_price - current_price) / current_price > 0.02 and confidence > min_confidence:
+                                        ai_results.append({
+                                            'symbol': symbol,
+                                            'name': BIST_SYMBOLS[symbol],
+                                            'current_price': current_price,
+                                            'predicted_price': predicted_price,
+                                            'expected_return': ((predicted_price - current_price) / current_price) * 100,
+                                            'confidence': confidence,
+                                            'model': ai_model
+                                        })
+                        except:
+                            continue
+                    
+                    if ai_results:
+                        st.success(f"🎯 {len(ai_results)} AI tahmini bulundu!", icon="✨")
+                        df_ai = pd.DataFrame(ai_results)
+                        st.dataframe(df_ai, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("🔍 Yeterli güven skoruna sahip AI tahmini bulunamadı", icon="ℹ️")
+                        
+                except ImportError:
+                    st.warning("🤖 AI modülü henüz aktif değil", icon="⚠️")
+        
+        # Formasyon Taraması
+        st.markdown("""
+        <div class="scan-card fade-in">
+            <div class="scan-title">
+                🕯️ Formasyon Taraması
+                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Candlestick Patternler</span>
+            </div>
+            <div class="scan-description">
+                Klasik candlestick formasyonlarını tespit ederek trend dönüşümlerini önceden yakalayın. Doji, Hammer, Engulfing gibi güçlü sinyalleri bulun.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        pattern_types = {
+            'doji': '⭐ Doji',
+            'hammer': '🔨 Hammer',
+            'bullish_engulfing': '🟢 Bullish Engulfing',
+            'bearish_engulfing': '🔴 Bearish Engulfing',
+            'morning_star': '🌅 Morning Star',
+            'evening_star': '🌆 Evening Star'
+        }
+        
+        col_pat1, col_pat2 = st.columns(2)
+        with col_pat1:
+            selected_pattern = st.selectbox(
+                "Formasyon Türü",
+                list(pattern_types.keys()),
+                format_func=lambda x: pattern_types[x],
+                key="pattern_select"
+            )
+        
+        with col_pat2:
+            pattern_interval = st.selectbox(
+                "Zaman Dilimi",
+                list(time_intervals.keys()),
+                format_func=lambda x: time_intervals[x],
+                index=4,  # 1d
+                key="pattern_interval"
+            )
+        
+        pattern_lookback = st.slider("Arama Periyodu (gün)", 1, 30, 5, key="pattern_lookback")
+        
+        if st.button("🔍 Formasyon Tara", key="pattern_scan", use_container_width=True):
+            with st.spinner("🕯️ Candlestick formasyonları aranıyor..."):
+                try:
+                    pattern_results = []
+                    
+                    for symbol in list(BIST_SYMBOLS.keys())[:30]:  # İlk 30 hisse
+                        try:
+                            fetcher = BISTDataFetcher()
+                            data = fetcher.get_stock_data(symbol, period="6mo", interval=pattern_interval)
+                            
+                            if data is not None and len(data) > 20:
+                                from modules.pattern_recognition import PatternRecognition
+                                pattern_analyzer = PatternRecognition(data)
+                                latest_patterns = pattern_analyzer.get_latest_patterns(lookback=pattern_lookback)
+                                
+                                if selected_pattern in latest_patterns and latest_patterns[selected_pattern] is not None:
+                                    pattern_date = latest_patterns[selected_pattern]
+                                    current_price = data['Close'].iloc[-1]
+                                    
+                                    pattern_results.append({
+                                        'symbol': symbol,
+                                        'name': BIST_SYMBOLS[symbol],
+                                        'current_price': current_price,
+                                        'pattern': pattern_types[selected_pattern],
+                                        'date': pattern_date.strftime('%Y-%m-%d'),
+                                        'days_ago': (datetime.now() - pattern_date).days
+                                    })
+                        except:
+                            continue
+                    
+                    if pattern_results:
+                        st.success(f"🎭 {len(pattern_results)} formasyon bulundu!", icon="🎪")
+                        df_pattern = pd.DataFrame(pattern_results)
+                        st.dataframe(df_pattern, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("🔍 Belirtilen formasyon bulunamadı", icon="ℹ️")
+                        
+                except ImportError:
+                    st.warning("🕯️ Formasyon modülü henüz aktif değil", icon="⚠️")
+    
     
     with tab4:
 
@@ -5572,132 +6332,130 @@ def show_stock_screener():
             # Modern filtreleme seçenekleri tasarımı
             st.markdown("""
             <style>
-            /* Slider stilleri */
+            /* Modern slider stilleri */
+            .filter-card {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 16px;
+                padding: 24px 20px;
+                margin: 16px 0;
+                backdrop-filter: blur(10px);
+                transition: all 0.3s ease;
+            }
+            
+            .filter-card:hover {
+                background: rgba(255,255,255,0.08);
+                border-color: rgba(255,255,255,0.2);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            }
+            
+            .filter-title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 12px;
+                text-align: center;
+            }
+            
+            .filter-value {
+                text-align: center;
+                font-size: 1.2rem;
+                font-weight: bold;
+                margin: 8px 0;
+            }
+            
+            /* Gradient slider stilleri */
             .stSlider > div > div > div > div {
+                height: 6px !important;
+                border-radius: 3px !important;
                 background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
-                height: 8px !important;
-                border-radius: 10px !important;
             }
             
             .stSlider > div > div > div > div > div {
                 background: white !important;
-                border: 3px solid #667eea !important;
-                width: 20px !important;
-                height: 20px !important;
+                border: 2px solid #667eea !important;
+                width: 18px !important;
+                height: 18px !important;
                 border-radius: 50% !important;
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+                transition: all 0.2s ease !important;
             }
             
             .stSlider > div > div > div > div > div:hover {
-                transform: scale(1.2) !important;
-                transition: all 0.2s ease !important;
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+                transform: scale(1.1) !important;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5) !important;
             }
             
-            /* Slider track renkleri */
-            div[data-testid="stSlider"] > div > div > div > div {
-                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+            /* Renkli slider stilleri */
+            .score-slider .stSlider > div > div > div > div {
+                background: linear-gradient(90deg, #ff6b6b 0%, #ffa500 50%, #00ff88 100%) !important;
+            }
+            
+            .volatility-slider .stSlider > div > div > div > div {
+                background: linear-gradient(90deg, #4834d4 0%, #686de0 100%) !important;
+            }
+            
+            .volume-slider .stSlider > div > div > div > div {
+                background: linear-gradient(90deg, #00d2d3 0%, #54a0ff 100%) !important;
             }
             </style>
             
             <div style="
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 20px;
-                border-radius: 15px;
-                margin: 20px 0;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                padding: 24px;
+                border-radius: 20px;
+                margin: 24px 0;
+                box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+                border: 1px solid rgba(255,255,255,0.1);
             ">
                 <h3 style="
                     color: white;
                     text-align: center;
-                    margin-bottom: 20px;
+                    margin-bottom: 8px;
                     font-weight: 600;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                ">🎯 Akıllı Filtreleme Sistemi</h3>
+                    font-size: 1.4rem;
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                ">🎯 Akıllı Filtreleme</h3>
+                <p style="
+                    color: rgba(255,255,255,0.8);
+                    text-align: center;
+                    margin: 0;
+                    font-size: 0.9rem;
+                ">Filtreleri ayarlayarak en iyi fırsatları bulun</p>
             </div>
             """, unsafe_allow_html=True)
             
-            # Filtreleme kartları
-            st.markdown("<div style='padding: 0 10px;'>", unsafe_allow_html=True)
-            col1, col2, col3 = st.columns(3, gap="large")
+            # Modern filtre kartları
+            st.markdown('<div class="scan-grid">', unsafe_allow_html=True)
             
-            with col1:
-                st.markdown("""
-                <div style="
-                    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-                    padding: 20px 15px;
-                    border-radius: 12px;
-                    margin: 10px 5px 15px 5px;
-                    text-align: center;
-                    box-shadow: 0 4px 15px rgba(255,107,107,0.3);
-                    overflow: hidden;
-                ">
-                    <h4 style="color: white; margin: 0; font-size: 16px; white-space: nowrap;">🏆 Puan Filtresi</h4>
-                </div>
-                <style>
-                div[data-testid="stSlider"][data-baseweb="slider"]:has([key="min_score_slider_v2"]) .stSlider > div > div > div > div {
-                    background: linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%) !important;
-                }
-                div[data-testid="stSlider"][data-baseweb="slider"]:has([key="min_score_slider_v2"]) .stSlider > div > div > div > div > div {
-                    border: 3px solid #ff6b6b !important;
-                    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4) !important;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                min_score = st.slider("", 0, 10, 5, key="min_score_slider_v2", help="Minimum kalite puanı (0-10)")
-                st.markdown(f"<p style='text-align: center; color: #ff6b6b; font-weight: bold; margin: 15px 5px 10px 5px;'>Seçilen: {min_score}/10</p>", unsafe_allow_html=True)
+            # Puan filtresi
+            st.markdown("""
+            <div class="filter-card score-slider">
+                <div class="filter-title" style="color: #ff6b6b;">🏆 Kalite Puanı</div>
+                <div class="filter-value" style="color: #ff6b6b;">5/10</div>
+            </div>
+            """, unsafe_allow_html=True)
+            min_score = st.slider("", 0, 10, 5, key="min_score_slider_v3", help="Minimum kalite puanı")
             
-            with col2:
-                st.markdown("""
-                <div style="
-                    background: linear-gradient(45deg, #4834d4, #686de0);
-                    padding: 20px 15px;
-                    border-radius: 12px;
-                    margin: 10px 5px 15px 5px;
-                    text-align: center;
-                    box-shadow: 0 4px 15px rgba(72,52,212,0.3);
-                    overflow: hidden;
-                ">
-                    <h4 style="color: white; margin: 0; font-size: 16px; white-space: nowrap;">📈 Volatilite Filtresi</h4>
-                </div>
-                <style>
-                .stSlider:has([key="min_volatility_slider_v2"]) > div > div > div > div {
-                    background: linear-gradient(90deg, #4834d4 0%, #686de0 100%) !important;
-                }
-                .stSlider:has([key="min_volatility_slider_v2"]) > div > div > div > div > div {
-                    border: 3px solid #4834d4 !important;
-                    box-shadow: 0 4px 12px rgba(72, 52, 212, 0.4) !important;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                min_volatility = st.slider("", 0.0, 15.0, 2.0, 0.1, key="min_volatility_slider_v2", help="Minimum volatilite yüzdesi")
-                st.markdown(f"<p style='text-align: center; color: #4834d4; font-weight: bold; margin: 15px 5px 10px 5px;'>Seçilen: {min_volatility:.1f}%</p>", unsafe_allow_html=True)
+            # Volatilite filtresi
+            st.markdown("""
+            <div class="filter-card volatility-slider">
+                <div class="filter-title" style="color: #4834d4;">📊 Volatilite</div>
+                <div class="filter-value" style="color: #4834d4;">2.0%</div>
+            </div>
+            """, unsafe_allow_html=True)
+            min_volatility = st.slider("", 0.0, 15.0, 2.0, 0.1, key="min_volatility_slider_v3", help="Minimum volatilite yüzdesi")
             
-            with col3:
-                st.markdown("""
-                <div style="
-                    background: linear-gradient(45deg, #00d2d3, #54a0ff);
-                    padding: 20px 15px;
-                    border-radius: 12px;
-                    margin: 10px 5px 15px 5px;
-                    text-align: center;
-                    box-shadow: 0 4px 15px rgba(0,210,211,0.3);
-                    overflow: hidden;
-                ">
-                    <h4 style="color: white; margin: 0; font-size: 16px; white-space: nowrap;">📊 Hacim Filtresi</h4>
-                </div>
-                <style>
-                .stSlider:has([key="min_volume_ratio_slider_v2"]) > div > div > div > div {
-                    background: linear-gradient(90deg, #00d2d3 0%, #54a0ff 100%) !important;
-                }
-                .stSlider:has([key="min_volume_ratio_slider_v2"]) > div > div > div > div > div {
-                    border: 3px solid #00d2d3 !important;
-                    box-shadow: 0 4px 12px rgba(0, 210, 211, 0.4) !important;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                min_volume_ratio = st.slider("", 0.0, 10.0, 1.5, 0.1, key="min_volume_ratio_slider_v2", help="Minimum hacim oranı")
-                st.markdown(f"<p style='text-align: center; color: #00d2d3; font-weight: bold; margin: 15px 5px 10px 5px;'>Seçilen: {min_volume_ratio:.1f}x</p>", unsafe_allow_html=True)
+            # Hacim filtresi
+            st.markdown("""
+            <div class="filter-card volume-slider">
+                <div class="filter-title" style="color: #00d2d3;">📈 Hacim Oranı</div>
+                <div class="filter-value" style="color: #00d2d3;">1.5x</div>
+            </div>
+            """, unsafe_allow_html=True)
+            min_volume_ratio = st.slider("", 0.0, 10.0, 1.5, 0.1, key="min_volume_ratio_slider_v3", help="Minimum hacim oranı")
+            
+            st.markdown('</div>', unsafe_allow_html=True)
             
             st.markdown("</div>", unsafe_allow_html=True)
 
