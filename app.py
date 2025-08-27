@@ -5746,105 +5746,102 @@ def show_stock_screener():
         
 
 
-        # Modern grid düzeni
-        st.markdown('<div class="scan-grid">', unsafe_allow_html=True)
+        # Modern grid düzeni - 3 sütunlu düzen
+        col1, col2, col3 = st.columns(3)
         
-        # RSI Tarama Kartı
-        st.markdown("""
-        <div class="scan-card fade-in">
-            <div class="scan-title">
-                📊 RSI Taraması
-                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Momentum Göstergesi</span>
+        with col1:
+            # RSI Tarama Kartı
+            st.markdown("""
+            <div class="scan-card fade-in">
+                <div class="scan-title">
+                    📊 RSI Taraması
+                    <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Momentum Göstergesi</span>
+                </div>
+                <div class="scan-description">
+                    Aşırı alım/satım seviyelerindeki hisseleri keşfedin. RSI göstergesi, fiyat hareketlerinin aşırı olup olmadığını belirlemenize yardımcı olur.
+                </div>
             </div>
-            <div class="scan-description">
-                Aşırı alım/satım seviyelerindeki hisseleri keşfedin. RSI göstergesi, fiyat hareketlerinin aşırı olup olmadığını belirlemenize yardımcı olur.
+            """, unsafe_allow_html=True)
+            
+            # RSI Aralık Seçimi
+            st.markdown('<div class="control-group">', unsafe_allow_html=True)
+            st.markdown('<div class="control-label">RSI Seviyesi</div>', unsafe_allow_html=True)
+            
+            rsi_preset = st.selectbox(
+                "",
+                ["Aşırı Satım (0-30)", "Düşük (30-40)", "Nötr (40-60)", "Yüksek (60-70)", "Aşırı Alım (70-100)", "Özel Aralık"],
+                key="rsi_range_select_v2",
+                help="Hangi RSI seviyesindeki hisseleri aramak istiyorsunuz?"
+            )
+            
+            rsi_ranges = {
+                "Aşırı Satım (0-30)": (0, 30),
+                "Düşük (30-40)": (30, 40),
+                "Nötr (40-60)": (40, 60),
+                "Yüksek (60-70)": (60, 70),
+                "Aşırı Alım (70-100)": (70, 100)
+            }
+            
+            if rsi_preset != "Özel Aralık":
+                rsi_min, rsi_max = rsi_ranges[rsi_preset]
+                st.markdown(f'<div class="value-display">Seçilen Aralık: {rsi_min} - {rsi_max}</div>', unsafe_allow_html=True)
+            else:
+                col_rsi1, col_rsi2 = st.columns(2)
+                with col_rsi1:
+                    rsi_min = st.number_input("Alt Limit", 0, 100, 30, key="rsi_min_custom_v2")
+                with col_rsi2:
+                    rsi_max = st.number_input("Üst Limit", 0, 100, 70, key="rsi_max_custom_v2")
+                st.markdown(f'<div class="value-display">Özel Aralık: {rsi_min} - {rsi_max}</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            if st.button("🎯 RSI Taramasını Başlat", key="rsi_scan_v2", use_container_width=True):
+                with st.spinner("🔍 RSI analizi yapılıyor..."):
+                    if rsi_preset == "Özel Aralık":
+                        results = screener.screen_by_rsi(rsi_min, rsi_max, selected_interval)
+                    else:
+                        results = screener.screen_by_rsi(*rsi_ranges[rsi_preset], selected_interval)
+                    
+                    if results:
+                        st.success(f"🎉 {len(results)} hisse bulundu!", icon="✅")
+                        df = pd.DataFrame(results)
+                        st.markdown('<div class="slide-in">', unsafe_allow_html=True)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    else:
+                        st.info("🔍 Belirtilen RSI aralığında hisse bulunamadı", icon="ℹ️")
+
+        with col2:
+            # Teknik İndikatör Taramaları
+            st.markdown("""
+            <div class="scan-card fade-in">
+                <div class="scan-title">
+                    📈 Teknik İndikatör Taraması
+                    <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Çoklu Gösterge Analizi</span>
+                </div>
+                <div class="scan-description">
+                    Birden fazla teknik indikatörü aynı anda kullanarak güçlü sinyal veren hisseleri bulun. MACD, Bollinger, VWAP gibi popüler göstergelerle kapsamlı analiz.
+                </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # RSI Aralık Seçimi
-        st.markdown('<div class="control-group">', unsafe_allow_html=True)
-        st.markdown('<div class="control-label">RSI Seviyesi</div>', unsafe_allow_html=True)
-        
-        rsi_preset = st.selectbox(
-            "",
-            ["Aşırı Satım (0-30)", "Düşük (30-40)", "Nötr (40-60)", "Yüksek (60-70)", "Aşırı Alım (70-100)", "Özel Aralık"],
-            key="rsi_range_select_v2",
-            help="Hangi RSI seviyesindeki hisseleri aramak istiyorsunuz?"
-        )
-        
-        rsi_ranges = {
-            "Aşırı Satım (0-30)": (0, 30),
-            "Düşük (30-40)": (30, 40),
-            "Nötr (40-60)": (40, 60),
-            "Yüksek (60-70)": (60, 70),
-            "Aşırı Alım (70-100)": (70, 100)
-        }
-        
-        if rsi_preset != "Özel Aralık":
-            rsi_min, rsi_max = rsi_ranges[rsi_preset]
-            st.markdown(f'<div class="value-display">Seçilen Aralık: {rsi_min} - {rsi_max}</div>', unsafe_allow_html=True)
-        else:
-            col_rsi1, col_rsi2 = st.columns(2)
-            with col_rsi1:
-                rsi_min = st.number_input("Alt Limit", 0, 100, 30, key="rsi_min_custom_v2")
-            with col_rsi2:
-                rsi_max = st.number_input("Üst Limit", 0, 100, 70, key="rsi_max_custom_v2")
-            st.markdown(f'<div class="value-display">Özel Aralık: {rsi_min} - {rsi_max}</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        if st.button("🎯 RSI Taramasını Başlat", key="rsi_scan_v2", use_container_width=True):
-            with st.spinner("🔍 RSI analizi yapılıyor..."):
-                if rsi_preset == "Özel Aralık":
-                    results = screener.screen_by_rsi(rsi_min, rsi_max, selected_interval)
-                else:
-                    results = screener.screen_by_rsi(*rsi_ranges[rsi_preset], selected_interval)
-                
-                if results:
-                    st.success(f"🎉 {len(results)} hisse bulundu!", icon="✅")
-                    df = pd.DataFrame(results)
-                    st.markdown('<div class="slide-in">', unsafe_allow_html=True)
-                    st.dataframe(df, use_container_width=True, hide_index=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                else:
-                    st.info("🔍 Belirtilen RSI aralığında hisse bulunamadı", icon="ℹ️")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Teknik İndikatör Taramaları
-        st.markdown("""
-        <div class="scan-card fade-in">
-            <div class="scan-title">
-                📈 Teknik İndikatör Taraması
-                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Çoklu Gösterge Analizi</span>
-            </div>
-            <div class="scan-description">
-                Birden fazla teknik indikatörü aynı anda kullanarak güçlü sinyal veren hisseleri bulun. MACD, Bollinger, VWAP gibi popüler göstergelerle kapsamlı analiz.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # İndikatör seçenekleri
-        technical_indicators = {
-            'MACD': '📊 MACD Sinyali',
-            'Bollinger': '🎯 Bollinger Bantları',
-            'VWAP': '📊 VWAP Kırılımı',
-            'Golden Cross': '🌟 Golden Cross',
-            'RSI Divergence': '🔄 RSI Divergence',
-            'Volume Spike': '💥 Hacim Patlaması'
-        }
-        
-        col_tech1, col_tech2 = st.columns(2)
-        with col_tech1:
+            """, unsafe_allow_html=True)
+            
+            # İndikatör seçenekleri
+            technical_indicators = {
+                'MACD': '📊 MACD Sinyali',
+                'Bollinger': '🎯 Bollinger Bantları',
+                'VWAP': '📊 VWAP Kırılımı',
+                'Golden Cross': '🌟 Golden Cross',
+                'RSI Divergence': '🔄 RSI Divergence',
+                'Volume Spike': '💥 Hacim Patlaması'
+            }
+            
             selected_tech_indicator = st.selectbox(
                 "İndikatör Türü",
                 list(technical_indicators.keys()),
                 format_func=lambda x: technical_indicators[x],
                 key="tech_indicator_select"
             )
-        
-        with col_tech2:
+            
             tech_interval = st.selectbox(
                 "Zaman Dilimi",
                 list(time_intervals.keys()),
@@ -5852,56 +5849,54 @@ def show_stock_screener():
                 index=0,
                 key="tech_interval"
             )
-        
-        if st.button("🔍 Teknik İndikatör Tara", key="tech_scan", use_container_width=True):
-            with st.spinner(f"{technical_indicators[selected_tech_indicator]} aranıyor..."):
-                try:
-                    if selected_tech_indicator == 'MACD':
-                        results = screener.screen_macd_bull_signal(tech_interval)
-                    elif selected_tech_indicator == 'Bollinger':
-                        results = screener.screen_bollinger_breakout(tech_interval)
-                    elif selected_tech_indicator == 'VWAP':
-                        results = screener.screen_vwap_bull_signal(tech_interval)
-                    elif selected_tech_indicator == 'Golden Cross':
-                        results = screener.screen_golden_cross(tech_interval)
-                    elif selected_tech_indicator == 'RSI Divergence':
-                        results = screener.screen_rsi_recovery(tech_interval)
-                    elif selected_tech_indicator == 'Volume Spike':
-                        results = screener.screen_volume_breakout(tech_interval)
-                    
-                    if results:
-                        st.success(f"✅ {len(results)} hisse bulundu!", icon="🎉")
-                        df = pd.DataFrame(results)
-                        st.dataframe(df, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("🔍 Belirtilen kriterde hisse bulunamadı", icon="ℹ️")
+            
+            if st.button("🔍 Teknik İndikatör Tara", key="tech_scan", use_container_width=True):
+                with st.spinner(f"{technical_indicators[selected_tech_indicator]} aranıyor..."):
+                    try:
+                        if selected_tech_indicator == 'MACD':
+                            results = screener.screen_macd_bull_signal(tech_interval)
+                        elif selected_tech_indicator == 'Bollinger':
+                            results = screener.screen_bollinger_breakout(tech_interval)
+                        elif selected_tech_indicator == 'VWAP':
+                            results = screener.screen_vwap_bull_signal(tech_interval)
+                        elif selected_tech_indicator == 'Golden Cross':
+                            results = screener.screen_golden_cross(tech_interval)
+                        elif selected_tech_indicator == 'RSI Divergence':
+                            results = screener.screen_rsi_recovery(tech_interval)
+                        elif selected_tech_indicator == 'Volume Spike':
+                            results = screener.screen_volume_breakout(tech_interval)
                         
-                except Exception as e:
-                    st.error(f"Tarama sırasında hata oluştu: {str(e)}")
-        
-        # AI Tahmin Taraması
-        st.markdown("""
-        <div class="scan-card fade-in">
-            <div class="scan-title">
-                🤖 AI Tahmin Taraması
-                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Yapay Zeka Destekli</span>
+                        if results:
+                            st.success(f"✅ {len(results)} hisse bulundu!", icon="🎉")
+                            df = pd.DataFrame(results)
+                            st.dataframe(df, use_container_width=True, hide_index=True)
+                        else:
+                            st.info("🔍 Belirtilen kriterde hisse bulunamadı", icon="ℹ️")
+                            
+                    except Exception as e:
+                        st.error(f"Tarama sırasında hata oluştu: {str(e)}")
+
+        with col3:
+            # AI Tahmin Taraması
+            st.markdown("""
+            <div class="scan-card fade-in">
+                <div class="scan-title">
+                    🤖 AI Tahmin Taraması
+                    <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Yapay Zeka Destekli</span>
+                </div>
+                <div class="scan-description">
+                    Yapay zeka modelleri ile gelecek fiyat tahminleri yapan hisseleri keşfedin. Ensemble, Random Forest ve Gradyan Artırma modelleri ile tahmin analizi.
+                </div>
             </div>
-            <div class="scan-description">
-                Yapay zeka modelleri ile gelecek fiyat tahminleri yapan hisseleri keşfedin. Ensemble, Random Forest ve Gradyan Artırma modelleri ile tahmin analizi.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col_ai1, col_ai2, col_ai3 = st.columns(3)
-        with col_ai1:
+            """, unsafe_allow_html=True)
+            
             ai_horizon = st.selectbox(
                 "Tahmin Süresi",
                 [3, 7, 14, 30],
                 format_func=lambda x: f"{x} gün sonra",
                 key="ai_horizon"
             )
-        
-        with col_ai2:
+            
             ai_model = st.selectbox(
                 "Model Türü",
                 ["ensemble", "random_forest", "gradient_boosting"],
@@ -5912,67 +5907,66 @@ def show_stock_screener():
                 }[x],
                 key="ai_model_screener"
             )
-        
-        with col_ai3:
+            
             min_confidence = st.slider("Minimum Güven Skoru", 0.6, 0.95, 0.8, 0.05, key="min_confidence_screener")
-        
-        if st.button("🚀 AI Tahmin Tara", key="ai_scan_screener", use_container_width=True):
-            with st.spinner("🧠 AI modelleri analiz ediyor..."):
-                try:
-                    from modules.ml_predictor import MLPredictor
-                    from modules.technical_analyzer import TechnicalAnalyzer
-                    
-                    # Tüm hisseleri tara
-                    ai_results = []
-                    for symbol in list(BIST_SYMBOLS.keys())[:25]:  # İlk 25 hisse ile sınırlı
-                        try:
-                            fetcher = BISTDataFetcher()
-                            data = fetcher.get_stock_data(symbol, period="1y", interval="1d")
-                            
-                            if data is not None and len(data) > 100:
-                                analyzer = TechnicalAnalyzer(data)
-                                indicators_to_add = ['rsi', 'ema_5', 'ema_8', 'ema_21', 'vwap', 'macd']
-                                
-                                for indicator in indicators_to_add:
-                                    try:
-                                        analyzer.add_indicator(indicator)
-                                    except:
-                                        pass
-                                
-                                ml_predictor = MLPredictor()
-                                predictions = ml_predictor.predict_price(data, analyzer.indicators, ai_horizon)
-                                
-                                if 'error' not in predictions:
-                                    current_price = data['Close'].iloc[-1]
-                                    model_predictions = [v for v in predictions.values() if isinstance(v, (int, float))]
-                                    
-                                    if model_predictions:
-                                        predicted_price = np.mean(model_predictions)
-                                        confidence = max(0.6, min(0.95, 1 - (np.std(model_predictions) / current_price)))
-                                        expected_return = ((predicted_price - current_price) / current_price) * 100
-                                        
-                                        if abs(expected_return) > 1 and confidence >= min_confidence:
-                                            ai_results.append({
-                                                'symbol': symbol,
-                                                'name': BIST_SYMBOLS[symbol],
-                                                'current_price': current_price,
-                                                'predicted_price': predicted_price,
-                                                'expected_return': expected_return,
-                                                'confidence': confidence,
-                                                'signal': 'AL' if expected_return > 0 else 'SAT'
-                                            })
-                        except:
-                            continue
-                    
-                    if ai_results:
-                        st.success(f"🎯 {len(ai_results)} AI tahmini bulundu!", icon="✨")
-                        df_ai = pd.DataFrame(ai_results)
-                        st.dataframe(df_ai, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("🔍 Yeterli güven skoruna sahip AI tahmini bulunamadı", icon="ℹ️")
+            
+            if st.button("🚀 AI Tahmin Tara", key="ai_scan_screener", use_container_width=True):
+                with st.spinner("🧠 AI modelleri analiz ediyor..."):
+                    try:
+                        from modules.ml_predictor import MLPredictor
+                        from modules.technical_analyzer import TechnicalAnalyzer
                         
-                except ImportError:
-                    st.warning("🤖 AI modülü henüz aktif değil", icon="⚠️")
+                        # Tüm hisseleri tara
+                        ai_results = []
+                        for symbol in list(BIST_SYMBOLS.keys())[:25]:  # İlk 25 hisse ile sınırlı
+                            try:
+                                fetcher = BISTDataFetcher()
+                                data = fetcher.get_stock_data(symbol, period="1y", interval="1d")
+                                
+                                if data is not None and len(data) > 100:
+                                    analyzer = TechnicalAnalyzer(data)
+                                    indicators_to_add = ['rsi', 'ema_5', 'ema_8', 'ema_21', 'vwap', 'macd']
+                                    
+                                    for indicator in indicators_to_add:
+                                        try:
+                                            analyzer.add_indicator(indicator)
+                                        except:
+                                            pass
+                                    
+                                    ml_predictor = MLPredictor()
+                                    predictions = ml_predictor.predict_price(data, analyzer.indicators, ai_horizon)
+                                    
+                                    if 'error' not in predictions:
+                                        current_price = data['Close'].iloc[-1]
+                                        model_predictions = [v for v in predictions.values() if isinstance(v, (int, float))]
+                                        
+                                        if model_predictions:
+                                            predicted_price = np.mean(model_predictions)
+                                            confidence = max(0.6, min(0.95, 1 - (np.std(model_predictions) / current_price)))
+                                            expected_return = ((predicted_price - current_price) / current_price) * 100
+                                            
+                                            if abs(expected_return) > 1 and confidence >= min_confidence:
+                                                ai_results.append({
+                                                    'symbol': symbol,
+                                                    'name': BIST_SYMBOLS[symbol],
+                                                    'current_price': current_price,
+                                                    'predicted_price': predicted_price,
+                                                    'expected_return': expected_return,
+                                                    'confidence': confidence,
+                                                    'signal': 'AL' if expected_return > 0 else 'SAT'
+                                                })
+                            except:
+                                continue
+                        
+                        if ai_results:
+                            st.success(f"🎯 {len(ai_results)} AI tahmini bulundu!", icon="✨")
+                            df_ai = pd.DataFrame(ai_results)
+                            st.dataframe(df_ai, use_container_width=True, hide_index=True)
+                        else:
+                            st.info("🔍 Yeterli güven skoruna sahip AI tahmini bulunamadı", icon="ℹ️")
+                            
+                    except ImportError:
+                        st.warning("🤖 AI modülü henüz aktif değil", icon="⚠️")
         
         # Formasyon Taraması
         st.markdown("""
