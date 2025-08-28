@@ -3577,149 +3577,7 @@ def show_technical_analysis():
                 """, unsafe_allow_html=True)
                 
                 # Hacim Artışı ve Fiyat Kırılımları - Boğa Sinyalleri Tabına Taşındı
-                st.markdown("""
-                <div style='
-                    border: 1px solid hsl(215, 28%, 20%); 
-                    border-radius: 0.75rem; 
-                    padding: 1.5rem; 
-                    margin: 1.5rem 0; 
-                    background: linear-gradient(135deg, hsl(220, 100%, 6%) 0%, hsl(215, 40%, 10%) 100%);
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-                '>
-                    <div style='
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 1rem;
-                        padding-bottom: 0.75rem;
-                        border-bottom: 1px solid hsl(215, 28%, 20%);
-                    '>
-                        <span style='
-                            font-size: 1.5rem;
-                            margin-right: 0.75rem;
-                        '>📊</span>
-                        <h3 style='
-                            color: hsl(210, 40%, 98%); 
-                            margin: 0; 
-                            font-size: 1.25rem;
-                            font-weight: 600;
-                        '>Hacim & Kırılım Taramaları</h3>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                # Hacim Artışı ve Fiyat Kırılımları - 2 Sütunlu Layout
-                scan_col1, scan_col2 = st.columns(2, gap="large")
-                
-                with scan_col1:
-                    st.markdown("""
-                    <div class="scan-card fade-in" style="animation-delay: 0.1s;">
-                        <div class="scan-title">
-                            📈 Hacim Artışı
-                            <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">İşlem Hacmi Analizi</span>
-                        </div>
-                        <div class="scan-description">
-                            Yüksek hacimle işlem gören hisseleri bulun. Anormal hacim artışları genellikle önemli fiyat hareketlerinin habercisidir.
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Hacim artışı seçimi
-                    volume_option = st.selectbox(
-                        "Seviye Seçin",
-                        ["Hafif Artış (1.2x)", "Orta Artış (1.5x)", "Güçlü Artış (2.0x)", "Çok Güçlü (3.0x)", "Patlama (5.0x)", "Özel Değer"],
-                        index=1,
-                        key="volume_option_select_bull",
-                        label_visibility="collapsed"
-                    )
-                    
-                    if volume_option == "Özel Değer":
-                        st.markdown("""
-                        <div class="control-group">
-                            <label class="control-label">Özel Değer</label>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        volume_multiplier = st.slider("Hacim Çarpanı", 1.0, 10.0, 1.5, 0.1, key="volume_mult_custom_bull")
-                    else:
-                        volume_values = {
-                            "Hafif Artış (1.2x)": 1.2,
-                            "Orta Artış (1.5x)": 1.5,
-                            "Güçlü Artış (2.0x)": 2.0,
-                            "Çok Güçlü (3.0x)": 3.0,
-                            "Patlama (5.0x)": 5.0
-                        }
-                        volume_multiplier = volume_values[volume_option]
-                        
-                        # Seçilen değeri göster
-                        st.markdown(f'<div class="value-display">Seçilen: {volume_multiplier}x</div>', unsafe_allow_html=True)
-                    
-                    if st.button("🔥 Hacim Taraması Başlat", key="volume_scan_bull", use_container_width=True):
-                        with st.spinner("📊 Hacim patlamaları aranıyor..."):
-                            results = screener.screen_by_volume(volume_multiplier, selected_interval)
-                            if results:
-                                st.success(f"🎉 {len(results)} hisse bulundu!", icon="🔥")
-                                df = pd.DataFrame(results)
-                                st.markdown('<div class="slide-in">', unsafe_allow_html=True)
-                                st.dataframe(df, use_container_width=True, hide_index=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
-                            else:
-                                st.info("📊 Belirtilen hacim çarpanında hisse bulunamadı", icon="📊")
-                
-                with scan_col2:
-                    st.markdown("""
-                    <div class="scan-card fade-in" style="animation-delay: 0.2s;">
-                        <div class="scan-title">
-                            ⚡ Fiyat Kırılımları
-                            <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Teknik Seviyeler</span>
-                        </div>
-                        <div class="scan-description">
-                            Direnç ve destek seviyelerini kıran hisseler. Kırılımlar genellikle trend değişimlerinin sinyalidir.
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Geriye bakış süresi seçimi
-                    if "lookback_option_select_bull" not in st.session_state:
-                        st.session_state.lookback_option_select_bull = "Orta Vade (20 gün)"
-                    
-                    # Seçilen değeri hesapla
-                    lookback_values = {
-                        "Kısa Vade (10 gün)": 10,
-                        "Orta Vade (20 gün)": 20,
-                        "Uzun Vade (30 gün)": 30,
-                        "Çok Uzun (50 gün)": 50,
-                        "Özel Süre": "Özel"
-                    }
-                    
-                    lookback_option = st.selectbox(
-                        "Süre Seçin",
-                        ["Kısa Vade (10 gün)", "Orta Vade (20 gün)", "Uzun Vade (30 gün)", "Çok Uzun (50 gün)", "Özel Süre"],
-                        key="lookback_option_select_bull",
-                        label_visibility="collapsed"
-                    )
-                    
-                    if lookback_option == "Özel Süre":
-                        st.markdown("""
-                        <div class="control-group">
-                            <label class="control-label">Özel Gün Sayısı</label>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        lookback = st.slider("Gün Sayısı", 5, 100, 20, key="lookback_custom_bull")
-                    else:
-                        lookback = lookback_values[lookback_option]
-                        st.markdown(f'<div class="value-display">Seçilen: {lookback} gün</div>', unsafe_allow_html=True)
-                    
-                    if st.button("💥 Kırılım Taraması Başlat", key="breakout_scan_bull", use_container_width=True):
-                        with st.spinner("⚡ Fiyat kırılımları analiz ediliyor..."):
-                            results = screener.screen_by_price_breakout(lookback, selected_interval)
-                            if results:
-                                st.success(f"🎉 {len(results)} kırılım bulundu!", icon="💥")
-                                df = pd.DataFrame(results)
-                                st.markdown('<div class="slide-in">', unsafe_allow_html=True)
-                                st.dataframe(df, use_container_width=True, hide_index=True)
-                                st.markdown('</div>', unsafe_allow_html=True)
-                            else:
-                                st.info("⚡ Belirtilen sürede kırılım bulunamadı", icon="⚡")
-                
-                st.markdown("</div>", unsafe_allow_html=True)
+                # Hacim & Kırılım Taramaları bölümü Teknik Taramalar sayfasına taşındı
                 
                 # Ayı Sinyalleri - Modern ve Kompakt Tasarım
                 st.markdown("""
@@ -5877,129 +5735,35 @@ def show_stock_screener():
                         st.error(f"Tarama sırasında hata oluştu: {str(e)}")
 
         with col3:
-            # AI Tahmin Taraması
+            # Formasyon Taraması
             st.markdown("""
             <div class="scan-card fade-in">
                 <div class="scan-title">
-                    🤖 AI Tahmin Taraması
-                    <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Yapay Zeka Destekli</span>
+                    🕯️ Formasyon Taraması
+                    <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Candlestick Patternler</span>
                 </div>
                 <div class="scan-description">
-                    Yapay zeka modelleri ile gelecek fiyat tahminleri yapan hisseleri keşfedin. Ensemble, Random Forest ve Gradyan Artırma modelleri ile tahmin analizi.
+                    Klasik candlestick formasyonlarını tespit ederek trend dönüşümlerini önceden yakalayın. Doji, Hammer, Engulfing gibi güçlü sinyalleri bulun.
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-            ai_horizon = st.selectbox(
-                "Tahmin Süresi",
-                [3, 7, 14, 30],
-                format_func=lambda x: f"{x} gün sonra",
-                key="ai_horizon"
-            )
+            pattern_types = {
+                'doji': '⭐ Doji',
+                'hammer': '🔨 Hammer',
+                'bullish_engulfing': '🟢 Bullish Engulfing',
+                'bearish_engulfing': '🔴 Bearish Engulfing',
+                'morning_star': '🌅 Morning Star',
+                'evening_star': '🌆 Evening Star'
+            }
             
-            ai_model = st.selectbox(
-                "Model Türü",
-                ["ensemble", "random_forest", "gradient_boosting"],
-                format_func=lambda x: {
-                    "ensemble": "🎯 Ensemble",
-                    "random_forest": "🌲 Random Forest",
-                    "gradient_boosting": "⚡ Gradyan Artırma"
-                }[x],
-                key="ai_model_screener"
-            )
-            
-            min_confidence = st.slider("Minimum Güven Skoru", 0.6, 0.95, 0.8, 0.05, key="min_confidence_screener")
-            
-            if st.button("🚀 AI Tahmin Tara", key="ai_scan_screener", use_container_width=True):
-                with st.spinner("🧠 AI modelleri analiz ediyor..."):
-                    try:
-                        from modules.ml_predictor import MLPredictor
-                        from modules.technical_analyzer import TechnicalAnalyzer
-                        
-                        # Tüm hisseleri tara
-                        ai_results = []
-                        for symbol in list(BIST_SYMBOLS.keys())[:25]:  # İlk 25 hisse ile sınırlı
-                            try:
-                                fetcher = BISTDataFetcher()
-                                data = fetcher.get_stock_data(symbol, period="1y", interval="1d")
-                                
-                                if data is not None and len(data) > 100:
-                                    analyzer = TechnicalAnalyzer(data)
-                                    indicators_to_add = ['rsi', 'ema_5', 'ema_8', 'ema_21', 'vwap', 'macd']
-                                    
-                                    for indicator in indicators_to_add:
-                                        try:
-                                            analyzer.add_indicator(indicator)
-                                        except:
-                                            pass
-                                    
-                                    ml_predictor = MLPredictor()
-                                    predictions = ml_predictor.predict_price(data, analyzer.indicators, ai_horizon)
-                                    
-                                    if 'error' not in predictions:
-                                        current_price = data['Close'].iloc[-1]
-                                        model_predictions = [v for v in predictions.values() if isinstance(v, (int, float))]
-                                        
-                                        if model_predictions:
-                                            predicted_price = np.mean(model_predictions)
-                                            confidence = max(0.6, min(0.95, 1 - (np.std(model_predictions) / current_price)))
-                                            expected_return = ((predicted_price - current_price) / current_price) * 100
-                                            
-                                            if abs(expected_return) > 1 and confidence >= min_confidence:
-                                                ai_results.append({
-                                                    'symbol': symbol,
-                                                    'name': BIST_SYMBOLS[symbol],
-                                                    'current_price': current_price,
-                                                    'predicted_price': predicted_price,
-                                                    'expected_return': expected_return,
-                                                    'confidence': confidence,
-                                                    'signal': 'AL' if expected_return > 0 else 'SAT'
-                                                })
-                            except:
-                                continue
-                        
-                        if ai_results:
-                            st.success(f"🎯 {len(ai_results)} AI tahmini bulundu!", icon="✨")
-                            df_ai = pd.DataFrame(ai_results)
-                            st.dataframe(df_ai, use_container_width=True, hide_index=True)
-                        else:
-                            st.info("🔍 Yeterli güven skoruna sahip AI tahmini bulunamadı", icon="ℹ️")
-                            
-                    except ImportError:
-                        st.warning("🤖 AI modülü henüz aktif değil", icon="⚠️")
-        
-        # Formasyon Taraması
-        st.markdown("""
-        <div class="scan-card fade-in">
-            <div class="scan-title">
-                🕯️ Formasyon Taraması
-                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Candlestick Patternler</span>
-            </div>
-            <div class="scan-description">
-                Klasik candlestick formasyonlarını tespit ederek trend dönüşümlerini önceden yakalayın. Doji, Hammer, Engulfing gibi güçlü sinyalleri bulun.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        pattern_types = {
-            'doji': '⭐ Doji',
-            'hammer': '🔨 Hammer',
-            'bullish_engulfing': '🟢 Bullish Engulfing',
-            'bearish_engulfing': '🔴 Bearish Engulfing',
-            'morning_star': '🌅 Morning Star',
-            'evening_star': '🌆 Evening Star'
-        }
-        
-        col_pat1, col_pat2 = st.columns(2)
-        with col_pat1:
             selected_pattern = st.selectbox(
                 "Formasyon Türü",
                 list(pattern_types.keys()),
                 format_func=lambda x: pattern_types[x],
                 key="pattern_select_screener"
             )
-        
-        with col_pat2:
+            
             pattern_interval = st.selectbox(
                 "Zaman Dilimi",
                 list(time_intervals.keys()),
@@ -6007,306 +5771,55 @@ def show_stock_screener():
                 index=4,  # 1d
                 key="pattern_interval_screener"
             )
-        
-        pattern_lookback = st.slider("Arama Periyodu (gün)", 1, 30, 5, key="pattern_lookback_screener")
-        
-        if st.button("🔍 Formasyon Tara", key="pattern_scan_screener", use_container_width=True):
-            with st.spinner("🕯️ Candlestick formasyonları aranıyor..."):
-                try:
-                    from modules.pattern_recognition import PatternRecognition
-                    
-                    pattern_results = []
-                    
-                    for symbol in list(BIST_SYMBOLS.keys())[:40]:  # İlk 40 hisse
-                        try:
-                            fetcher = BISTDataFetcher()
-                            data = fetcher.get_stock_data(symbol, period="6mo", interval=pattern_interval)
-                            
-                            if data is not None and len(data) > 20:
-                                pattern_analyzer = PatternRecognition(data)
-                                latest_patterns = pattern_analyzer.get_latest_patterns(lookback=pattern_lookback)
-                                
-                                if selected_pattern in latest_patterns and latest_patterns[selected_pattern] is not None:
-                                    pattern_date = latest_patterns[selected_pattern]
-                                    current_price = data['Close'].iloc[-1]
-                                    
-                                    pattern_results.append({
-                                        'symbol': symbol,
-                                        'name': BIST_SYMBOLS[symbol],
-                                        'current_price': current_price,
-                                        'pattern': pattern_types[selected_pattern],
-                                        'date': pattern_date.strftime('%Y-%m-%d'),
-                                        'days_ago': (datetime.now() - pattern_date).days
-                                    })
-                        except:
-                            continue
-                    
-                    if pattern_results:
-                        st.success(f"🎭 {len(pattern_results)} formasyon bulundu!", icon="🎪")
-                        df_pattern = pd.DataFrame(pattern_results)
-                        st.dataframe(df_pattern, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("🔍 Belirtilen formasyon bulunamadı", icon="ℹ️")
+            
+            pattern_lookback = st.slider("Arama Periyodu (gün)", 1, 30, 5, key="pattern_lookback_screener")
+            
+            if st.button("🔍 Formasyon Tara", key="pattern_scan_screener", use_container_width=True):
+                with st.spinner("🕯️ Candlestick formasyonları aranıyor..."):
+                    try:
+                        from modules.pattern_recognition import PatternRecognition
                         
-                except ImportError:
-                    st.warning("🕯️ Formasyon modülü henüz aktif değil", icon="⚠️")
-        
-        # News Sentiment Taraması
-        st.markdown("""
-        <div class="scan-card fade-in">
-            <div class="scan-title">
-                📰 Haber Sentiment
-                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Medya Analizi</span>
-            </div>
-            <div class="scan-description">
-                Finansal haberlerin hisse senetleri üzerindeki etkisini analiz edin. Pozitif/negatif sentiment taraması ile piyasa duygusunu ölçün.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Sentiment Ayarları
-        sentiment_types = {
-            'all': 'Tüm Haberler',
-            'positive': 'Pozitif Haberler',
-            'negative': 'Negatif Haberler',
-            'neutral': 'Nötr Haberler'
-        }
-        
-        col_sent1, col_sent2 = st.columns(2)
-        with col_sent1:
-            selected_sentiment = st.selectbox(
-                "Sentiment Türü",
-                list(sentiment_types.keys()),
-                format_func=lambda x: sentiment_types[x],
-                key="sentiment_select"
-            )
-        
-        with col_sent2:
-            sentiment_days = st.slider("Arama Günü", 1, 7, 3, key="sentiment_days")
-        
-        if st.button("📊 Sentiment Analizi", key="sentiment_scan", use_container_width=True):
-            with st.spinner("📰 Haber sentiment analizi yapılıyor..."):
-                try:
-                    from modules.sentiment_analyzer import SentimentAnalyzer
-                    
-                    sentiment_analyzer = SentimentAnalyzer()
-                    sentiment_results = []
-                    
-                    for symbol in list(BIST_SYMBOLS.keys())[:30]:  # İlk 30 hisse
-                        try:
-                            news_data = sentiment_analyzer.get_stock_news(symbol, limit=sentiment_days * 3)
-                            
-                            if news_data and 'articles' in news_data:
-                                sentiments = []
-                                for article in news_data['articles'][:sentiment_days]:
-                                    sentiment = sentiment_analyzer.analyze_sentiment(article.get('title', ''))
-                                    sentiments.append(sentiment)
+                        pattern_results = []
+                        
+                        for symbol in list(BIST_SYMBOLS.keys())[:40]:  # İlk 40 hisse
+                            try:
+                                fetcher = BISTDataFetcher()
+                                data = fetcher.get_stock_data(symbol, period="6mo", interval=pattern_interval)
                                 
-                                if sentiments:
-                                    avg_sentiment = sum(sentiments) / len(sentiments)
+                                if data is not None and len(data) > 20:
+                                    pattern_analyzer = PatternRecognition(data)
+                                    latest_patterns = pattern_analyzer.get_latest_patterns(lookback=pattern_lookback)
                                     
-                                    # Filtreleme
-                                    if selected_sentiment == 'all' or \
-                                       (selected_sentiment == 'positive' and avg_sentiment > 0.1) or \
-                                       (selected_sentiment == 'negative' and avg_sentiment < -0.1) or \
-                                       (selected_sentiment == 'neutral' and -0.1 <= avg_sentiment <= 0.1):
+                                    if selected_pattern in latest_patterns and latest_patterns[selected_pattern] is not None:
+                                        pattern_date = latest_patterns[selected_pattern]
+                                        current_price = data['Close'].iloc[-1]
                                         
-                                        sentiment_results.append({
-                                            'symbol': symbol,
-                                            'name': BIST_SYMBOLS[symbol],
-                                            'sentiment_score': f"{avg_sentiment:.3f}",
-                                            'sentiment': 'Pozitif' if avg_sentiment > 0.1 else 'Negatif' if avg_sentiment < -0.1 else 'Nötr',
-                                            'news_count': len(sentiments),
-                                            'last_update': datetime.now().strftime('%Y-%m-%d')
-                                        })
-                        except:
-                            continue
-                    
-                    if sentiment_results:
-                        # Sentiment'e göre sırala
-                        sentiment_results.sort(key=lambda x: float(x['sentiment_score']), reverse=True)
-                        st.success(f"📰 {len(sentiment_results)} sentiment analizi hazır!", icon="✅")
-                        df_sentiment = pd.DataFrame(sentiment_results)
-                        st.dataframe(df_sentiment, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("🔍 Belirtilen kriterlerde haber bulunamadı", icon="ℹ️")
-                        
-                except ImportError:
-                    st.warning("📰 Sentiment analizi modülü bulunamadı. Lütfen gerekli bağımlılıkları kontrol edin.")
-                except Exception as e:
-                    st.error(f"🔍 Sentiment analizi hatası: {str(e)}")
-        
-        # AI Tahmin Taraması
-        st.markdown("""
-        <div class="scan-card fade-in">
-            <div class="scan-title">
-                🤖 AI Tahmin Taraması
-                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Yapay Zeka Destekli</span>
-            </div>
-            <div class="scan-description">
-                Yapay zeka modelleri ile gelecek fiyat tahminleri yapan hisseleri keşfedin. Ensemble, Random Forest ve Gradyan Artırma modelleri ile tahmin analizi.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col_ai1, col_ai2, col_ai3 = st.columns(3)
-        with col_ai1:
-            ai_horizon = st.selectbox(
-                "Tahmin Süresi",
-                [3, 7, 14],
-                format_func=lambda x: f"{x} gün sonra",
-                key="ai_horizon_screener"
-            )
-        
-        with col_ai2:
-            ai_model = st.selectbox(
-                "Model Türü",
-                ["ensemble", "random_forest", "gradient_boosting"],
-                format_func=lambda x: {
-                    "ensemble": "🎯 Ensemble",
-                    "random_forest": "🌲 Random Forest",
-                    "gradient_boosting": "⚡ Gradyan Artırma"
-                }[x],
-                key="ai_model"
-            )
-        
-        with col_ai3:
-            min_confidence = st.slider("Minimum Güven Skoru", 0.6, 0.95, 0.8, 0.05, key="min_confidence")
-        
-        if st.button("🚀 AI Tahmin Tara", key="ai_scan", use_container_width=True):
-            with st.spinner("🧠 AI modelleri analiz ediyor..."):
-                try:
-                    from modules.ml_predictor import MLPredictor
-                    
-                    # Tüm hisseleri tara
-                    ai_results = []
-                    for symbol in list(BIST_SYMBOLS.keys())[:20]:  # İlk 20 hisse ile sınırlı
-                        try:
-                            fetcher = BISTDataFetcher()
-                            data = fetcher.get_stock_data(symbol, period="1y", interval="1d")
-                            
-                            if data is not None and len(data) > 100:
-                                analyzer = TechnicalAnalyzer(data)
-                                indicators_to_add = ['rsi', 'ema_5', 'ema_8', 'ema_21', 'vwap', 'macd']
-                                
-                                for indicator in indicators_to_add:
-                                    try:
-                                        analyzer.add_indicator(indicator)
-                                    except:
-                                        pass
-                                
-                                ml_predictor = MLPredictor()
-                                predictions = ml_predictor.predict_price(data, analyzer.indicators, ai_horizon)
-                                
-                                if 'error' not in predictions:
-                                    current_price = data['Close'].iloc[-1]
-                                    predicted_price = np.mean([v for v in predictions.values() if isinstance(v, (int, float))])
-                                    confidence = 0.85  # Örnek güven skoru
-                                    
-                                    if abs(predicted_price - current_price) / current_price > 0.02 and confidence > min_confidence:
-                                        ai_results.append({
+                                        pattern_results.append({
                                             'symbol': symbol,
                                             'name': BIST_SYMBOLS[symbol],
                                             'current_price': current_price,
-                                            'predicted_price': predicted_price,
-                                            'expected_return': ((predicted_price - current_price) / current_price) * 100,
-                                            'confidence': confidence,
-                                            'model': ai_model
+                                            'pattern': pattern_types[selected_pattern],
+                                            'date': pattern_date.strftime('%Y-%m-%d'),
+                                            'days_ago': (datetime.now() - pattern_date).days
                                         })
-                        except:
-                            continue
-                    
-                    if ai_results:
-                        st.success(f"🎯 {len(ai_results)} AI tahmini bulundu!", icon="✨")
-                        df_ai = pd.DataFrame(ai_results)
-                        st.dataframe(df_ai, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("🔍 Yeterli güven skoruna sahip AI tahmini bulunamadı", icon="ℹ️")
+                            except:
+                                continue
                         
-                except ImportError:
-                    st.warning("🤖 AI modülü henüz aktif değil", icon="⚠️")
-        
-        # Formasyon Taraması
-        st.markdown("""
-        <div class="scan-card fade-in">
-            <div class="scan-title">
-                🕯️ Formasyon Taraması
-                <span style="font-size: 0.8em; color: #6c757d; margin-left: 10px;">Candlestick Patternler</span>
-            </div>
-            <div class="scan-description">
-                Klasik candlestick formasyonlarını tespit ederek trend dönüşümlerini önceden yakalayın. Doji, Hammer, Engulfing gibi güçlü sinyalleri bulun.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        pattern_types = {
-            'doji': '⭐ Doji',
-            'hammer': '🔨 Hammer',
-            'bullish_engulfing': '🟢 Bullish Engulfing',
-            'bearish_engulfing': '🔴 Bearish Engulfing',
-            'morning_star': '🌅 Morning Star',
-            'evening_star': '🌆 Evening Star'
-        }
-        
-        col_pat1, col_pat2 = st.columns(2)
-        with col_pat1:
-            selected_pattern = st.selectbox(
-                "Formasyon Türü",
-                list(pattern_types.keys()),
-                format_func=lambda x: pattern_types[x],
-                key="pattern_select"
-            )
-        
-        with col_pat2:
-            pattern_interval = st.selectbox(
-                "Zaman Dilimi",
-                list(time_intervals.keys()),
-                format_func=lambda x: time_intervals[x],
-                index=4,  # 1d
-                key="pattern_interval"
-            )
-        
-        pattern_lookback = st.slider("Arama Periyodu (gün)", 1, 30, 5, key="pattern_lookback")
-        
-        if st.button("🔍 Formasyon Tara", key="pattern_scan", use_container_width=True):
-            with st.spinner("🕯️ Candlestick formasyonları aranıyor..."):
-                try:
-                    pattern_results = []
-                    
-                    for symbol in list(BIST_SYMBOLS.keys())[:30]:  # İlk 30 hisse
-                        try:
-                            fetcher = BISTDataFetcher()
-                            data = fetcher.get_stock_data(symbol, period="6mo", interval=pattern_interval)
+                        if pattern_results:
+                            st.success(f"🎭 {len(pattern_results)} formasyon bulundu!", icon="🎪")
+                            df_pattern = pd.DataFrame(pattern_results)
+                            st.dataframe(df_pattern, use_container_width=True, hide_index=True)
+                        else:
+                            st.info("🔍 Belirtilen formasyon bulunamadı", icon="ℹ️")
                             
-                            if data is not None and len(data) > 20:
-                                from modules.pattern_recognition import PatternRecognition
-                                pattern_analyzer = PatternRecognition(data)
-                                latest_patterns = pattern_analyzer.get_latest_patterns(lookback=pattern_lookback)
-                                
-                                if selected_pattern in latest_patterns and latest_patterns[selected_pattern] is not None:
-                                    pattern_date = latest_patterns[selected_pattern]
-                                    current_price = data['Close'].iloc[-1]
-                                    
-                                    pattern_results.append({
-                                        'symbol': symbol,
-                                        'name': BIST_SYMBOLS[symbol],
-                                        'current_price': current_price,
-                                        'pattern': pattern_types[selected_pattern],
-                                        'date': pattern_date.strftime('%Y-%m-%d'),
-                                        'days_ago': (datetime.now() - pattern_date).days
-                                    })
-                        except:
-                            continue
-                    
-                    if pattern_results:
-                        st.success(f"🎭 {len(pattern_results)} formasyon bulundu!", icon="🎪")
-                        df_pattern = pd.DataFrame(pattern_results)
-                        st.dataframe(df_pattern, use_container_width=True, hide_index=True)
-                    else:
-                        st.info("🔍 Belirtilen formasyon bulunamadı", icon="ℹ️")
-                        
-                except ImportError:
-                    st.warning("🕯️ Formasyon modülü henüz aktif değil", icon="⚠️")
+                    except ImportError:
+                        st.warning("🕯️ Formasyon modülü henüz aktif değil", icon="⚠️")
+        
+        # News Sentiment section removed - moved to dedicated news analysis page
+        
+        # AI Prediction section removed - moved to dedicated AI analysis page
+        
+        # Duplicate Pattern Scan section removed
     
     
     with tab4:
