@@ -1,5 +1,16 @@
 # Runbook
 
+## ADR-0010 hesaplama sürümü geçişi
+
+Accepted VWEMA/Supertrend düzeltmesinden önce üretilen hesap cache'leri yeni
+sonuçlarla karıştırılmaz; bu göstergeleri kullanan süreç/cache normal sürüm
+geçişinde yenilenir. Eski bu özelliklerle eğitilen optional model yeniden eğitim
+ister; format1 indikatör semantiğini otomatik tespit etmez. Bu uygulama çalışması
+kullanıcı servisini yeniden başlatmadı veya artifact'ını açmadı/migrate etmedi.
+Rollback helper/kart/test dilimini birlikte geri alır; VST-01–03 tekrar açılır.
+[Karar](../50-decisions/ADR-0010.md) ve
+[kanıt](../20-execution/2026-11-06-adr0010-implementation.md).
+
 ## Prerequisites
 
 - Python 3 ve `venv`/`pip`.

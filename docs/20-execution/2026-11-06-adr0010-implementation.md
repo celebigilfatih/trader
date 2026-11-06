@@ -49,11 +49,11 @@ kalite, backlog/kapanış, CHANGELOG ve Boot handoff.
 **Interfaces:** Task1'in same-index VWEMA Series'i; scalar çıkarma ve altıncı
 kartın gerçek AST bloğu kontrollü Streamlit AppTest içinde çalıştırılır.
 
-- [ ] Mevcut kartı actual source assignment/with bloğuyla render et: None/NaN/
+- [x] Mevcut kartı actual source assignment/with bloğuyla render et: None/NaN/
   ±inf, boş/missing seri, gerçek all-zero-volume helper ve finite Üzeri/Altı.
   Eksik değerlerde RED —/Hesaplanamadı; tüm app/browser diye sunulmaz.
-- [ ] Yalnız VWEMA5 okuma/default ve card guard'ını düzelt; aynı AppTest GREEN.
-- [ ] Core/API/AppTest ve tam backend dış socket engelli; uygun mutantlar,
+- [x] Yalnız VWEMA5 okuma/default ve card guard'ını düzelt; aynı AppTest GREEN.
+- [x] Core/API/AppTest ve tam backend dış socket engelli; uygun mutantlar,
   compile/CDSK yapı/link/ADR/diff. Mevcut geçerli13 hesaplama testi aynı kalır.
 - [ ] Bağımsız bütün değişiklik incelemesi; bulguların gereken TDD düzeltmesi;
   belgeler/Boot güncellemesi ve son commit/push/remote SHA/clean tree doğrulaması.
@@ -67,3 +67,27 @@ API'de ilk39 sabit100 sonrası130/hacim1000 sonucu VWEMA5=21700/167,
 VWEMA20=87300/673; all-zero hacim null, Supertrend9/10 null ve11 barda94.
 Yalnız helper'ların empty/tek bar sözleşmesi bu pakettedir; mevcut genel
 sinyal/pozisyon okuyucularının en az iki fiyat gereksinimi genişletilmedi.
+
+Task2: dört actual-card AppTest RED7 assertion failure/0 error (None render
+hatası assertion olarak raporlanır), dar guard sonrası4/4 (2.226 s).
+Eksik/empty/missing key/NaN/±inf ve gerçek all-zero VWEMA akışı —/Hesaplanamadı;
+finite fiyat/Üzeri/Altı renkleri korunur. Tam **412 test /32.881 s /OK**,
+dış socket engelli, Windows asyncio loopback serbest. Önceki geçerli13 test aynı.
+
+15 bellek içi geçerli mutant: hacmi yok sayma, zero-decay atlama, sahte sıfır,
+gelecek seed, alpha/önceki mass, zero bar fiyatına atlama; Supertrend erken seed,
+warmup yönü/bfill, H<L/overflow denetimi; sıfır period, bool/negatif fiyat.
+Hepsi assertion failure/0 error ile yakalandı. İlk harness anchor uyumsuzluğu
+mutant sonucu sayılmadı; diskte üretim mutasyonu yapılmadı.
+
+Operasyon sınırı: testler yeni süreçlerde çalıştı; kullanıcı cache/servisi ve
+artifact'ı değiştirilmedi. Optional eski bu özellikli modeller yeniden eğitim
+ister; format1/CI/config/dependency aynı. Frontend production build/browser,
+canlı provider ve uzak CI bu backend/legacy diliminde yeniden koşulmadı.
+Upstream CDSK validator mevcut iki bilinen konumda yok; yapı kontrolü onun
+yerine geçen bir başarı olarak sunulmaz. VST-01–03 dar dilimi kapandı; genel M1,
+FVG/OB aktif bağlantıları, legacy StockScreener ve finansal etkinlik açık.
+
+Restore hedef53/53 (4.287 s).67 Python kaynağı compile,39 zorunlu CDSK dosyası,
+11 Boot bölümü,10 Accepted ADR ve91 değişen-belge yerel bağlantısı doğrulandı;
+git diff --check temiz. Bunlar upstream validator çalıştırıldığı anlamına gelmez.

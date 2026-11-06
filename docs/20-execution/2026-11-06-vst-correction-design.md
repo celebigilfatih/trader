@@ -1,7 +1,8 @@
 # VST-01–03 düzeltme sözleşmesi tasarımı
 
-- **Status:** Tasarım tamamlandı; [ADR-0010](../50-decisions/ADR-0010.md) Proposed,
-  özel A paketi kararı bekleniyor. Üretim/test/config değiştirilmedi.
+- **Status:** Tarihsel tasarım kaydı. O aşamada ADR-0010 Proposed idi;
+  sonraki açık onayla Accepted ve [uygulandı](2026-11-06-adr0010-implementation.md).
+  Aşağıdaki gözlem ve doğrulamalar tasarım aşamasının tarihsel kanıtıdır.
 - **Başlangıç:** `698461b`, `codex/m1-pattern-signal-tests`, temiz çalışma ağacı.
 - **Amaç:** Önceki test diliminde bulunan üç açıklık için belirsiz formül ve
   hazır olma seçimlerini incelemeye/onaya hazır hale getirmek.

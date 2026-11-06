@@ -20,10 +20,13 @@
 
 ## Invariants and Ownership
 
-VWEMA/Supertrend için [ADR-0010](../50-decisions/ADR-0010.md) **Proposed**:
+VWEMA/Supertrend için [ADR-0010](../50-decisions/ADR-0010.md) **Accepted ve uygulandı**:
 ilk pozitif hacimden başlayan VWEMA; Supertrend fiyat/yön çiftinin aynı
-hazır olma sınırı; NaN/invalid/empty ve eksik kart sözleşmesi. Bu öneri henüz
-mevcut invariant değildir. Yeni alan/kalıcı migration/artifact formatı seçilmez.
+hazır olma sınırı; NaN/invalid/empty ve eksik kart sözleşmesi. Konfigürasyon ve
+ilgili fiyat/hacim validasyonu kısa/boş dönüşten önce; hata atomik ValueError'dur.
+Yeni alan/kalıcı migration/artifact formatı yoktur. Bu özelliklerle eski
+matematikte eğitilen optional modeller yeniden eğitim ister; format1 bunu otomatik
+tespit etmez. Kullanıcı artifact'ı açılmadı/migrate edilmedi.
 
 - `BISTDataFetcher` dış veriyi OHLCV sözleşmesine normalize eder ve en az 15
   kayıt bekler.

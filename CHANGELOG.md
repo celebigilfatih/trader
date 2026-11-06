@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — Accepted ADR-0010 uygulaması
+
+- Açık A onayıyla nedensel, hacim ağırlıklı VWEMA; leading/all-zero ve zero-decay
+  sözleşmesi, Supertrend sabit hazır indeks p ve strict/atomik girdi uygulandı.
+- VWEMA5 kartı None/NaN/sonsuz/boş değerde nötr —/Hesaplanamadı gösterir.
+  API alanları/config/uzun seri Supertrend/format1 aynı; kullanıcı artifact'ı değişmedi.
+- 19 core+3 gerçek API+4 actual-card AppTest eklendi; RED→GREEN, tam412 test
+  dış socket engelli /32.881 s /OK.15 bellek içi mutant assertion failure/0 error.
+- VST-01–03 dar dilimi kapandı; M1 ve FVG/OB/legacy tarayıcı bağlantıları açık.
+  Mimari/kalite/kapanış ve Boot1.57 güncellendi; kapsam ve kanıt execution kaydında.
+
 ### 2026-11-06 — VST-01–03 düzeltme sözleşmesi Proposed
 
 - ADR-0010 A paketi: geçmişe bağlı VWEMA hacim ağırlığı/ilk pozitif seed;

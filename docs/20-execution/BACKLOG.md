@@ -2,17 +2,15 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
-VST-01–03 dar sözleşme tasarımı tamamlandı: [ADR-0010](../50-decisions/ADR-0010.md)
-**Proposed**, özel A paketi onayı bekleniyor. VWEMA ilk pozitif hacim seed'i ve
-ayrı üssel fiyat*hacim/hacim durumları; Supertrend n<=p'de iki NaN alan,
-default ilk hazır indeks10; strict girdi/atomik hata ve eksik VWEMA kartı
-—/Hesaplanamadı. Mevcut ad/config/uzun seri Supertrend korunur; VWEMA sayısal
-çıktısı bilinçli değişir. Model optional özellik/cache/reader etkileri
-[tasarım/kabul kaydındadır](2026-11-06-vst-correction-design.md).
-Mevcut27 hedef test0.256 s'de dış socket engelli geçti; karşı örnekler yeniden
-gözlendi. Üretim/test/CI/config/Accepted ADR değiştirilmedi; VST/M1 açık.
-Sonraki iş A özel kararından sonra dar TDD uygulaması; genel devam isteği
-henüz sunulmamış bu matematik paketinin önceden onayı sayılmadı.
+[ADR-0010](../50-decisions/ADR-0010.md) A paketi açık onayla Accepted ve uygulandı.
+VST-01–03 dar dilimi kapandı: nedensel hacim ağırlıklı VWEMA, Supertrend n<=p'de
+iki eksik alan/default ilk hazır indeks10, strict girdi/atomik ValueError ve
+eksik VWEMA kartında nötr —/Hesaplanamadı. Yeni19 core+3 API+4 kontrollü kart testi;
+tam412/412 dış socket engelli (32.881 s), önceki geçerli13 test korunur.
+[Uygulama/kanıt](2026-11-06-adr0010-implementation.md). Optional eski model
+yeniden eğitim/cache yenileme sınırları ADR'dedir; kullanıcı artifact'ı değişmedi.
+Sıradaki iş FVG/OB aktif okuyucu bağlantıları ve legacy StockScreener zincirleri.
+Genel M1 In Progress; canonical/finansal etkinlik doğrulanmış değildir.
 
 ### Önceki VWEMA/Supertrend test dilimi
 
@@ -187,7 +185,7 @@ RSS bütçe/tanı ve legacy kaynak görünürlüğü uygulama kaydı:
 - **CDSK:** 0.1.0 belge/çalışma iskeleti kurulu; M0 tamamlandı olarak kayıtlı.
   Yapısal validator'ın geçmesi, tüm ürün veya operasyon gereksinimlerinin
   tamamlandığı anlamına gelmez. Constitution hâlâ Draft ve TBD alanları var.
-- **M1:** Kısmi; 386 backend testi (VWEMA/Supertrend/Stochastic API/momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
+- **M1:** Kısmi; 412 backend testi (VWEMA/Supertrend/Stochastic API/momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
   dış ağ engelli geçti. Cockpit seti 10/10 deterministik senaryodur. İlk dört
   işin ve onaylı RSS politikasının dar dilimleri uygulandı; BL-001 ve genel kapanış kriterleri açık.
 - **M2:** Yerel demo auth, watchlist ve paper portföy temeli var; gerçek davet

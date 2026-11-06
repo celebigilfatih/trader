@@ -18,16 +18,16 @@
   hata görünürlüğü.
 - **Risks:** Mevcut UI monoliti ve dış servislerin değişken yanıtları.
 - **Status:** In Progress
-- **Evidence (2026-11-06):** 386 backend testi dış socket engelli geçti;
+- **Evidence (2026-11-06):** 412 backend testi dış socket engelli geçti;
   momentum/patern/sinyal/risk/OTT/ML ve onaylı RSS/provenance dilimleri doğrulandı.
   Kalan indikatörler, legacy tarayıcı zincirleri ve diğer aktif veri/hata yolları
   genel kapanışı engelliyor. Kabul matrisi ve sıralı P0 işleri
   [M1 kapanış kontrolündedir](M1_CLOSEOUT.md). Stochastic/Williams %R/CCI çekirdeği
   17 yeni testle doğrulandı; Accepted ADR-0009 ve7 HTTP testi OS-01 skaler %K
   dilimini kapattı. VWEMA/Supertrend13 test ve gerçek API/sinyal okuyucuları
-  geçerli alt kapsamı doğruladı; VST-01–03 başlangıç/hacim/kısa veri sorunları
-  ayrı açık. ADR-0010 A paketi Proposed, özel karar bekliyor; ardından dar
-  düzeltme. Genel M1 açık. Önceki35 test tarihsel kanıttır.
+  geçerli alt kapsamı doğruladı; Accepted ADR-0010 A paketi19 core+3 API+4 kart
+  regresyonuyla VST-01–03 başlangıç/hacim/kısa veri dilimini kapattı.
+  FVG/OB/legacy tarayıcı ve genel M1 açık. Önceki35 test tarihsel kanıttır.
 
 ## Milestone — M2 ürün doğrulama ve çekirdek açılımı
 

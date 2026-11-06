@@ -1,15 +1,19 @@
 # Test Strategy
 
-## VST düzeltme sözleşmesi — Proposed, 2026-11-06
+## VST düzeltmesi — Accepted ADR-0010, 2026-11-06
 
-Bu yalnız tasarım adımında mevcut27 core/API testi dış socket engelli
-0.256 s'de geçti; VST-01–03 karşı örnekleri güncel runtime'da tekrarlandı.
-Yeni formül henüz uygulanmadı. [ADR-0010](../50-decisions/ADR-0010.md) A özel
-onayından sonra weighted rasyonel oracles/prefix/leading-zero/all-zero/p1,
-Supertrend0..p+1 sınırı/gerçek risk-sinyal/API, invalid-atomic ve eksik kart
-AppTest RED→GREEN gerekir. [Tasarım/kabul kaydı](../20-execution/2026-11-06-vst-correction-design.md).
-Tam386/32-mutant önceki test dilimi kanıtıdır; burada tekrar koşulmadı.
-Frontend/canlı/uzak CI ve upstream CDSK yokluğu ayrı raporlanır; runtime/test aynı.
+Yeni19 core testi RED114 assertion failure/0 error; üç gerçek API regresyonu
+RED3 failure/0 error; dört kontrollü kart testi RED7 failure/0 error verdi.
+Üretim düzeltmesi sonrası hedef53/53; tam412/412 (32.881 s), dış socket engelli,
+Windows asyncio loopback serbest. Rasyonel hacim/prefix/zero-gap/leading/all-zero/p1,
+underflow/finite extremes, strict config/domain ve atomik hata, Supertrend0..p+1,
+gerçek risk/sinyal ve HTTP null/weighted sonuçları sınandı. Kart actual assignment
+ve with AST'si ile AppTest'te çalışır; tam uygulama/browser kanıtı değildir.
+15 geçerli bellek içi mutant assertion failure/0 error ile yakalandı; ilk harness
+anchor hatası mutant sonucu sayılmadı, diskte üretim mutasyonu yapılmadı.
+[Uygulama/kanıt](../20-execution/2026-11-06-adr0010-implementation.md).
+VST-01–03 dar dilimi kapandı; canonical/finansal etkinlik ve genel M1 açıktır.
+Frontend/canlı/uzak CI tekrar koşulmadı; upstream CDSK validator ortamda yoktur.
 
 ## VWEMA/Supertrend geçerli alt kapsam — 2026-11-06
 

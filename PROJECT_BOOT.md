@@ -1,6 +1,6 @@
 # BIST Teknik Analiz Uygulaması — Project Boot
 
-- **Document version:** 1.56
+- **Document version:** 1.57
 - **CDSK version:** 0.1.0
 - **Last updated:** 2026-11-06
 
@@ -41,10 +41,10 @@
 - **Version:** Release etiketi yok (`TBD`).
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
   tabanı In Progress. Güncel kabul kanıtı ve kalan işler M1_CLOSEOUT kaydında.
-- **Current focus:** VST-01–03 için ADR-0010 A paketi Proposed; nedensel
-  VWEMA hacim ağırlığı, Supertrend hazır olma ve input/eksik kart sözleşmesi
-  özel karar bekliyor. Mevcut27 test yeniden geçti; tam386 önceki dilim kanıtı.
-  Üretim değişmedi, VST/M1 açık; OS-01 kapalı kalır.
+- **Current focus:** Accepted ADR-0010 A uygulandı: nedensel VWEMA hacim ağırlığı,
+  Supertrend hazır olma, strict/atomik girdi ve nötr eksik kart. VST-01–03 dar
+  dilimi kapandı; tam412 test geçti. Sonraki FVG/OB ve legacy tarayıcı okuyucuları;
+  genel M1 açık, OS-01 kapalı kalır.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
@@ -53,7 +53,7 @@
   UI yayılım kalibrasyonu/finansal etkinlik bu onaylara dahil değildir.
   ADR-0009 somut A sorusundan sonra verilen devam yanıtıyla Accepted uygulandı;
   diğer çoklu çıktı API genişlemeleri bu karara dahil değildir.
-  ADR-0010 A matematik/hazır olma paketi henüz Accepted değildir; özel karar bekler.
+  ADR-0010 A paketi “Onaylıyorum ve devam etg” açık yanıtıyla Accepted ve uygulandı.
 - **Last status update:** 2026-11-06
 
 ## 3. Repository Navigation
@@ -99,7 +99,7 @@
 | ML hedef/ön işleme ve model artifact sözleşmesi | Accepted ve uygulandı | [ADR-0007](docs/50-decisions/ADR-0007.md) |
 | ML ufuk cap, confidence girdisi ve gözlem sunumu | Accepted ve uygulandı | [ADR-0008](docs/50-decisions/ADR-0008.md) |
 | Stochastic API `stoch` seçicisini son %K'ya eşleme | Accepted ve uygulandı | [ADR-0009](docs/50-decisions/ADR-0009.md) |
-| VWEMA hacim ağırlığı ve Supertrend hazır olma/eksik kart paketi | Proposed | [ADR-0010](docs/50-decisions/ADR-0010.md) |
+| VWEMA hacim ağırlığı ve Supertrend hazır olma/eksik kart paketi | Accepted / uygulandı | [ADR-0010](docs/50-decisions/ADR-0010.md) |
 | 3D Web Experience profili uygulanmaz | N/A for current scope | `docs/70-experience/3D_WEB_EXPERIENCE.md` |
 
 > Yalnızca en önemli güncel kararları özetle. Kararın tam gerekçesi ve sonuçları
@@ -120,14 +120,12 @@
   Sonraki “onayladım, devam edelim” yanıtı somut ADR-0008'i Accepted yaptı.
   ADR-0009 somut “stoch=%K” onay sorusuna “Sıradaki Adım ile devam edelim.”
   yanıtı yalnız bu A eşlemesinin uygulama onayı olarak kaydedildi.
-- **Recently completed:** VST-01–03 A paketi tasarımı/alternatifler/kabul
-  oracles ve reader/model/cache etkileri.27 mevcut hedef test0.256 s'de geçti;
-  full386/32-mutant önceki dilim kaydıdır. Üretim değişmedi; M1 açık.
+- **Recently completed:** ADR-0010 A;19 core+3 gerçek API+4 kontrollü kart testi,
+  tam412/412,15 mutant. VWEMA/Supertrend/eksik kart dar düzeltmesi tamamlandı.
 
 ## 7. Current Priorities
 
-1. M1 kapanış listesi: Proposed ADR-0010 A paketine özel karar; ardından
-   VST-01–03 dar TDD uygulaması ve kalan FVG/OB/legacy tarayıcı bağlantıları.
+1. M1 kapanış listesi: kalan FVG/OB/legacy tarayıcı aktif okuyucu bağlantıları.
    Momentum çekirdeği ve ML-01–08 dar dilimleri kapandı; genel M1/kalibrasyon açık.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
@@ -138,11 +136,11 @@
 
 ## 8. Known Constraints
 
-- VWEMA seed'i ilerideki başlangıç barlarından etkilenir, pozitif hacim
-  büyüklüğü sonraki Close*V/V hesabında sadeleşir. Supertrend kısa veride
-  fiyat yokken yön+1 verebilir;9 barlık kontrollü pozisyon okuyucusunda skor
-  katkısı görüldü, mevcut fetcher'ın15 bar filtresiyle canlı akış doğrulanmadı.
-  VST-01–03 açık; finansal formül/warmup değişikliği sessizce yapılmaz.
+- ADR-0010 nedensel VWEMA/sabit Supertrend hazır olmayı uyguladı. Eski bu
+  özelliklerle eğitilen optional modeller yeniden eğitim ister; format1 otomatik
+  semantik tespit yapmaz. Önceki hesap cache'leri yeni sonuçlarla karıştırılmamalı;
+  kullanıcı süreç/servis/artifact'ı bu çalışmada değiştirilmedi. Genel sinyal/pozisyon
+  okuyucularının en az iki fiyat gereksinimi bu dar helper düzeltmesinde genişletilmedi.
 - 2026-08-19 itibarıyla, `make ci` akışı backend çalışabilirlik ve smoke
   kontrolünü geçebilecek şekilde stabilize oldu; çevrimdışı deterministik test ve
   veri güvenilirliği açmazları halen izleniyor.
@@ -197,7 +195,7 @@
 - [x] Çevrimdışı market-data/API/teknik hesaplama, patern/sinyal ve RSS/NLP ile
   kontrollü Streamlit, ADR-0005 transport/tanı ve değişken MACD/Bollinger testleri
   ile temel BOS/kombolar ve risk/pozisyon/DayTrader testleri eklendi; toplam
-  backend test sayısı386;97 ML core testi ve17 kontrollü Streamlit testi içerir.
+  backend test sayısı412;97 ML core testi ve21 kontrollü Streamlit testi içerir.
   Momentum17 ve sonraki Stochastic API7 testi dar dilimleri kapattı; genel M1 açık.
   Bu, M1'in bütün kabul kriterlerinin kapandığı anlamına gelmez.
 - [x] On deterministik tarayıcı senaryosu üretim frontend'inde ve Next.js
@@ -207,7 +205,26 @@
 
 ### Güncel devir — 2026-11-06
 
-- **VST tasarımı:** [ADR-0010](docs/50-decisions/ADR-0010.md) Proposed ve
+- **Uygulama:** [ADR-0010](docs/50-decisions/ADR-0010.md) açık A onayıyla Accepted.
+  [Execution kanıtı](docs/20-execution/2026-11-06-adr0010-implementation.md): nedensel
+  hacim ağırlığı, Supertrend n<=p'de iki NaN, strict/atomik ValueError ve eksik
+  VWEMA kartında nötr —/Hesaplanamadı. Mevcut alan/config/uzun seri bant hesabı korunur.
+- **Kanıt:**19 core RED114 failure/0 error; API3 RED3/0; kart4 RED7/0 →GREEN.
+  Core/API49/49, kart4/4; tam412/412 dış socket engelli (32.881 s), asyncio
+  loopback serbest.15 geçerli transient mutant assertion failure/0 error ile yakalandı.
+  Restore hedef53/53;67 compile/39 belge/11 Boot/10 Accepted ADR/91 yerel link ve
+  diff kontrolü geçti; upstream CDSK validator başarısı iddia edilmez.
+- **Sınır / sonraki:** VST-01–03 dar dilimi kapandı; FVG/OB ve legacy tarayıcı
+  okuyucuları, provenance ve genel M1 açık. Eski optional modeller yeniden eğitim,
+  hesap cache'leri süreç yenileme ister; kullanıcı artifact'ı/servisi değiştirilmedi.
+  Format1/CI/dependency aynı. Frontend/canlı sağlayıcı/uzak CI yeniden koşulmadı;
+  upstream CDSK validator ortamda yoktur, yapı kontrolleri bunun yerine geçmez.
+- **Git:** Başlangıç b990d44, core060a9dd; aynı onaylı codex dalı ve önceki
+  commit/push yetkisiyle devam. Son teslim commit'i git log'dan doğrulanır.
+
+### Önceki VST tasarım devri — 2026-11-06
+
+- **VST tasarımı:** [ADR-0010](docs/50-decisions/ADR-0010.md) o aşamada Proposed ve
   [tasarım/kabul kaydı](docs/20-execution/2026-11-06-vst-correction-design.md).
   Öneri A üç bulguyu birlikte çözer: nedensel hacim ağırlıklı VWEMA, Supertrend
   sabit ilk hazır indeks p ve input/NaN/empty/eksik kart sunumu. Henüz özel onay yok.

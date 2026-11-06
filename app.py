@@ -4097,7 +4097,7 @@ def show_modern_dashboard():
             ema_13 = analyzer.indicators.get('ema_13', pd.Series()).iloc[-1] if not analyzer.indicators.get('ema_13', pd.Series()).empty else 0
             ma_200 = analyzer.indicators.get('ma_200', pd.Series()).iloc[-1] if not analyzer.indicators.get('ma_200', pd.Series()).empty else 0
             vwma_5 = analyzer.indicators.get('vwma_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwma_5', pd.Series()).empty else 0
-            vwema_5 = analyzer.indicators.get('vwema_5', pd.Series()).iloc[-1] if not analyzer.indicators.get('vwema_5', pd.Series()).empty else 0
+            vwema_5 = analyzer.indicators.get('vwema_5', pd.Series(dtype=float)).iloc[-1] if not analyzer.indicators.get('vwema_5', pd.Series(dtype=float)).empty else np.nan
             
             current_price = latest['Close']
             
@@ -4197,15 +4197,22 @@ def show_modern_dashboard():
             
             # VWEMA 5 Card (NEW)
             with indicator_cols[5]:
-                price_above_vwema5 = current_price > vwema_5
-                status_color = "#00ff88" if price_above_vwema5 else "#ff4757"
-                status_icon = "🟢" if price_above_vwema5 else "🔴"
-                status_text = "Üzeri" if price_above_vwema5 else "Altı"
+                if pd.notna(vwema_5) and np.isfinite(vwema_5):
+                    price_above_vwema5 = current_price > vwema_5
+                    status_color = "#00ff88" if price_above_vwema5 else "#ff4757"
+                    status_icon = "🟢" if price_above_vwema5 else "🔴"
+                    status_text = "Üzeri" if price_above_vwema5 else "Altı"
+                    vwema_value = f"₺{vwema_5:.2f}"
+                else:
+                    status_color = "#94a3b8"
+                    status_icon = "⚪"
+                    status_text = "Hesaplanamadı"
+                    vwema_value = "—"
                     
                 st.markdown(f"""
                 <div class="metric-card">
                     <div class="metric-title">{status_icon} VWEMA 5</div>
-                    <div class="metric-value">₺{vwema_5:.2f}</div>
+                    <div class="metric-value">{vwema_value}</div>
                     <div class="metric-change" style="color: {status_color};">
                         {status_text}
                     </div>

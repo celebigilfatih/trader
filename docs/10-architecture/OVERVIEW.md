@@ -82,7 +82,7 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   sağlar; RSS/Yahoo kaynak tanıları bellektedir. Merkezi üretim gözlemi açık.
 - UI ve domain hesaplamalarının büyük ölçüde tek dosyada birleşmesi değişiklik
   riskini yükseltiyor.
-- 386 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
+- 412 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
   Windows asyncio için yerel loopback serbest. Legacy `test_app.py` ve
   tarayıcı smoke akışı dış sağlayıcılara bağlı kalabilir.
 - Stochastic/Williams %R/CCI çekirdeği 17 gerçek hesaplama testiyle sınandı.
@@ -95,11 +95,12 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   VST-02 başlangıç sonrası pozitif hacmin sadeleşmesi ve VST-03 kısa Supertrend
   fiyat/yön/seed tutarsızlığı açıktır. Mevcut temel bant hesabı canonical
   trailing Supertrend diye doğrulanmadı; [test ve karşı örnek kaydı](../20-execution/2026-11-06-vwema-supertrend-tests.md).
-  Sonraki [ADR-0010](../50-decisions/ADR-0010.md) A paketi, nedensel hacim
-  ağırlığı + sabit Supertrend hazır olma ve eksik kart önerisi olarak **Proposed**;
-  özel karar bekliyor, üretim formülü henüz değiştirilmedi.
-- Ayrı deterministik cockpit modu 10 senaryodur. 17 kontrollü Streamlit AppTest
-  legacy haber/ML fonksiyonlarını render eder; tam uygulama/browser kanıtı değildir.
+  [ADR-0010](../50-decisions/ADR-0010.md) A paketi **Accepted ve uygulandı**:
+  nedensel hacim ağırlığı + sabit Supertrend hazır olma, strict/atomik girdi ve
+  nötr eksik kart. VST-01–03 dar dilimi kapandı; canonical bant veya etkinlik iddiası yok.
+- Ayrı deterministik cockpit modu 10 senaryodur. 21 kontrollü Streamlit AppTest
+  legacy haber/ML fonksiyonları ve gerçek VWEMA kart AST'sini render eder;
+  tam uygulama/browser kanıtı değildir.
 - BOS mevcut batch hesabında swing için çevredeki gelecek mumları da kullanır;
   tarama sondan 10. mumu içerir, daha yeni 9 mumu dışlar. Eklenen testler bu
   davranışı karakterize eder; canlı/causal strateji veya kârlılık kanıtı değildir.
