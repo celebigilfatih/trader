@@ -2,6 +2,16 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+FVG/OB sarmalayıcı→legacy chart bağlantısı11 testle doğrulandı ve DataFrame
+okuyucu kusuru düzeltildi; gerçek legacy RSI ilk dilimi6 core+2 actual buton
+AppTest ile sınandı. [Kanıt/kapsam](2026-11-06-fvg-ob-legacy-rsi.md), hedef45/45.
+OS-02 çoklu çıktı API500 ve RS-01 kesinti/no-match ayrımı açık:
+[ADR-0011](../50-decisions/ADR-0011.md) ve
+[ADR-0012](../50-decisions/ADR-0012.md) **Proposed**, özel A kararları bekleniyor.
+Boğa/teknik ve haftalık/aylık legacy tarayıcılar, provenance ve genel M1 açık.
+
+### Önceki ADR-0010 uygulaması
+
 [ADR-0010](../50-decisions/ADR-0010.md) A paketi açık onayla Accepted ve uygulandı.
 VST-01–03 dar dilimi kapandı: nedensel hacim ağırlıklı VWEMA, Supertrend n<=p'de
 iki eksik alan/default ilk hazır indeks10, strict girdi/atomik ValueError ve
@@ -185,7 +195,7 @@ RSS bütçe/tanı ve legacy kaynak görünürlüğü uygulama kaydı:
 - **CDSK:** 0.1.0 belge/çalışma iskeleti kurulu; M0 tamamlandı olarak kayıtlı.
   Yapısal validator'ın geçmesi, tüm ürün veya operasyon gereksinimlerinin
   tamamlandığı anlamına gelmez. Constitution hâlâ Draft ve TBD alanları var.
-- **M1:** Kısmi; 412 backend testi (VWEMA/Supertrend/Stochastic API/momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
+- **M1:** Kısmi; 431 backend testi (FVG/OB/legacy RSI/VWEMA/Supertrend/Stochastic API/momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
   dış ağ engelli geçti. Cockpit seti 10/10 deterministik senaryodur. İlk dört
   işin ve onaylı RSS politikasının dar dilimleri uygulandı; BL-001 ve genel kapanış kriterleri açık.
 - **M2:** Yerel demo auth, watchlist ve paper portföy temeli var; gerçek davet

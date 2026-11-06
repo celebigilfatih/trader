@@ -58,13 +58,13 @@ backlog/kapanış/CHANGELOG/Boot handoff; gerekirse somut Proposed ADR.
 **Interfaces:** gerçek `StockScreener` kurucusu; yalnız get_stock_data sınırına
 sentetik OHLCV/None/exception enjeksiyonu. Actual RSI button AST okuyucu.
 
-- [ ] Gerçek RSI inclusive bounds/0/100/35/65 etiketleri ve artan sıralama;
+- [x] Gerçek RSI inclusive bounds/0/100/35/65 etiketleri ve artan sıralama;
   interval-period sözlüğü+fallback,20/21/22 bar ve None/empty korunması;
   bir sembol hatasından sonra gerçek sonucun gelmesi. Yeni üretim mantığı gerekmezse eklenmez.
-- [ ] Actual button AppTest gerçek taramadan sonuç DataFrame'i ve gerçek no-match
+- [x] Actual button AppTest gerçek taramadan sonuç DataFrame'i ve gerçek no-match
   bilgi metnini gösterir. Provider kesintisi/no-match ve FVG/OB API tanısı ayrı
   geçici probe ile raporlanır; bozuk sözleşme normatif passing test yapılmaz.
-- [ ] Dış socket engelli hedef/tam backend; anlamlı transient mutantlar,
+- [x] Dış socket engelli hedef/tam backend; anlamlı transient mutantlar,
   compile/39 CDSK dosyası/11 Boot/10 Accepted ADR/link/diff; upstream validator ayrı.
 - [ ] Tek fresh-context bağımsız son inceleme, gereken TDD düzeltmesi ve kalıcı
   sonuç/karar/sınır kayıtları. Önceki yetkiyle son commit/push ve remote SHA/clean tree.
@@ -80,3 +80,44 @@ filled filtrelememe niyeti korunarak yalnız DataFrame okuyucu bağlandı.
 Sonra yeni10 + önceki patern/kombo26 = **36/36 /2.294 s /OK**, dış socket engelli.
 İki yönde literal date/zone/OHLC/size/strength ve config/short/empty/caller
 koruma; seçilmemiş/no-pattern, end clamp, karışık ve filled chart testleri var.
+
+Task2:6 gerçek RSI ve2 actual buton AppTest ilk koşuda8/8 (0.634 s). Mevcut
+geçerli davranış testidir; üretim RSI değişmedi. Wilder22 +2/-1 rasyonel oracle
+65.625; inclusive filtre,0/100 ve35/65 etiketleri, sıralama,7 interval/period
+örneği, None/empty/20/21/22 ve tek sembol hatasından sonra gerçek sonuç doğrulandı.
+Provider sınırı kontrollü; gerçek kurucu/analyzer/ta ve buton→tablo yolu kullanıldı.
+
+Ek uzun chart örneği OB'nin10 bar genişliğini/clamp'ten bağımsız ve iki rengini
+doğruladı; chart sonrası caller/analyzer ve türetilmiş frame'ler korunur.
+Son hedef **45/45 /3.694 s /OK**:11 yeni FVG/OB +8 RSI +26 önceki patern/kombo.
+Önceki tam koşu430/430 (18.201 s), bu son ek testten önceki kayıttır.
+
+14 geçerli bellek içi mutant assertion failure/0 error: RSI iki inclusive uç,
+sıralama,35/65 etiketleri,interval/period,22 ilk hazır; FVG threshold,OB lookback,
+grafik5/10 bar genişliği,low/high ve seçim kapalı dalı. İlk sandbox Streamlit
+temp-dizin ve boş satır indeksleme harness sonuçları başarı sayılmadı; hedef
+assertion netleştirilip izinli ortamda tekrarlandı. Diskte üretim mutasyonu yoktur.
+
+## Açık karşı örnekler ve somut kararlar
+
+| Kayıt | Gerçek okuyucu kanıtı | Durum / sonraki kapı |
+|---|---|---|
+| OS-02 | Auth + gerçek analyzer + kontrollü40-bar provider; fvg/order_block/bos/fvg_ob_combo/fvg_bos_combo/bollinger ayrı isteklerde500, macd200. | Skaler endpoint çoklu çıktı projeksiyonu eksik. [ADR-0011](../50-decisions/ADR-0011.md) Proposed A: altı seçici mevcut invalid_indicator400 ile açıkça reddedilir; nesne/list desteği ayrı tasarım. Henüz uygulanmadı. |
+| RS-01 | Gerçek RSI65.625 +80–90 filtresi ve provider TimeoutError senaryoları actual butonda aynı info/0table/0error/0exception üretir: “Belirtilen RSI aralığında hisse bulunamadı”. | Kesinti/yetersiz veri ile no-match ayrımı eksik. [ADR-0012](../50-decisions/ADR-0012.md) Proposed A: liste korunur, geçici last_rsi_diagnostics ve success/partial/failed/empty metinleri. Henüz uygulanmadı. |
+
+500 veya yanlış no-match testte normatif beklenen çıktı yapılmadı; tanı amaçlı
+probe sonuçlarıdır. API400/nesne modeli ve RSI yeni tanı/hata metni bu genel
+devam talebinden onay türetilerek değiştirilmedi. Onay kapısı AGENTS veri
+sözleşmesidir; test ve sıradan grafik bağlantısı için yeni onay gerektirilmedi.
+Trend gücü/özet için modül dışı Python çağıranı bulunmadı; bu aktif okuyucu
+envanterinde gerekçeli N/A, future API/UI kullanımı eklenirse yeniden ele alınır.
+
+M1-P0-01'in FVG/OB→legacy chart dilimi kapandı, HTTP OS-02 açık. M1-P0-02 ilk
+RSI geçerli hesap/okuyucu dilimi doğrulandı; RS-01, boğa/teknik ve haftalık/aylık
+tarama yolları açık. Genel M1/finansal etkinlik kapanışı yoktur. Kullanıcı artifact'ı,
+servisi, dependency, CI ve frontend değiştirilmedi; canlı sağlayıcı/full-browser,
+frontend build ve uzak CI yeniden çalıştırılmadı. Upstream CDSK validator yokluğu sürer.
+
+Son tam paket **431/431 /18.175 s /OK**, dış socket engelli, asyncio loopback
+serbest.69 Python compile/39 zorunlu belge/11 Boot/10 Accepted+2 Proposed ADR ve
+değişen belgelerin yerel bağlantıları/diff kontrolü geçti; upstream CDSK sonucu değildir.

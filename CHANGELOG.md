@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — FVG/OB grafik ve ilk legacy RSI okuyucuları
+
+- Gerçek FVG/OB yönlü DataFrame'leri legacy chart'a bağlandı; tarih/fiyat,
+  mevcut renk/5–10 bar genişliği ve seçim kapısı korunur. Formül/config değişmedi.
+- 11 FVG/OB+6 legacy RSI+2 actual buton AppTest eklendi. Grafik RED6/0→GREEN;
+  hedef45/45, tam431 test dış socket engelli /18.175 s /OK;14 geçerli mutant/0error.
+- OS-02 altı çoklu çıktı API500; RS-01 tüm kaynak hatası=no-match görünümü
+  gerçek okuyucuda tekrarlandı, passing beklenti yapılmadı. ADR-0011/0012 A
+  önerileri Proposed; API/RSI çıktı/hata sözleşmesi henüz değiştirilmedi.
+- Mimari/kalite/kapanış ve Boot1.58 güncellendi; genel M1 ve kalan legacy tarayıcılar açık.
+
 ### 2026-11-06 — Accepted ADR-0010 uygulaması
 
 - Açık A onayıyla nedensel, hacim ağırlıklı VWEMA; leading/all-zero ve zero-decay

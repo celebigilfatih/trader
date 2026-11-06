@@ -82,7 +82,7 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   sağlar; RSS/Yahoo kaynak tanıları bellektedir. Merkezi üretim gözlemi açık.
 - UI ve domain hesaplamalarının büyük ölçüde tek dosyada birleşmesi değişiklik
   riskini yükseltiyor.
-- 412 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
+- 431 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
   Windows asyncio için yerel loopback serbest. Legacy `test_app.py` ve
   tarayıcı smoke akışı dış sağlayıcılara bağlı kalabilir.
 - Stochastic/Williams %R/CCI çekirdeği 17 gerçek hesaplama testiyle sınandı.
@@ -98,9 +98,14 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   [ADR-0010](../50-decisions/ADR-0010.md) A paketi **Accepted ve uygulandı**:
   nedensel hacim ağırlığı + sabit Supertrend hazır olma, strict/atomik girdi ve
   nötr eksik kart. VST-01–03 dar dilimi kapandı; canonical bant veya etkinlik iddiası yok.
-- Ayrı deterministik cockpit modu 10 senaryodur. 21 kontrollü Streamlit AppTest
-  legacy haber/ML fonksiyonları ve gerçek VWEMA kart AST'sini render eder;
+- Ayrı deterministik cockpit modu 10 senaryodur. 23 kontrollü Streamlit AppTest
+  legacy haber/ML fonksiyonları, gerçek VWEMA kart ve RSI buton AST'sini render eder;
   tam uygulama/browser kanıtı değildir.
+- FVG/OB seçicileri yönlü DataFrame üretir; legacy grafik gerçek date/low/high
+  satırlarını mevcut renk/5–10 bar genişliğiyle artık okur. Yeni filled filtresi
+  veya hesap/formül yoktur. Legacy RSI gerçek StockScreener/ta ve actual butonla
+  sınandı. HTTP çoklu çıktı OS-02 ve RSI kesinti/no-match RS-01 açık;
+  ADR-0011/0012 Proposed, genel tarayıcı/M1 kapanışı yoktur.
 - BOS mevcut batch hesabında swing için çevredeki gelecek mumları da kullanır;
   tarama sondan 10. mumu içerir, daha yeni 9 mumu dışlar. Eklenen testler bu
   davranışı karakterize eder; canlı/causal strateji veya kârlılık kanıtı değildir.

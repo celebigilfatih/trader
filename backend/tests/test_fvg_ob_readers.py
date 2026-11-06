@@ -98,6 +98,7 @@ class TestFvgObReaders(unittest.TestCase):
 
     def shapes(self, frame, names, selected=None):
         analyzer = self.calculate(frame, *names)
+        before = frame.copy(deep=True)
         snapshots = {key: value.copy(deep=True) for key, value in analyzer.indicators.items()}
         try:
             figure = chart_function()(frame, analyzer, selected if selected is not None else dict.fromkeys(names, True))
@@ -105,6 +106,8 @@ class TestFvgObReaders(unittest.TestCase):
             self.fail(f'Actual chart raised {type(exc).__name__}: {exc}')
         for key, value in snapshots.items():
             pd.testing.assert_frame_equal(analyzer.indicators[key], value)
+        pd.testing.assert_frame_equal(frame, before)
+        pd.testing.assert_frame_equal(analyzer.data, before)
         self.assertEqual([trace.type for trace in figure.data], ['candlestick', 'bar'])
         return list(figure.layout.shapes)
 
@@ -132,6 +135,16 @@ class TestFvgObReaders(unittest.TestCase):
         frame = ob_chain('bullish')
         shapes = self.shapes(frame, ['fvg', 'order_block'])
         self.assertEqual([(s.x0, s.y0, s.y1) for s in shapes], [(frame.index[25], 102, 103), (frame.index[23], 100, 102)])
+
+    def test_order_block_chart_keeps_ten_bar_width_and_direction_colors(self):
+        for direction, color in [('bullish', 'rgba(33, 150, 243, 0.15)'), ('bearish', 'rgba(255, 152, 0, 0.15)')]:
+            with self.subTest(direction=direction):
+                frame = ob_chain(direction)
+                tail = candles([(100, 101, 99, 100)] * 10, start=frame.index[-1] + pd.Timedelta(days=1))
+                frame = pd.concat([frame, tail])
+                shapes = self.shapes(frame, ['order_block'])
+                self.assertEqual(len(shapes), 1)
+                self.assertEqual((shapes[0].x0, shapes[0].x1, shapes[0].fillcolor), (frame.index[23], frame.index[33], color))
 
     def test_disabled_or_empty_patterns_draw_no_zones(self):
         self.assertEqual(self.shapes(ob_chain('bullish'), ['fvg', 'order_block'], dict(fvg=False, order_block=False)), [])

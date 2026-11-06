@@ -1,5 +1,20 @@
 # Test Strategy
 
+## FVG/OB grafik ve ilk legacy RSI — 2026-11-06
+
+11 yeni gerçek helper+actual Plotly chart testi,6 gerçek legacy RSI ve2 actual
+buton AppTest. Grafik RED6 assertion failure/0error →GREEN; yalnız DataFrame
+okuyucu bağlandı. RSI geçerli mevcut davranış testleri ilk koşuda8/8; hesaplayıcı
+double yok, yalnız provider sınırı sentetik OHLCV/None/exception ile kontrol edilir.
+Hedef45/45 (3.694 s),14 geçerli bellek içi mutant assertion failure/0error;
+tam431/431 (18.175 s) dış socket engelli, asyncio loopback serbest geçti;
+ilk sandbox temp-dizin/indeksleme harness koşuları bu sayıya dahil değildir.
+FVG/OB iki yön/threshold/lookback/zone/date/filled/strength, seçili/kapanmış grafik,
+5/10 bar width/end clamp; RSI65.625/0/100/35/65,bounds,sort,interval ve ilk hazır
+bar/no-match/tek hata sonrası gerçek sonuç doğrulandı. Tüm app/browser testi değildir.
+API500 ve kesinti=no-match tanıları **beklenen passing test değildir**; OS-02/
+RS-01 için ADR-0011/0012 Proposed. [Uygulama/kanıt](../20-execution/2026-11-06-fvg-ob-legacy-rsi.md).
+
 ## VST düzeltmesi — Accepted ADR-0010, 2026-11-06
 
 Yeni19 core testi RED114 assertion failure/0 error; üç gerçek API regresyonu

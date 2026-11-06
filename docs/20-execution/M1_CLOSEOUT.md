@@ -8,7 +8,16 @@
   [gereksinimler](../00-product/REQUIREMENTS.md), BL-001/002/003 ve Accepted
   ADR-0004–0010. Constitution Draft olarak kalır.
 
-## Güncel ilerleme — Accepted ADR-0010 uygulandı
+## Güncel ilerleme — FVG/OB grafik ve ilk legacy RSI
+
+11 FVG/OB helper+actual chart testi,6 gerçek legacy RSI ve2 actual buton AppTest;
+grafik DataFrame okuyucu kusuru düzeltildi. Hedef45/45,14 geçerli mutant/0error.
+[Kanıt/kapsam](2026-11-06-fvg-ob-legacy-rsi.md). OS-02: altı çoklu çıktı seçicisi
+HTTP500; RS-01: tüm kaynak hatası ile gerçek no-match aynı metne dönüşür.
+İki karşı örnek passing oracle yapılmadı; ADR-0011/0012 Proposed, özel karar bekler.
+Genel M1 ve boğa/teknik/haftalık/aylık legacy tarayıcı dilimleri açık.
+
+## Önceki Accepted ADR-0010 uygulaması
 
 [ADR-0010](../50-decisions/ADR-0010.md) A paketi açık kullanıcı onayıyla uygulandı:
 VWEMA nedensel hacim ağırlığı, Supertrend sabit hazır olma, atomik input hatası
@@ -71,8 +80,8 @@ kanıtının eksik olduğunu belirtir. Test sayısı bir kabul eşiği değildir
 
 | Mevcut M1 ölçütü | Kanıt | Durum / kalan iş |
 |---|---|---|
-| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 412 backend testi dış socket bağlantıları engelli geçti. Accepted ADR-0010 rasyonel/prefix/domain/readiness, gerçek sinyal/API ve kontrollü eksik kart kanıtı eklendi. | **Kısmi.** OS-01 ve VST-01–03 dar dilimleri kapandı; FVG/OB aktif bağlantıları ve legacy `StockScreener` zincirleri açık. P0-01/02. |
-| Veri ve mock/deneysel kaynaklar açıkça etiketlenir (REQ-005/006, BL-002) | Cockpit analiz/RSI için 10 deterministik tarayıcı senaryosu; legacy haber/ML için 17 kontrollü AppTest. Accepted A metinleri, ADR-0004 zaman/skor ve ADR-0008 gözlem ufku uygulandı. | **Onaylı dilim doğrulandı; genel kapsam kısmi.** Diğer aktif legacy sonuçların kaynak/son bar/deneysel nitelik ve hata sonrası eski sonuç davranışı ekran envanterine bağlanmalı. P0-03. |
+| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 431 backend testi dış socket engelli geçti; FVG/OB gerçek helper→chart ve gerçek legacy RSI→buton/tablo kanıtı eklendi. | **Kısmi.** OS-01/VST ve FVG/OB legacy chart dar dilimi kapandı. OS-02 HTTP, RS-01 kesinti/no-match ve kalan legacy tarayıcılar açık. P0-01/02. |
+| Veri ve mock/deneysel kaynaklar açıkça etiketlenir (REQ-005/006, BL-002) | Cockpit analiz/RSI için10 deterministik tarayıcı senaryosu; legacy haber/ML17, VWEMA4, RSI2 kontrollü AppTest. Accepted A metinleri, ADR-0004 zaman/skor ve ADR-0008 gözlem ufku uygulandı. | **Onaylı dilim doğrulandı; genel kapsam kısmi.** Diğer aktif legacy sonuçların kaynak/son bar/deneysel nitelik ve hata sonrası eski sonuç davranışı ekran envanterine bağlanmalı. RS-01 açık. P0-03. |
 | Entegrasyon hatası görünürdür (REQ-001, BL-003) | OHLCV provider/adaptör ve RSS transport/tanı testleri; partial/failed RSS uyarıları ve cockpit veri yok/503/yeniden deneme senaryoları var. Sentetik fiyat veya başarısız NLP için sahte nötr skor üretilmez. | **Kısmi.** Legacy tarayıcı bazı istisnaları `continue` ile atlar; boş sonuç ile kesinti ayrımı ayrıca sınanmalı. Diğer aktif Yahoo yolları için bütçe/tanı ve okuyucu kapsamı netleşmeli. P0-02/04. |
 
 Kaynak kanıtları: [test stratejisi](../30-quality/TEST_STRATEGY.md),
@@ -129,13 +138,13 @@ beklenir. Bilinen bir kusur passing beklenti olarak sabitlenmemelidir.
 
 | Sıra / kayıt | Kapsam | Somut kapanış kanıtı | Karar sınırı |
 |---|---|---|---|
-| **1 — M1-P0-01 / BL-001** | Momentum/OS-01 ve VST-01–03 dar dilimleri tamamlandı. FVG/OB aktif okuyucu bağlantıları kalır; trend gücü/özet aktif kullanım veya gerekçeli N/A açısından sınıflandırılır. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
-| **2 — M1-P0-02 / BL-001/003** | UI'nın gerçekten çağırdığı legacy `StockScreener` yolları; önce RSI, ardından boğa taramaları ve haftalık/aylık performans. | Gerçek analyzer + enjekte OHLCV ile dahil/dışarıda/eşitlik/sıralama; interval-period iletimi; boş/yetersiz veri, bir sembolün hatası ve tüm kaynakların kesintisi. Sağlayıcı ağı ve gerçek sleep kullanılmaz; boş sonuç/kesinti görünürlüğü ayrıca kontrol edilir. | Yeni çıktı alanı veya hata sözleşmesi gerekiyorsa önce somutlaştırılır; mevcut kusur sessizce doğru kabul edilmez. |
+| **1 — M1-P0-01 / BL-001** | Momentum/OS-01 ve VST-01–03 tamamlandı. FVG/OB gerçek helper→legacy chart bağlandı; HTTP OS-02 açık (ADR-0011 Proposed). Trend gücü/özet için modül dışı Python çağıranı yok, bu envanterde gerekçeli N/A. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
+| **2 — M1-P0-02 / BL-001/003** | Gerçek legacy RSI geçerli hesap/ilk hazır/interval/sıralama ve actual buton sınandı. RS-01 no-match/kesinti açıklığı ADR-0012 Proposed; boğa/teknik ve haftalık/aylık performans kalır. | Gerçek analyzer + enjekte OHLCV ile dahil/dışarıda/eşitlik/sıralama; interval-period iletimi; boş/yetersiz veri, bir sembolün hatası ve tüm kaynakların kesintisi. Sağlayıcı ağı ve gerçek sleep kullanılmaz; boş sonuç/kesinti görünürlüğü ayrıca kontrol edilir. | Yeni çıktı alanı veya hata sözleşmesi gerekiyorsa önce somutlaştırılır; mevcut kusur sessizce doğru kabul edilmez. |
 | **3 — M1-P0-03 / BL-002** | Aktif legacy analiz/tarama sonuçlarını onaylı kaynak/deneysel metinler ve hata sonrası durumla eşleştiren ekran envanteri. | Her aktif sonuç için kaynak, veri zamanı, veri niteliği ve eksik/hatalı durumda gösterim kanıtı veya gerekçeli N/A; yanlış “canlı/gerçek” iddiası ve eski sonucun güncel sunulması kalmaz. Bağlanmayan mock yardımcılar ayrı kaydedilir. | Kabul edilmiş metinlerin uygulanması kapsamındadır; yeni ekran/model/metadata sözleşmesi ayrıca onay gerektirebilir. |
 | **4 — M1-P0-04 / BL-003** | OHLCV provider dışındaki aktif Yahoo/SDK çağrılarını ve hata okuyucularını sınıflandırma. | Her aktif yol için mevcut timeout/retry/hata dönüşü ve kullanıcı görünürlüğü; kontrollü başarı/boş/kesinti testi. Kullanılmayan yöntemler gerekçeli N/A. `.info` kullanan yardımcılar ortak OHLCV bütçesi altında diye raporlanmaz. | Yeni SDK bütçe/retry/transport politikası Accepted ADR-0005'in otomatik uzantısı değildir; gerekirse Proposed ADR ve açık onay. Üretim merkezi monitoring bu dilime eklenmez. |
 
-**Hemen sonraki adım:** Kalan FVG/OB aktif okuyucu ve legacy tarayıcı bağlantılarının
-mevcut sözleşmesini gerçek hesaplayıcı testleriyle doğrulamak.
+**Hemen sonraki adım:** ADR-0011/0012 A seçeneklerine özel karar; sonra dar TDD
+uygulaması. Bağımsız kalan boğa/teknik/haftalık/aylık legacy tarayıcı dilimleri sürer.
 Çekirdek testlerinin geçmesi bütün okuyucuların çalıştığını göstermez.
 
 ## Tekrarlanabilirlik ve CI sınırı

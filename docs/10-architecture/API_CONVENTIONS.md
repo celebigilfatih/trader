@@ -52,3 +52,11 @@ Supertrend defaultta11 bardan önce fiyat/yön üretmez; API mevcut supertrend
 alanında null verir. All-zero hacimde VWEMA da null'dır. Auth/provenance ve query
 adları korunur; üç gerçek HTTP regresyonu eklendi, API paketi18/18 geçti.
 [Uygulama kanıtı](../20-execution/2026-11-06-adr0010-implementation.md).
+
+## Açık çoklu çıktı sınırı — OS-02
+
+Gerçek analyzer ile fvg/order_block/bos/fvg_ob_combo/fvg_bos_combo/bollinger
+bu skaler route'ta HTTP500 verir. Config'de bulunmak HTTP projeksiyonunun çalıştığı
+anlamına gelmez. [ADR-0011](../50-decisions/ADR-0011.md) **Proposed A**, bu altı
+seçiciyi açık400 ile reddetmeyi önerir; henüz kabul/uygulama yoktur. Structured
+nesne/list endpoint'i bu önerinin sunduğu bir yetenek değildir.

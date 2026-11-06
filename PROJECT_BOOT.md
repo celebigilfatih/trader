@@ -1,6 +1,6 @@
 # BIST Teknik Analiz Uygulaması — Project Boot
 
-- **Document version:** 1.57
+- **Document version:** 1.58
 - **CDSK version:** 0.1.0
 - **Last updated:** 2026-11-06
 
@@ -41,10 +41,10 @@
 - **Version:** Release etiketi yok (`TBD`).
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
   tabanı In Progress. Güncel kabul kanıtı ve kalan işler M1_CLOSEOUT kaydında.
-- **Current focus:** Accepted ADR-0010 A uygulandı: nedensel VWEMA hacim ağırlığı,
-  Supertrend hazır olma, strict/atomik girdi ve nötr eksik kart. VST-01–03 dar
-  dilimi kapandı; tam412 test geçti. Sonraki FVG/OB ve legacy tarayıcı okuyucuları;
-  genel M1 açık, OS-01 kapalı kalır.
+- **Current focus:** FVG/OB→legacy chart DataFrame bağlantısı düzeltildi;
+  gerçek legacy RSI ilk dilimi doğrulandı.11+8 yeni test; tam431/431 geçti.
+  OS-02 altı çoklu çıktı API500 ve RS-01 kesinti/no-match ayrımı açık;
+  ADR-0011/0012 Proposed A kararları bekliyor. Genel M1 açık, OS-01/VST kapalı.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
@@ -54,6 +54,8 @@
   ADR-0009 somut A sorusundan sonra verilen devam yanıtıyla Accepted uygulandı;
   diğer çoklu çıktı API genişlemeleri bu karara dahil değildir.
   ADR-0010 A paketi “Onaylıyorum ve devam etg” açık yanıtıyla Accepted ve uygulandı.
+  ADR-0011 API seçim sınırı ve ADR-0012 geçici RSI tanısı özel onay almadı;
+  API/RSI üretim sözleşmeleri bu önerilere geçirilmedi.
 - **Last status update:** 2026-11-06
 
 ## 3. Repository Navigation
@@ -100,6 +102,8 @@
 | ML ufuk cap, confidence girdisi ve gözlem sunumu | Accepted ve uygulandı | [ADR-0008](docs/50-decisions/ADR-0008.md) |
 | Stochastic API `stoch` seçicisini son %K'ya eşleme | Accepted ve uygulandı | [ADR-0009](docs/50-decisions/ADR-0009.md) |
 | VWEMA hacim ağırlığı ve Supertrend hazır olma/eksik kart paketi | Accepted / uygulandı | [ADR-0010](docs/50-decisions/ADR-0010.md) |
+| Çoklu çıktı API seçicilerini açık400 ile reddetme | Proposed | [ADR-0011](docs/50-decisions/ADR-0011.md) |
+| Legacy RSI geçici tanı ve kesinti/no-match ayrımı | Proposed | [ADR-0012](docs/50-decisions/ADR-0012.md) |
 | 3D Web Experience profili uygulanmaz | N/A for current scope | `docs/70-experience/3D_WEB_EXPERIENCE.md` |
 
 > Yalnızca en önemli güncel kararları özetle. Kararın tam gerekçesi ve sonuçları
@@ -120,12 +124,14 @@
   Sonraki “onayladım, devam edelim” yanıtı somut ADR-0008'i Accepted yaptı.
   ADR-0009 somut “stoch=%K” onay sorusuna “Sıradaki Adım ile devam edelim.”
   yanıtı yalnız bu A eşlemesinin uygulama onayı olarak kaydedildi.
-- **Recently completed:** ADR-0010 A;19 core+3 gerçek API+4 kontrollü kart testi,
-  tam412/412,15 mutant. VWEMA/Supertrend/eksik kart dar düzeltmesi tamamlandı.
+- **Recently completed:** FVG/OB helper→gerçek grafik bağlantısı, gerçek legacy
+  RSI→actual buton/tablo;19 yeni test, tam431/431 ve14 mutant. Formül/config/RSI/API
+  değişmedi; yalnız mevcut grafik okuyucusu bağlandı. VST-01–03 kapalı kalır.
 
 ## 7. Current Priorities
 
-1. M1 kapanış listesi: kalan FVG/OB/legacy tarayıcı aktif okuyucu bağlantıları.
+1. M1 kapanış listesi: OS-02/RS-01 için Proposed ADR-0011/0012 A özel kararları;
+   sonra dar TDD. Kalan boğa/teknik/haftalık/aylık legacy tarayıcı bağlantıları.
    Momentum çekirdeği ve ML-01–08 dar dilimleri kapandı; genel M1/kalibrasyon açık.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
@@ -136,6 +142,11 @@
 
 ## 8. Known Constraints
 
+- Çoklu çıktı fvg/order_block/bos/fvg_ob_combo/fvg_bos_combo/bollinger skaler
+  API okuyucusunda500 verir (OS-02). Legacy RSI tüm kaynak hatasını “hisse
+  bulunamadı” gösterir (RS-01). Proposed ADR-0011/0012 henüz uygulanmadı;
+  bu kusurlar doğru davranış diye passing test yapılmadı. Boğa/teknik ve performans
+  taramaları ayrıca açık. Trend gücü/özet için modül dışı çağıran yok: bu envanterde N/A.
 - ADR-0010 nedensel VWEMA/sabit Supertrend hazır olmayı uyguladı. Eski bu
   özelliklerle eğitilen optional modeller yeniden eğitim ister; format1 otomatik
   semantik tespit yapmaz. Önceki hesap cache'leri yeni sonuçlarla karıştırılmamalı;
@@ -195,7 +206,7 @@
 - [x] Çevrimdışı market-data/API/teknik hesaplama, patern/sinyal ve RSS/NLP ile
   kontrollü Streamlit, ADR-0005 transport/tanı ve değişken MACD/Bollinger testleri
   ile temel BOS/kombolar ve risk/pozisyon/DayTrader testleri eklendi; toplam
-  backend test sayısı412;97 ML core testi ve21 kontrollü Streamlit testi içerir.
+  backend test sayısı431;97 ML core testi ve23 kontrollü Streamlit testi içerir.
   Momentum17 ve sonraki Stochastic API7 testi dar dilimleri kapattı; genel M1 açık.
   Bu, M1'in bütün kabul kriterlerinin kapandığı anlamına gelmez.
 - [x] On deterministik tarayıcı senaryosu üretim frontend'inde ve Next.js
@@ -204,6 +215,27 @@
 ## 11. AI Handoff
 
 ### Güncel devir — 2026-11-06
+
+- **İş:** [FVG/OB ve legacy RSI kaydı](docs/20-execution/2026-11-06-fvg-ob-legacy-rsi.md).
+  FVG/OB yönlü DataFrame'leri mevcut grafikte date/low/high ile okunur; renkler ve
+ 5/10 bar genişlikleri korunur. Hesap/formül/config/API/RSI üretimi değişmedi.
+- **Kanıt:** Grafik testleri önce6 assertion failure/0error, sonra GREEN;
+  toplam11 FVG/OB+6 gerçek RSI+2 actual buton AppTest. Hedef45/45 (3.694 s),
+  tam431/431 (18.175 s), dış socket engelli, asyncio loopback serbest.
+ 14 geçerli bellek içi mutant assertion failure/0error; ilk harness aksaklıkları
+  başarı sayılmadı.69 compile/39 CDSK dosyası/11 Boot/10 Accepted+2 Proposed ADR.
+- **Açık kararlar:** [ADR-0011](docs/50-decisions/ADR-0011.md) A: altı multi-output
+  seçici HTTP400; [ADR-0012](docs/50-decisions/ADR-0012.md) A: mevcut RSI listesine
+  dokunmadan geçici tanı ve doğru success/partial/failed/empty metinleri.
+  İkisi de Proposed, özel karar bekler; yeni sözleşme uygulanmadı.
+- **Sınırlar / sonraki:** Genel M1, boğa/teknik/haftalık/aylık tarayıcı ve provenance
+  açık. Trend/özet modül dışında çağrılmıyor, bu aktif okuyucu envanterinde N/A.
+  Kullanıcı servisi/artifact'ı, frontend/dependency/CI aynı; canlı/full-browser/uzak
+  CI yeniden yok. Upstream CDSK validator yok, yapı kontrolü onun sonucu değildir.
+- **Git:** Başlangıç8c554ae, grafikbe5d555; aynı codex dalı ve önceki commit/push
+  tercihi sürer. Nihai SHA git log/remote kaydından doğrulanır.
+
+### Önceki ADR-0010 uygulama devri — 2026-11-06
 
 - **Uygulama:** [ADR-0010](docs/50-decisions/ADR-0010.md) açık A onayıyla Accepted.
   [Execution kanıtı](docs/20-execution/2026-11-06-adr0010-implementation.md): nedensel

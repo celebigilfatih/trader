@@ -23,3 +23,5 @@
 | [ADR-0008](ADR-0008.md) | ML ufuk sınırı, confidence girdisi ve gözlem ufku sunumu | Accepted |
 | [ADR-0009](ADR-0009.md) | Stochastic API seçicisinin skaler %K eşlemesi | Accepted |
 | [ADR-0010](ADR-0010.md) | VWEMA hacim ağırlığı ve Supertrend hazır olma sözleşmesi | Accepted |
+| [ADR-0011](ADR-0011.md) | Skaler analiz API'sinde çoklu çıktı seçicilerinin sınırı | Proposed |
+| [ADR-0012](ADR-0012.md) | Legacy RSI taramasında değerlendirme ve kesinti ayrımı | Proposed |
