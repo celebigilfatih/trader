@@ -66,8 +66,10 @@ sentetik OHLCV/None/exception enjeksiyonu. Actual RSI button AST okuyucu.
   geçici probe ile raporlanır; bozuk sözleşme normatif passing test yapılmaz.
 - [x] Dış socket engelli hedef/tam backend; anlamlı transient mutantlar,
   compile/39 CDSK dosyası/11 Boot/10 Accepted ADR/link/diff; upstream validator ayrı.
-- [ ] Tek fresh-context bağımsız son inceleme, gereken TDD düzeltmesi ve kalıcı
-  sonuç/karar/sınır kayıtları. Önceki yetkiyle son commit/push ve remote SHA/clean tree.
+- [x] Tek fresh-context bağımsız son inceleme, gereken TDD düzeltmesi ve kalıcı
+  sonuç/karar/sınır kayıtları.
+- Teslim: önceki açık yetkiyle aynı dala commit/push; remote SHA/clean tree
+  son yanıtta doğrulanır. Nihai SHA git log/remote kaydıdır.
 
 ## Evidence
 
@@ -121,3 +123,39 @@ frontend build ve uzak CI yeniden çalıştırılmadı. Upstream CDSK validator 
 Son tam paket **431/431 /18.175 s /OK**, dış socket engelli, asyncio loopback
 serbest.69 Python compile/39 zorunlu belge/11 Boot/10 Accepted+2 Proposed ADR ve
 değişen belgelerin yerel bağlantıları/diff kontrolü geçti; upstream CDSK sonucu değildir.
+
+## Bağımsız son inceleme ve yürütücü kararları
+
+Fresh-context inceleme8c554ae..bd2b6a9 ve sonraki iki approval-boundary belge
+netleştirmesini kontrol etti. Yeni Critical/Important veya actionable Minor yok;
+önceden var olan OS-02/RS-01 **Important** olarak ayrıca doğrulandı.
+İncelemecinin kendi hedef koşusu **45/45 /1.940 s /OK**, dış socket engelli;
+HTTP ve actual buton karşı örneklerini de bağımsız tekrar etti. Tam431 ve14-mutant
+kanıtı yürütücüye aittir, bağımsız tam tekrar iddia edilmez. Son görev kapısı
+tam paketi **431/431 /18.363 s /OK** yeniden geçti. Helper encoded log'u binary
+match diye etiketledi; gerçek log sonundaki sayı/OK ayrıca okunup doğrulandı.
+
+İncelemecinin kapsam dışında bıraktıkları hakkında yürütücü kararları:
+
+1. OS-02/RS-01 düzeltmesini öneriler onaylanmadan uygulamamak: altı seçiciyi400
+   yapma ve geçici tanı/hata sunumu mevcut sözleşme kararlarıdır. Kullanıcı etkisi
+   değerlendirildi ve açık tutuldu; karar beklerken HTTP500 ve yanıltıcı no-match
+   riski sürer. Kullanıcının genel devamı henüz sunulmamış iki A'nın özel onayı değildir.
+2. Diğer legacy tarayıcılar/provenance/genel M1 kapanmaz: bu dilim ilk RSI ve
+   FVG/OB chart'tır. Aksi karar sınanmayan zincirleri tamamlanmış gibi gösterir.
+3. Canonical/causal patern ve finansal etkinlik doğrulanmış sayılmaz: batch
+   hesaplar ve future-bar filled bilgisi korundu. Aksi yorum kanıtlanmamış
+   yatırım/causality beklentisi yaratır; burada gerçek okuyucu doğrulandı.
+4. Farklı/kesilmiş DataFrame ile ayrı analyzer eşleştirme desteği eklenmez:
+   mevcut iki chart çağıranı analyzer'ı çizilen frame'den kurar. Farklı tarihli
+   eşleştirmede date bulunamazsa chart hata verebilir; yeni bu kullanım kapsam dışıdır.
+5. Tam monolit/browser/canlı provider/frontend build/uzak CI/dependency uyumluluğu
+   başarısı iddia edilmez: kontrollü hedef/tam backend ve seçili runtime kanıtı
+   vardır; bu ortamlara veya başka sürümlere özel kusurlar dışlanmış değildir.
+6. Upstream CDSK validator başarısı iddia edilmez: bilinen konumlarda yoktur.
+   Yapı/link/compile kontrolü standardın normatif validator sonucunun yerine geçmez.
+
+Ertelenen Minor yok. Kullanıcıya önerilen somut sonraki kararlar ADR-0011 A ve
+ADR-0012 A'dır; Proposed kalırlar. İlgili approval-boundary paragrafları AGENTS'in
+“veri modeli/migration” kapısını bu sözleşmelere uygulamanın yorum olduğunu açıklar;
+genel test/kod bakımına hayalî onay şartı eklenmez.

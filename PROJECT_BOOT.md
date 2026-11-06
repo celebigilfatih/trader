@@ -224,6 +224,9 @@
   tam431/431 (18.175 s), dış socket engelli, asyncio loopback serbest.
  14 geçerli bellek içi mutant assertion failure/0error; ilk harness aksaklıkları
   başarı sayılmadı.69 compile/39 CDSK dosyası/11 Boot/10 Accepted+2 Proposed ADR.
+  Yerel98 belge linki/diff geçti. Bağımsız incelemede yeni engelleyici bulgu yok;
+  incelemeci45/45 (1.940 s) ve iki karşı örneği tekrar doğruladı. Yürütücünün son
+  tam kapısı431/431 (18.363 s); bağımsız tam431/mutant tekrarı iddia edilmez.
 - **Açık kararlar:** [ADR-0011](docs/50-decisions/ADR-0011.md) A: altı multi-output
   seçici HTTP400; [ADR-0012](docs/50-decisions/ADR-0012.md) A: mevcut RSI listesine
   dokunmadan geçici tanı ve doğru success/partial/failed/empty metinleri.
