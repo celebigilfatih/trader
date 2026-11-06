@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — M1-P0-01 momentum çekirdeği testleri
+
+- Gerçek Stochastic/Williams %R/CCI için17 test: High/Low/Close ve rolling
+  expiry, K/D warmup, endpoints/sıfır, CCI typical price/MAD/0.015, config,
+  flat sonrası toparlanma ve girdi/index/prefix korunması. Ta/pandas gerçek.
+- 34 geçerli transient mutant assertion failure/0 error; restore17/17.
+  Tam366 backend testi dış socket engelli /28.443 saniye /OK. Frontend build,
+  browser ve canlı sağlayıcı tekrar koşulmadı; finansal etkinlik ölçülmedi.
+  Bağımsız son inceleme bulgusuz; reviewer17 hedef testi yeniden doğruladı.
+- OS-01: Stochastic API seçici/çıktı anahtarı uyuşmazlığı kontrollü provider ile
+  yeniden üretildi; KeyError passing beklenti yapılmadı. Sonraki öncelik çıktı
+  sözleşmesini somutlaştırmak. Kalan VWEMA/Supertrend/aktif bağlantılar ve M1 açık.
+- Kapanış matrisi/backlog/milestone/mimari/kalite/requirements ve Boot1.52 güncel;
+  runtime/API alanları/CI/manifest/ADR kararları değişmedi.
+
 ### 2026-11-06 — M1 kabul kapıları ve kalan P0 kontrolü
 
 - M1_CLOSEOUT kabul/kanıt matrisi, gerçek çağrı envanteri ve dört sıralı P0 alt

@@ -1,6 +1,24 @@
 # Test Strategy
 
-## Güncel M1 kanıtı ve sınırı — 2026-11-06
+## Momentum hesaplama dilimi — 2026-11-06
+
+`test_momentum_indicators.py` 17 gerçek hesaplama testi ekler: K14/D3 ve
+Williams14 için ayrı H/L/C, ekstremumun pencereden çıkması, ilk geçerli değerler,
+endpoints/sıfır; CCI20 için typical price/MAD/0.015 ve iki impulse'un çıkışı.
+Config override, flat sonrası toparlanma, girdi/index/prefix de sınanır.
+Ta/pandas mock'lanmaz; literal/rasyonel beklenen değerler bağımsızdır.
+34 geçerli transient mutant assertion failure/0 error; restore sonrası 17/17.
+İlk koşudaki üç KeyError mutant sonucu alan-varlığı assertion'larıyla güçlendirildi;
+error sonuçları mutation başarısı sayılmadı. Tam paket **366 test / 28.443 s / OK**,
+dış socket engelli, Windows asyncio loopback serbest. Üretim kodu değişmedi.
+
+OS-01: gerçek analiz route fonksiyonu fixture provider ile `stoch` seçimi için
+`KeyError('stoch')` verir; Williams/CCI geçer. Hatalı davranış passing beklentiye
+çevrilmedi. Bu çekirdek dilimi API çoklu çıktı okuyucusunu veya bütün UI'yı
+doğrulamaz. Frontend build/browser ve canlı sağlayıcı tekrar koşulmadı.
+Plan/kanıt [execution kaydındadır](../20-execution/2026-11-06-momentum-indicator-tests.md).
+
+## Önceki M1 kapanış kontrolü — 2026-11-06, 349 test
 
 [M1 kapanış kontrolü](../20-execution/M1_CLOSEOUT.md) mevcut kabul ölçütlerini
 test ve aktif okuyucu envanterine bağlar. Yeni tam koşu dış socket engelli
@@ -62,7 +80,7 @@ Bu belge adımında frontend build/browser ve canlı sağlayıcılar tekrar koş
   haliyle yanlış negatif üretebilir).
 - **Unit / offline API:** `make test-backend` veya
   `python3 -m unittest discover -s backend/tests -p 'test_*.py'`.
-  2026-11-06 güncel doğrulaması: 349 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
+  2026-11-06 güncel doğrulaması: 366 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
   sabit sentetik OHLCV ile sınar; `test_api_contracts.py` hem sözleşme doubles'ını
   hem gerçek hesaplayıcıyla analiz/RSI akışlarını kapsar. Beklenen değerler
   hesaplayıcının kendi çıktısından türetilmez. RSI mevcut konfigürasyonda 22 dönemdir.

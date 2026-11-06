@@ -8,6 +8,23 @@
   [gereksinimler](../00-product/REQUIREMENTS.md), BL-001/002/003 ve Accepted
   ADR-0004–0008. Constitution Draft olarak kalır.
 
+## Güncel ilerleme — momentum test dilimi
+
+Stochastic/Williams %R/CCI çekirdek dilimi 17 gerçek hesaplama testiyle
+doğrulandı; 34 geçerli bellek içi mutant assertion failure verdi, error yok.
+Tam paket **366 test / 28.443 s / OK**, dış socket engelli; asyncio loopback
+serbest. Çalışma zamanı/CI/manifest ve finansal politika değişmedi.
+Plan ve ayrıntı [momentum execution kaydındadır](2026-11-06-momentum-indicator-tests.md).
+
+**OS-01 açık:** Gerçek analiz route fonksiyonunda kontrollü provider ile
+`indicators=stoch`, `KeyError('stoch')` üretir: hesaplayıcı `stoch_k/stoch_d`
+üretirken API seçici anahtarı okumaktadır. Williams/CCI aynı reproducer'da
+sayısal yanıt verir. Bu, çekirdek hesabın veya API Stochastic entegrasyonunun
+tamamlandığı iddiası değildir. Hatalı API davranışı passing test yapılmadı.
+Sonraki öncelik OS-01 için mevcut API sözleşmesini netleştirmek; alan/veri
+sözleşmesi değişecekse somut öneri ve AGENTS onayı gerekir. Ardından kalan
+VWEMA/Supertrend ve aktif okuyucu bağlantıları izlenir.
+
 ## Kabul ölçütü ve kanıt matrisi
 
 “Dilim doğrulandı” yalnız belirtilen akış için geçerlidir; “kısmi” genel kapanış
@@ -15,7 +32,7 @@ kanıtının eksik olduğunu belirtir. Test sayısı bir kabul eşiği değildir
 
 | Mevcut M1 ölçütü | Kanıt | Durum / kalan iş |
 |---|---|---|
-| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 349 backend testi dış socket bağlantıları engelli geçti. Teknik analiz, patern/BOS/kombolar, sinyal, risk/pozisyon, OTT ve ML için bağımsız beklenen değerler ve önceki mutation kayıtları var. | **Kısmi.** Seçilebilir Stochastic/Williams %R/CCI, bazı diğer hesaplar ve legacy `StockScreener` zincirleri için açık kanıt yok. P0-01/02. |
+| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 366 backend testi dış socket bağlantıları engelli geçti. Teknik analiz, patern/BOS/kombolar, sinyal, risk/pozisyon, OTT, ML ve Stochastic/Williams %R/CCI çekirdeği için bağımsız beklenen değerler ve mutation kayıtları var. | **Kısmi.** OS-01 Stochastic API okuyucusu, kalan VWEMA/Supertrend/aktif bağlantılar ve legacy `StockScreener` zincirleri açık. P0-01/02. |
 | Veri ve mock/deneysel kaynaklar açıkça etiketlenir (REQ-005/006, BL-002) | Cockpit analiz/RSI için 10 deterministik tarayıcı senaryosu; legacy haber/ML için 17 kontrollü AppTest. Accepted A metinleri, ADR-0004 zaman/skor ve ADR-0008 gözlem ufku uygulandı. | **Onaylı dilim doğrulandı; genel kapsam kısmi.** Diğer aktif legacy sonuçların kaynak/son bar/deneysel nitelik ve hata sonrası eski sonuç davranışı ekran envanterine bağlanmalı. P0-03. |
 | Entegrasyon hatası görünürdür (REQ-001, BL-003) | OHLCV provider/adaptör ve RSS transport/tanı testleri; partial/failed RSS uyarıları ve cockpit veri yok/503/yeniden deneme senaryoları var. Sentetik fiyat veya başarısız NLP için sahte nötr skor üretilmez. | **Kısmi.** Legacy tarayıcı bazı istisnaları `continue` ile atlar; boş sonuç ile kesinti ayrımı ayrıca sınanmalı. Diğer aktif Yahoo yolları için bütçe/tanı ve okuyucu kapsamı netleşmeli. P0-02/04. |
 
@@ -25,7 +42,7 @@ Kaynak kanıtları: [test stratejisi](../30-quality/TEST_STRATEGY.md),
 [ADR-0007 uygulaması](2026-11-06-adr0007-implementation.md),
 [ADR-0008 uygulaması](2026-11-06-adr0008-implementation.md).
 
-## Bu kontrolde yeniden doğrulananlar
+## İlk kapanış kontrolünün tarihsel kanıtı — 349 test
 
 - `.venv/Scripts/python.exe -B -` üzerinden unittest discovery: **349 test,
   53.874 saniye, OK**. Dış `connect`, `connect_ex` ve `create_connection`
@@ -73,14 +90,14 @@ beklenir. Bilinen bir kusur passing beklenti olarak sabitlenmemelidir.
 
 | Sıra / kayıt | Kapsam | Somut kapanış kanıtı | Karar sınırı |
 |---|---|---|---|
-| **1 — M1-P0-01 / BL-001** | İlk dilim Stochastic, Williams %R ve CCI. Ardından VWEMA, Supertrend ve FVG/OB aktif okuyucu bağlantıları; trend gücü/özet önce aktif kullanım veya gerekçeli N/A açısından sınıflandırılır. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
+| **1 — M1-P0-01 / BL-001** | Stochastic, Williams %R ve CCI çekirdek test dilimi tamamlandı; OS-01 API okuyucu kusuru açık. Kalan VWEMA, Supertrend ve FVG/OB aktif okuyucu bağlantıları; trend gücü/özet önce aktif kullanım veya gerekçeli N/A açısından sınıflandırılır. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
 | **2 — M1-P0-02 / BL-001/003** | UI'nın gerçekten çağırdığı legacy `StockScreener` yolları; önce RSI, ardından boğa taramaları ve haftalık/aylık performans. | Gerçek analyzer + enjekte OHLCV ile dahil/dışarıda/eşitlik/sıralama; interval-period iletimi; boş/yetersiz veri, bir sembolün hatası ve tüm kaynakların kesintisi. Sağlayıcı ağı ve gerçek sleep kullanılmaz; boş sonuç/kesinti görünürlüğü ayrıca kontrol edilir. | Yeni çıktı alanı veya hata sözleşmesi gerekiyorsa önce somutlaştırılır; mevcut kusur sessizce doğru kabul edilmez. |
 | **3 — M1-P0-03 / BL-002** | Aktif legacy analiz/tarama sonuçlarını onaylı kaynak/deneysel metinler ve hata sonrası durumla eşleştiren ekran envanteri. | Her aktif sonuç için kaynak, veri zamanı, veri niteliği ve eksik/hatalı durumda gösterim kanıtı veya gerekçeli N/A; yanlış “canlı/gerçek” iddiası ve eski sonucun güncel sunulması kalmaz. Bağlanmayan mock yardımcılar ayrı kaydedilir. | Kabul edilmiş metinlerin uygulanması kapsamındadır; yeni ekran/model/metadata sözleşmesi ayrıca onay gerektirebilir. |
 | **4 — M1-P0-04 / BL-003** | OHLCV provider dışındaki aktif Yahoo/SDK çağrılarını ve hata okuyucularını sınıflandırma. | Her aktif yol için mevcut timeout/retry/hata dönüşü ve kullanıcı görünürlüğü; kontrollü başarı/boş/kesinti testi. Kullanılmayan yöntemler gerekçeli N/A. `.info` kullanan yardımcılar ortak OHLCV bütçesi altında diye raporlanmaz. | Yeni SDK bütçe/retry/transport politikası Accepted ADR-0005'in otomatik uzantısı değildir; gerekirse Proposed ADR ve açık onay. Üretim merkezi monitoring bu dilime eklenmez. |
 
-**Hemen sonraki uygulama:** M1-P0-01'in Stochastic/Williams %R/CCI dilimi.
-Önce yeni finansal davranış seçmeden mevcut hesaplama ve pencere sınırları
-bağımsız beklenen değerlerle sınanır; bulunan kusurlar ayrıca değerlendirilir.
+**Hemen sonraki adım:** OS-01 Stochastic API okuyucusunun mevcut sözleşmesini
+somutlaştırmak; ardından M1-P0-01'in kalan VWEMA/Supertrend ve aktif bağlantıları.
+Çekirdek testlerinin geçmesi bütün okuyucuların çalıştığını göstermez.
 
 ## Tekrarlanabilirlik ve CI sınırı
 
@@ -128,6 +145,6 @@ bağımsız beklenen değerlerle sınanır; bulunan kusurlar ayrıca değerlendi
 M1 ancak yukarıdaki üç mevcut kabul ölçütü için kalan aktif yollar kanıtlandığında
 veya yetkili kapsam kararıyla gerekçeli N/A olduğunda yeniden değerlendirilebilir.
 P0 test/hata görünürlüğü veya veri niteliği açığı varken **Completed** yapılmaz.
-Genel Definition of Done şablonu bu belgeyle topluca işaretlenmez. Bu adım yalnız
-kontrol kaydını ve kaynak belgelerin tutarlılığını tamamlar; çalışma zamanı,
-testler, CI, veri modeli, bağımlılıklar ve kabul edilmiş ADR'ler değişmez.
+Genel Definition of Done şablonu bu belgeyle topluca işaretlenmez. İlk kapanış
+kontrolü yalnız belgeleri değiştirdi; sonraki momentum dilimi 17 test ekledi.
+Çalışma zamanı, CI, veri modeli, bağımlılıklar ve kabul edilmiş ADR'ler değişmedi.

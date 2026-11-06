@@ -82,9 +82,13 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   sağlar; RSS/Yahoo kaynak tanıları bellektedir. Merkezi üretim gözlemi açık.
 - UI ve domain hesaplamalarının büyük ölçüde tek dosyada birleşmesi değişiklik
   riskini yükseltiyor.
-- 349 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
+- 366 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
   Windows asyncio için yerel loopback serbest. Legacy `test_app.py` ve
   tarayıcı smoke akışı dış sağlayıcılara bağlı kalabilir.
+- Stochastic/Williams %R/CCI çekirdeği 17 gerçek hesaplama testiyle sınandı.
+  API analiz okuyucusunda `stoch` seçici anahtarı `stoch_k/stoch_d` üretimiyle
+  eşleşmiyor; kontrollü reproducer KeyError verir (OS-01). Bu test dilimi API
+  alanlarını değiştirmedi; [execution kaydı](../20-execution/2026-11-06-momentum-indicator-tests.md).
 - Ayrı deterministik cockpit modu 10 senaryodur. 17 kontrollü Streamlit AppTest
   legacy haber/ML fonksiyonlarını render eder; tam uygulama/browser kanıtı değildir.
 - BOS mevcut batch hesabında swing için çevredeki gelecek mumları da kullanır;

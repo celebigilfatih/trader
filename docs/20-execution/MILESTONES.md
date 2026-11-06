@@ -18,12 +18,14 @@
   hata görünürlüğü.
 - **Risks:** Mevcut UI monoliti ve dış servislerin değişken yanıtları.
 - **Status:** In Progress
-- **Evidence (2026-11-06):** 349 backend testi dış socket engelli geçti;
-  patern/sinyal/risk/OTT/ML ve onaylı RSS/provenance dilimleri doğrulandı.
+- **Evidence (2026-11-06):** 366 backend testi dış socket engelli geçti;
+  momentum/patern/sinyal/risk/OTT/ML ve onaylı RSS/provenance dilimleri doğrulandı.
   Kalan indikatörler, legacy tarayıcı zincirleri ve diğer aktif veri/hata yolları
   genel kapanışı engelliyor. Kabul matrisi ve sıralı P0 işleri
-  [M1 kapanış kontrolündedir](M1_CLOSEOUT.md); sonraki dilim Stochastic/Williams
-  %R/CCI testleridir. Önceki 35 test kaydı tarihsel başlangıç kanıtıdır.
+  [M1 kapanış kontrolündedir](M1_CLOSEOUT.md). Stochastic/Williams %R/CCI çekirdeği
+  17 yeni testle doğrulandı; OS-01 Stochastic API okuyucusu açık. Sonraki öncelik
+  bu çıktı sözleşmesini somutlaştırmak; kalan VWEMA/Supertrend/aktif bağlantılar
+  ardından gelir. Önceki 35 test kaydı tarihsel başlangıç kanıtıdır.
 
 ## Milestone — M2 ürün doğrulama ve çekirdek açılımı
 

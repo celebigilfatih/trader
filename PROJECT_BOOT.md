@@ -1,6 +1,6 @@
 # BIST Teknik Analiz Uygulaması — Project Boot
 
-- **Document version:** 1.51
+- **Document version:** 1.52
 - **CDSK version:** 0.1.0
 - **Last updated:** 2026-11-06
 
@@ -41,10 +41,10 @@
 - **Version:** Release etiketi yok (`TBD`).
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
   tabanı In Progress. Güncel kabul kanıtı ve kalan işler M1_CLOSEOUT kaydında.
-- **Current focus:** Accepted ADR-0008 uygulandı; ML-01–08 bilinen dar dilimleri
-  ve gözlem ufku sunumu tamamlandı. M1 kapanış matrisi hazır; 349 test tekrar
-  geçti. Sonraki iş M1-P0-01 Stochastic/Williams %R/CCI bağımsız hesaplama testleri;
-  legacy tarayıcı ve kalan veri/hata yolları nedeniyle genel M1 açık.
+- **Current focus:** Stochastic/Williams %R/CCI çekirdek dilimi 17 yeni testle
+  doğrulandı; toplam 366 backend testi. Sonraki öncelik OS-01 Stochastic API
+  anahtar/çıktı sözleşmesini somutlaştırmak; ardından VWEMA/Supertrend ve aktif
+  okuyucu boşlukları. Genel M1 açık; yeni ADR veya runtime değişikliği yok.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
@@ -113,15 +113,15 @@
   onay sorusuna “onaylıyorum” dedi; başka algoritma/version/üretim onayı değildir.
   Sonraki somut ADR-0007 sorusuna “Onaylıyorum.” ile o sözleşme de Accepted oldu.
   Sonraki “onayladım, devam edelim” yanıtı somut ADR-0008'i Accepted yaptı.
-- **Recently completed:** Tek bounds/clip, price-current helper ve legacy
-  uyumu; panel h gözlem/actual last_index/0..h şematik eksen.18 yeni testle349
-  backend/97 ML core/17 controlled UI; bağımsız59 hedef test incelemesi önemli bulgusuz.
+- **Recently completed:** M1 kabul/kanıt matrisi ve ilk momentum dilimi;
+  17 yeni test/34 geçerli mutant ve toplam366 backend testi. Önceki ADR-0008
+  ufuk/helper/gözlem sunumu kapandı;97 ML core/17 controlled UI kayıtları korunur.
 
 ## 7. Current Priorities
 
-1. M1 kabul kapılarını kalan P0 eksikleriyle eşlemek; çekirdek test/veri
-   güvenilirliği ve hata/kaynak görünürlüğü için somut kapanış listesi çıkarmak.
-   Bilinen ML-01–08 dilimleri kapandı; genel M1 ve kalibrasyon ayrı.
+1. M1 kapanış listesini uygulamak: OS-01 Stochastic API okuyucusu için çıktı
+   sözleşmesini netleştirmek; ardından VWEMA/Supertrend ve aktif okuyucu testleri.
+   Momentum çekirdeği ve ML-01–08 dar dilimleri kapandı; genel M1/kalibrasyon açık.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
    senaryo testlerini eklemek.
@@ -185,7 +185,8 @@
 - [x] Çevrimdışı market-data/API/teknik hesaplama, patern/sinyal ve RSS/NLP ile
   kontrollü Streamlit, ADR-0005 transport/tanı ve değişken MACD/Bollinger testleri
   ile temel BOS/kombolar ve risk/pozisyon/DayTrader testleri eklendi; toplam
-  backend test sayısı349;97 ML core testi ve17 kontrollü Streamlit testi içerir.
+  backend test sayısı366;97 ML core testi ve17 kontrollü Streamlit testi içerir.
+  Son momentum dilimi17 gerçek hesaplama testi ekledi; OS-01 API okuyucusu açık.
   Bu, M1'in bütün kabul kriterlerinin kapandığı anlamına gelmez.
 - [x] On deterministik tarayıcı senaryosu üretim frontend'inde ve Next.js
   üretim derlemesi geçti; canlı sağlayıcı smoke'u bu adımda çalıştırılmadı.
@@ -193,6 +194,27 @@
 ## 11. AI Handoff
 
 ### Güncel devir — 2026-11-06
+
+- **Momentum dilimi:** [Execution kaydı](docs/20-execution/2026-11-06-momentum-indicator-tests.md).
+  Gerçek add_indicator/get_latest zincirinde17 test; K14/D3, Williams14, CCI20,
+  High/Low/Close, rolling expiry, HLC typical price/MAD/0.015, warmup/flat/zero,
+  config, girdi/index/prefix. Ta/pandas mock'lanmadı; runtime değişmedi.
+- **Kanıt:**34 geçerli transient mutant assertion failure/0 error; restore17/17.
+  İlk üç mutant KeyError'ı açık alan-varlığı assertion'larıyla giderildi.
+  Tam366 test dış socket engelli /28.443 s /OK, asyncio loopback serbest.
+  Bağımsız son inceleme bulgusuz; reviewer17 hedef testi0.038 s'de doğruladı.
+  63 Python compile/39 belge/11 Boot/8 Accepted ADR ve link/diff kontrolü geçti.
+  Frontend/canlı sağlayıcılar bu test adımında yeniden koşulmadı.
+- **Açık OS-01 / sonraki iş:** Gerçek route fonksiyonu `indicators='stoch'`
+  ile KeyError verir; üretici stoch_k/stoch_d, okuyucu stoch arar. Williams/CCI
+  aynı kontrollü provider reproducer'ında geçer. Hatalı davranış passing test
+  yapılmadı. Sonraki öncelik çıktı sözleşmesini somutlaştırmak; alan/veri modeli
+  değişirse AGENTS onayı gerekir. Ardından kalan VWEMA/Supertrend/aktif bağlantılar.
+- **Sınır/Git:** Başlangıç `c3a5047`, aynı codex dalı; önceki commit/push yetkisi
+  sürer. Yeni ADR/runtime/CI/dependency/artifact değişikliği yok. M1 In Progress;
+  Constitution Draft, upstream validator yokluğu ve mevcut uyarılar sürer.
+
+### Önceki M1 kapanış kontrolü — 2026-11-06
 
 - **Kapanış kontrolü:** [M1 kabul/kanıt matrisi](docs/20-execution/M1_CLOSEOUT.md)
   tamamlandı. BL-001/002/003 dar doğrulamaları ile kalan aktif yol eksikleri
@@ -801,6 +823,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
+| 1.52 | 2026-11-06 | Momentum çekirdeğine17 test/34 geçerli mutant;366 backend testi dış socket engelli geçti. Runtime değişmedi; OS-01 Stochastic API okuyucu kusuru açık ve sonraki öncelik, genel M1 açık. |
 | 1.51 | 2026-11-06 | M1 kabul/kanıt matrisi ve sıralı P0 kapanış listesi;349 test dış socket engelli yeniden geçti. Requirement/CI/release belge çelişkileri uyumlandı; sonraki dilim Stochastic/Williams %R/CCI, M1 açık. |
 | 1.50 | 2026-11-06 | ADR-0008 özel onayla uygulandı;18 yeni/349 backend testi,97 ML core/17 controlled UI. Tek cap/helper/gözlem sunumu kapandı; fbc7c43 aynı dala push, genel M1 açık. |
 | 1.49 | 2026-11-06 | abfc592 checkpoint commit/push;331 backend, üretim build ve10 Edge senaryosu tekrar geçti. ADR-0008 Proposed tasarımı/review hazır; özel onay bekliyor, runtime aynı. |

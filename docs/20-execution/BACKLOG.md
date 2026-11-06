@@ -2,6 +2,21 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+M1-P0-01 Stochastic/Williams %R/CCI çekirdek dilimi tamamlandı: 17 yeni gerçek
+hesaplama testi; 34 geçerli transient mutant assertion failure/0 error. Tam
+366 backend testi dış socket engelli / 28.443 s / OK. Girdi/index/prefix,
+pencere, config, warmup/flat ve gerçek sıfır ayrımı sınandı; runtime değişmedi.
+Plan/kanıt [momentum kaydındadır](2026-11-06-momentum-indicator-tests.md).
+
+**OS-01 — açık P0 okuyucu kusuru:** `analyze_symbol(..., indicators='stoch')`
+gerçek hesaplayıcı + kontrollü provider ile `KeyError('stoch')` verir.
+Üretici `stoch_k/stoch_d`, API okuyucusu seçici `stoch` anahtarını kullanır.
+Bu kusur passing beklenti yapılmadı; sonraki öncelik API çıktı sözleşmesini
+somutlaştırmak, alan/veri sözleşmesi değişecekse somut öneri ve AGENTS onayı.
+Ardından VWEMA/Supertrend ve diğer aktif okuyucu boşlukları kalır. M1 açık.
+
+### Önceki M1 kapanış kontrolü
+
 M1 kabul kapısı kontrolü tamamlandı; milestone **In Progress** kalır.
 [Kapanış matrisi ve sıralı P0 işleri](M1_CLOSEOUT.md): önce Stochastic/Williams
 %R/CCI, sonra diğer hesap/okuyucu boşlukları, gerçek legacy tarayıcı zincirleri,
@@ -10,7 +25,8 @@ aktif ekran provenance envanteri ve diğer aktif Yahoo hata yolları.
 ve bütün `StockScreener` metotları sıfır çağrı verdi. Bu bir satır/branch coverage
 veya finansal etkinlik ölçümü değildir. REQ-004 Accepted ADR-0004 ile uyumlandı;
 REQ-006/007 kısmen doğrulandı. CI yalnız `make ci` çalıştırır; README düzeltildi.
-Üretim kodu/test/CI/dependency/ADR değişmedi. Sıradaki iş M1-P0-01 ilk test dilimi.
+Üretim kodu/test/CI/dependency/ADR o kontrol adımında değişmedi. O aşamadaki
+M1-P0-01 ilk test dilimi yukarıda tamamlandı.
 
 ### Önceki ADR-0008 uygulama dilimi
 
@@ -121,7 +137,7 @@ RSS bütçe/tanı ve legacy kaynak görünürlüğü uygulama kaydı:
 - **CDSK:** 0.1.0 belge/çalışma iskeleti kurulu; M0 tamamlandı olarak kayıtlı.
   Yapısal validator'ın geçmesi, tüm ürün veya operasyon gereksinimlerinin
   tamamlandığı anlamına gelmez. Constitution hâlâ Draft ve TBD alanları var.
-- **M1:** Kısmi; 349 backend testi (ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
+- **M1:** Kısmi; 366 backend testi (momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
   dış ağ engelli geçti. Cockpit seti 10/10 deterministik senaryodur. İlk dört
   işin ve onaylı RSS politikasının dar dilimleri uygulandı; BL-001 ve genel kapanış kriterleri açık.
 - **M2:** Yerel demo auth, watchlist ve paper portföy temeli var; gerçek davet
