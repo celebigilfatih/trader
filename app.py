@@ -356,6 +356,31 @@ def create_chart(df, analyzer, selected_indicators):
     
     # Teknik indikatörleri ana grafiğe ekle
     for indicator, enabled in selected_indicators.items():
+        # Real pattern calculators publish directional DataFrames, not scalar
+        # Series or the older positional-list representation below.
+        if enabled and indicator in ('fvg', 'order_block'):
+            prefix = 'fvg' if indicator == 'fvg' else 'ob'
+            if any(f'{prefix}_{direction}' in analyzer.indicators for direction in ('bullish', 'bearish')):
+                if indicator == 'fvg':
+                    width, line_width = 5, 1
+                    styles = [('bullish', 'rgba(76, 175, 80, 0.2)', 'rgba(76, 175, 80, 0.5)'),
+                              ('bearish', 'rgba(244, 67, 54, 0.2)', 'rgba(244, 67, 54, 0.5)')]
+                else:
+                    width, line_width = 10, 2
+                    styles = [('bullish', 'rgba(33, 150, 243, 0.15)', 'rgba(33, 150, 243, 0.6)'),
+                              ('bearish', 'rgba(255, 152, 0, 0.15)', 'rgba(255, 152, 0, 0.6)')]
+                for direction, fill_color, line_color in styles:
+                    zones = analyzer.indicators.get(f'{prefix}_{direction}')
+                    if isinstance(zones, pd.DataFrame):
+                        for _, zone in zones.iterrows():
+                            start = np.flatnonzero(df.index == zone['date'])[0]
+                            fig.add_shape(
+                                type='rect', x0=zone['date'],
+                                x1=df.index[min(start + width, len(df.index) - 1)],
+                                y0=zone['low'], y1=zone['high'], fillcolor=fill_color,
+                                line=dict(color=line_color, width=line_width), row=1, col=1
+                            )
+                continue
         if enabled and indicator in analyzer.indicators:
             indicator_data = analyzer.indicators[indicator]
             config = INDICATORS_CONFIG.get(indicator, {})
