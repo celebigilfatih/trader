@@ -2,14 +2,26 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+M1 kabul kapısı kontrolü tamamlandı; milestone **In Progress** kalır.
+[Kapanış matrisi ve sıralı P0 işleri](M1_CLOSEOUT.md): önce Stochastic/Williams
+%R/CCI, sonra diğer hesap/okuyucu boşlukları, gerçek legacy tarayıcı zincirleri,
+aktif ekran provenance envanteri ve diğer aktif Yahoo hata yolları.
+349 test dış socket engelli yeniden geçti; çağrı envanterinde ilk üç indikatör
+ve bütün `StockScreener` metotları sıfır çağrı verdi. Bu bir satır/branch coverage
+veya finansal etkinlik ölçümü değildir. REQ-004 Accepted ADR-0004 ile uyumlandı;
+REQ-006/007 kısmen doğrulandı. CI yalnız `make ci` çalıştırır; README düzeltildi.
+Üretim kodu/test/CI/dependency/ADR değişmedi. Sıradaki iş M1-P0-01 ilk test dilimi.
+
+### Önceki ADR-0008 uygulama dilimi
+
 Kullanıcı somut ADR-0008 sorusuna “onayladım, devam edelim” dedi; Accepted ve
 uygulandı. Tek ufuk cap'i, price/current_price helper yolu+legacy uyumu ve panelde
 h gözlem/gerçek son index/0..h şematik eksen tamamlandı.18 yeni testle349 backend,
 97 ML/17 kontrollü Streamlit testi;19 geçerli mutant ve bağımsız inceleme kanıtı
 [execution kaydındadır](2026-11-06-adr0008-implementation.md).
 Fiyat/format1/HTTP/model politikalarının onay dışı kısımları değişmedi; M1 genel
-kapanışı iddia edilmez. Sonraki iş M1 kabul kapıları ve kalan P0 eksiklerini
-somut kapanış listesine dönüştürmek; UI yayılım kalibrasyonu ayrı kalır.
+kapanışı iddia edilmez. O aşamadaki sonraki iş olan M1 kabul kapıları ve kalan
+P0 kapanış kontrolü yukarıda tamamlandı; UI yayılım kalibrasyonu ayrı kalır.
 
 Kullanıcı Commit & Push istedi;70 dosyalık tamamlanmış çalışma `abfc592` ile
 `origin/codex/m1-pattern-signal-tests` dalına gönderildi. Commit öncesi331 backend
@@ -116,10 +128,10 @@ RSS bütçe/tanı ve legacy kaynak görünürlüğü uygulama kaydı:
   operasyonu, alarm/bildirim ve günlük snapshot kapanışı açık.
 - **M3:** Üretim hazırlığı Proposed; PostgreSQL kalıcılığı, worker, deployment,
   backup/restore, rollback ve operasyon sahipliği tamamlanmadı.
-- **Git:** Başlangıç HEAD `6ed1a59`, çalışma dalı
-  `codex/m1-pattern-signal-tests`. Önceki belge/API teslimi yerel geçmişte var;
-  bu oturumda uzak ref doğrulanmadı. Önceki commit/push talebi bu yeni test
-  değişiklikleri için tekrarlanmış bir teslim isteği sayılmadı.
+- **Git:** `codex/m1-pattern-signal-tests`; bu kontrol başlangıcında HEAD
+  `b6f07c6`, çalışma ağacı temiz ve dal upstream ile eşitti. Önceki açık Commit &
+  Push yetkisiyle `abfc592`, `fbc7c43` ve teslim belgeleri aynı dala gönderildi.
+  Daha eski “commit/push yok” notları kendi adımlarının tarihsel kaydıdır.
 
 | ID | Outcome | Priority | Dependencies | Acceptance criteria | Status |
 |---|---|---|---|---|---|
@@ -240,7 +252,10 @@ susturma ve genel dependency destek matrisi de bu test adımında değişmedi.
 - BL-009 hedefi kabul edilmiştir; mevcut yerel API'nin çalışması PostgreSQL,
   snapshot worker, backup veya üretim dağıtımının tamamlandığına kanıt değildir.
 
-## Sıradaki beş iş (mevcut kapsam, yeni ürün kararı değil)
+## İlk beş iş — tarihsel uygulama sırası
+
+Bu ilk listenin dar dilimleri aşağıda kayıtlıdır. Güncel devam sırası ve genel
+M1 kapanışının kalan işleri [M1_CLOSEOUT](M1_CLOSEOUT.md) kaydındadır.
 
 | Sıra | İş / dosyalar | Kabul ve doğrulama | Durum / kapı |
 |---|---|---|---|

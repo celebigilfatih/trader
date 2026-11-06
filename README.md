@@ -252,9 +252,12 @@ make clean           # geçici dosyaları temizle
 
 Repo için otomatik CI, `.github/workflows/ci.yml` ile tanımlıdır ve:
 - `make ci` hedefini çalıştırır (bağımlılık yükleme, testler, frontend build, smoke)
-- `make ci-e2e` hedefini çalıştırır (`make ci-core` + `make smoke-ui-stack`)
-- `make ci-full` hedefini çalıştırır (`make ci-e2e`)
 - Pull request ve `main` branch’e push’larda otomatik olarak tetiklenir.
+
+`make ci-e2e` ve `make ci-full` yerel alternatiflerdir; mevcut GitHub Actions
+workflow'u bu hedefleri veya 10 deterministik tarayıcı senaryosunu çalıştırmaz.
+Feature dalına push tek başına CI koşusu başlatmaz. M1 kanıtı ve açık kapılar
+[kapanış kontrolünde](docs/20-execution/M1_CLOSEOUT.md) izlenir.
 
 ### 12.1. Günlük doğrulama playbook'u (öneri)
 

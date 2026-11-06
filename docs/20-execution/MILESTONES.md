@@ -18,9 +18,12 @@
   hata görünürlüğü.
 - **Risks:** Mevcut UI monoliti ve dış servislerin değişken yanıtları.
 - **Status:** In Progress
-- **Evidence (2026-11-05):** 35 backend testi geçiyor; gerçek teknik hesaplayıcı
-  artık doğrudan ve API üzerinden ağsız sınanıyor. Patern/sinyal/ML kapsamı,
-  veri niteliği görünürlüğü ve entegrasyon kapanışı hâlâ eksik.
+- **Evidence (2026-11-06):** 349 backend testi dış socket engelli geçti;
+  patern/sinyal/risk/OTT/ML ve onaylı RSS/provenance dilimleri doğrulandı.
+  Kalan indikatörler, legacy tarayıcı zincirleri ve diğer aktif veri/hata yolları
+  genel kapanışı engelliyor. Kabul matrisi ve sıralı P0 işleri
+  [M1 kapanış kontrolündedir](M1_CLOSEOUT.md); sonraki dilim Stochastic/Williams
+  %R/CCI testleridir. Önceki 35 test kaydı tarihsel başlangıç kanıtıdır.
 
 ## Milestone — M2 ürün doğrulama ve çekirdek açılımı
 

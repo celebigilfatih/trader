@@ -1,6 +1,6 @@
 # BIST Teknik Analiz Uygulaması — Project Boot
 
-- **Document version:** 0.1
+- **Document version:** 1.51
 - **CDSK version:** 0.1.0
 - **Last updated:** 2026-11-06
 
@@ -40,11 +40,11 @@
   (2026-11-05); ADR-0007 ve Simple ML-04–06 uygulamaları tamamlandı (2026-11-06).
 - **Version:** Release etiketi yok (`TBD`).
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
-  tabanı başladı. Sonraki adım API-first Next.js cockpit’i ile uçtan uca akışın
-  stabilizasyonu.
+  tabanı In Progress. Güncel kabul kanıtı ve kalan işler M1_CLOSEOUT kaydında.
 - **Current focus:** Accepted ADR-0008 uygulandı; ML-01–08 bilinen dar dilimleri
-  ve gözlem ufku sunumu tamamlandı.349 backend testi; sonraki iş M1 kabul kapıları
-  ve kalan P0 eksikleri için somut kapanış listesi. Genel M1 açık.
+  ve gözlem ufku sunumu tamamlandı. M1 kapanış matrisi hazır; 349 test tekrar
+  geçti. Sonraki iş M1-P0-01 Stochastic/Williams %R/CCI bağımsız hesaplama testleri;
+  legacy tarayıcı ve kalan veri/hata yolları nedeniyle genel M1 açık.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
@@ -194,6 +194,24 @@
 
 ### Güncel devir — 2026-11-06
 
+- **Kapanış kontrolü:** [M1 kabul/kanıt matrisi](docs/20-execution/M1_CLOSEOUT.md)
+  tamamlandı. BL-001/002/003 dar doğrulamaları ile kalan aktif yol eksikleri
+  ayrıldı; M1 In Progress. İlk sonraki iş Stochastic/Williams %R/CCI testleri,
+  ardından diğer hesap/okuyucu, legacy tarayıcı, provenance ve Yahoo hata yolları.
+- **Yeni kanıt:** 349 backend testi dış socket engelli / 53.874 s / OK; loopback
+  serbest. Gerçek çağrı profili ilk üç indikatör ve bütün `StockScreener`
+  metotlarında sıfır çağrı gösterdi; satır/branch coverage veya accuracy değildir.
+  Frontend build/10 browser ve canlı sağlayıcılar bu belge adımında koşulmadı.
+- **Belge uyumu:** REQ-004 tarih/skor zorunluluğu Accepted ADR-0004 ile uyumlandı;
+  REQ-006/007 kısmi doğrulandı. MILESTONES eski 35 test kaydı, release planı ve
+  README CI hedefleri güncellendi. CI/test/runtime/manifest/ADR değişmedi;
+  yeni karar yok. CDSK upstream validator yokluğu ve mevcut uyarılar açık.
+- **Git başlangıcı:** Aynı codex dalında `b6f07c6`, temiz ve upstream ile eşit;
+  önceki Commit & Push yetkisi sürer. Bu belge adımının teslim SHA'sı Git
+  geçmişinden izlenir; commit/push ürün kilometre taşı kapanışı değildir.
+
+### Önceki ADR-0008 uygulama devri — 2026-11-06
+
 - **Onay/uygulama:** Somut ADR-0008 sorusuna “onayladım, devam edelim”;
   Accepted ve uygulandı. Tek h bounds ve bir kez clip; price/current_price
   confidence+legacy/mixed-invalid doğrulaması. Panel gözlem/gerçek last_index ve
@@ -214,8 +232,8 @@
   Push yetkisiyle uygulama `fbc7c43` olarak aynı upstream'e gönderildi. Remote SHA,
   clean tree ve ahead/behind0/0 doğrulandı; teslim kaydı ayrı docs commit'inde.
   Kullanıcı
-  dosyası/migration/newdependency/servis yok. Sonraki iş M1 kabul kapıları ve
-  kalan P0 kapanış listesi; genel M1/M2, Constitution Draft ve operasyon kapıları
+  dosyası/migration/newdependency/servis yok. O aşamadaki sonraki M1 kapanış
+  kontrolü yukarıda tamamlandı; genel M1/M2, Constitution Draft ve operasyon kapıları
   açık. Kanıt [execution kaydında](docs/20-execution/2026-11-06-adr0008-implementation.md).
 
 ### Önceki Git teslimi / ADR-0008 tasarım kaydı — 2026-11-06
@@ -783,6 +801,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
+| 1.51 | 2026-11-06 | M1 kabul/kanıt matrisi ve sıralı P0 kapanış listesi;349 test dış socket engelli yeniden geçti. Requirement/CI/release belge çelişkileri uyumlandı; sonraki dilim Stochastic/Williams %R/CCI, M1 açık. |
 | 1.50 | 2026-11-06 | ADR-0008 özel onayla uygulandı;18 yeni/349 backend testi,97 ML core/17 controlled UI. Tek cap/helper/gözlem sunumu kapandı; fbc7c43 aynı dala push, genel M1 açık. |
 | 1.49 | 2026-11-06 | abfc592 checkpoint commit/push;331 backend, üretim build ve10 Edge senaryosu tekrar geçti. ADR-0008 Proposed tasarımı/review hazır; özel onay bekliyor, runtime aynı. |
 | 1.48 | 2026-11-06 | Simple ML-04–06 kapandı;13 yeni test,83 ML/331 backend testi ve11 mutant. Model/config/dependency aynı; sonraki ML-07/08/takvim kararı, genel M1 açık. |

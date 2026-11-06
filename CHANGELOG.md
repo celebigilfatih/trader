@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — M1 kabul kapıları ve kalan P0 kontrolü
+
+- M1_CLOSEOUT kabul/kanıt matrisi, gerçek çağrı envanteri ve dört sıralı P0 alt
+  işi kaydedildi. Sonraki uygulama Stochastic/Williams %R/CCI bağımsız testleri;
+  genel M1 In Progress. M2/M3 ve üretim kapıları M1 kapsamına taşınmadı.
+- 349 backend testi dış socket engelli / 53.874 saniye / OK. İlk üç indikatör
+  ve legacy StockScreener yollarında çağrı yok; bu ölçüm branch coverage veya
+  finansal etkinlik değildir. Frontend build/browser ve canlı sağlayıcı tekrar yok.
+- REQ-004 zorunlu tarih/skor çelişkisi Accepted ADR-0004 ile uyumlandı;
+  REQ-006/007 kısmi doğrulandı. Eski milestone/release/Git ve README CI hedefleri
+  güncellendi; CI yalnız make ci çalıştırır. Backlog/kalite/Boot 1.51 güncel.
+  Runtime/test/CI/dependency/veri modeli ve ADR kararları değişmedi.
+
 ### 2026-11-06 — ADR-0008 onaylı ufuk/helper/panel uygulaması
 
 - Kullanıcı “onayladım, devam edelim” dedi; ADR-0008 Accepted ve uygulandı. Tek

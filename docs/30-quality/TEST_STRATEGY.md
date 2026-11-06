@@ -1,5 +1,22 @@
 # Test Strategy
 
+## Güncel M1 kanıtı ve sınırı — 2026-11-06
+
+[M1 kapanış kontrolü](../20-execution/M1_CLOSEOUT.md) mevcut kabul ölçütlerini
+test ve aktif okuyucu envanterine bağlar. Yeni tam koşu dış socket engelli
+349 test / 53.874 saniye / OK; Windows asyncio loopback serbesttir. Üç gerçek
+modüldeki çağrı profili Stochastic/Williams %R/CCI ve legacy `StockScreener`
+yollarında sıfır çağrı gösterdi. Çağrı envanteri satır/branch coverage veya
+aritmetik doğruluk kanıtı değildir; FVG/OB alt sınıflarının mevcut testlerini
+yok saymaz. M1 ve REQ-007 genel kapanışı kısmi kalır.
+
+Makefile test hedefi genel dış ağ engeli uygulamaz; bu koşunun guard'ı geçici
+çalıştırıcıdaydı. Kalıcı offline çalıştırıcı ve CI bağlantısı ayrı kalite işidir.
+Mevcut workflow PR/`main` push üzerinde yalnız `make ci` çalıştırır;
+`ci-e2e`/`ci-full` veya 10 deterministik browser senaryosu otomatik koşulmaz.
+Bu belge adımında frontend build/browser ve canlı sağlayıcılar tekrar koşulmadı.
+Önceki doğrulama bölümleri tarihsel dilim kanıtları olarak korunur.
+
 ## Risk-based Test Layers
 
 1. **P0 finansal hesaplama birimleri:** İndikatör, sinyal, patern, feature ve risk

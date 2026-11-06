@@ -6,3 +6,6 @@
 | M1 — Güvenilirlik tabanı | Çekirdek analizler çevrimdışı ve deterministik doğrulanır | Testler ağdan ayrılır; veri ve mock kaynakları açıkça etiketlenir | In Progress |
 | M2 — Ürün doğrulama | Kapalı beta hedef akışlarının doğrulanması | Paper portföy, davetli erişim, alarm ve snapshot temel akışları çalışır | In Progress |
 | M3 — Üretim hazırlığı | FastAPI + Next.js + Postgres + Coolify ile güvenli dağıtım adayı | Deployment, backup, health, rollback ve gözlem kararları uygulanır | Proposed |
+
+M1 için güncel kanıt matrisi ve kalan P0 uygulama sırası:
+[M1 kapanış kontrolü](../20-execution/M1_CLOSEOUT.md). Milestone durumu değişmedi.
