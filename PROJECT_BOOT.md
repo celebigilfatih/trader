@@ -211,7 +211,9 @@
   AppTest gerçek extracted function+controlled IO'dur, tam browser/live-provider
   değildir. Next.js kaynakları aynı, önceki build/UI10 tekrar koşulmadı.
 - **Git/sonraki adım:** Başlangıç `1aaed7b`, aynı codex dalı; önceki Commit &
-  Push yetkisiyle doğrulanmış devam işi aynı upstream'e gönderilir. Kullanıcı
+  Push yetkisiyle uygulama `fbc7c43` olarak aynı upstream'e gönderildi. Remote SHA,
+  clean tree ve ahead/behind0/0 doğrulandı; teslim kaydı ayrı docs commit'inde.
+  Kullanıcı
   dosyası/migration/newdependency/servis yok. Sonraki iş M1 kabul kapıları ve
   kalan P0 kapanış listesi; genel M1/M2, Constitution Draft ve operasyon kapıları
   açık. Kanıt [execution kaydında](docs/20-execution/2026-11-06-adr0008-implementation.md).
@@ -781,7 +783,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
-| 1.50 | 2026-11-06 | ADR-0008 özel onayla uygulandı;18 yeni/349 backend testi,97 ML core/17 controlled UI. Tek cap/helper/gözlem sunumu kapandı; genel M1 açık, aynı dalda teslim. |
+| 1.50 | 2026-11-06 | ADR-0008 özel onayla uygulandı;18 yeni/349 backend testi,97 ML core/17 controlled UI. Tek cap/helper/gözlem sunumu kapandı; fbc7c43 aynı dala push, genel M1 açık. |
 | 1.49 | 2026-11-06 | abfc592 checkpoint commit/push;331 backend, üretim build ve10 Edge senaryosu tekrar geçti. ADR-0008 Proposed tasarımı/review hazır; özel onay bekliyor, runtime aynı. |
 | 1.48 | 2026-11-06 | Simple ML-04–06 kapandı;13 yeni test,83 ML/331 backend testi ve11 mutant. Model/config/dependency aynı; sonraki ML-07/08/takvim kararı, genel M1 açık. |
 | 1.47 | 2026-11-06 | ADR-0007 açık onayla uygulandı;30 yeni/70 ML testi ve318 backend testi. ML-01–03/advanced ML-04 kapandı; Simple ve kalan politika/M1 açık. |

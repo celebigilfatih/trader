@@ -71,7 +71,7 @@ Create backend/tests/test_legacy_ml_horizon.py.
   engelli (asyncio loopback serbest), memory compile/CDSK39/Boot11/link/diff.
 - [x] ADR index, disclosure doc, AI/DATA_MODEL/BACKLOG/TEST_STRATEGY/CHANGELOG/
   Boot güncel; scope risks/deferred UI spread calibration açıkça ayrı.
-- [ ] Onaylı commit/push aynı dal; uzak SHA/clean/ahead-behind doğrulaması.
+- [x] Onaylı commit/push aynı dal; uzak SHA/clean/ahead-behind doğrulaması.
 
 ## Execution ledger
 
@@ -112,5 +112,7 @@ Create backend/tests/test_legacy_ml_horizon.py.
   CHANGELOG ve Boot1.50 güncel.18 yeni test; M1 genel kapanışı/accuracy/kalibrasyon,
   UI dispersion tercihi ve işletim kapıları açık. Kullanıcı artifact'ı/migration veya
   yeni servis/dependency yok. Next.js/canlı sağlayıcı tekrarı yapılmadı.
-- Başlangıç HEAD1aaed7b; kullanıcının önceki Commit & Push yetkisi korunur.
-  Teslim commit'i ve uzak eşleşme onaylı Git adımı tamamlanınca kaydedilecek.
+- Task4 complete: başlangıç HEAD1aaed7b; kullanıcı Commit & Push yetkisiyle
+  `fbc7c438ea4dfa2e14dbc14c55ad5265ec3e23c1` uygulama commit'i aynı upstream'e
+  push edildi. Uzak SHA eşitliği, clean tree ve ahead/behind0/0 doğrulandı.
+  Bu teslim kaydı ayrı docs commit'iyle korunur; merge/PR/force-push yapılmadı.

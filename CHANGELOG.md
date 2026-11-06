@@ -14,7 +14,8 @@
 - 14 çekirdek+4 AppTest yeni test;349 backend/97 ML/17 kontrollü Streamlit test.
   19 geçerli mutant yakalandı, bağımsız59 hedef test incelemesi önemli bulgusuz.
   Docs/handoff güncel;62 Python/CDSK yapı/link/diff kontrolü. Next.js/canlı
-  sağlayıcı tekrar yok; kalibrasyon ve genel M1 açık. Önceki commit/push akışı sürer.
+  sağlayıcı tekrar yok; kalibrasyon ve genel M1 açık. Uygulama `fbc7c43` ile aynı
+  uzak dala push edildi; uzak SHA eşleşmesi/clean tree doğrulandı.
 
 ### 2026-11-06 — Git checkpoint teslimi ve ADR-0008 Proposed
 
