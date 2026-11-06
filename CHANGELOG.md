@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — Git checkpoint teslimi ve ADR-0008 Proposed
+
+- Kullanıcı Commit & Push talebiyle70 dosyalık M1 güvenilirlik çalışması `abfc592`
+  commit'i olarak `origin/codex/m1-pattern-signal-tests` dalına gönderildi; upstream
+  izleme kuruldu. Merge/PR/force-push yok. Yerel otomatik Git kimliği korundu.
+- Teslim öncesi331 backend testi, Next.js üretim build/lint/type ve üretilmiş
+  frontend üzerinde10/10 deterministik Edge senaryosu tekrar geçti (dış istek0).
+- Sonraki adım ADR-0008 Proposed: tek ufuk cap'i, fiyat/current_price confidence
+  girdi uyumu ve panelde gözlem ufku/kesin olmayan tarih sunumu. Tasarım bağımsız
+  builder incelemesinden geçti; özel uygulama onayı bekliyor. Runtime kodu/test/
+  dependency/artifact değişmedi. Backlog/mimari/kalite/handoff güncellendi.
+
 ### 2026-11-06 — Simple ML-04–06 dar hata düzeltmeleri
 
 - Her Simple eğitim denemesi eski trained flag/cache'i temizler; nonfinite metric

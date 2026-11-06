@@ -2,6 +2,15 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+Kullanıcı Commit & Push istedi;70 dosyalık tamamlanmış çalışma `abfc592` ile
+`origin/codex/m1-pattern-signal-tests` dalına gönderildi. Commit öncesi331 backend
+testi, Next.js üretim build ve10/10 deterministik Edge senaryosu tekrar geçti.
+Sonraki ML-07/08/gözlem ufku için [ADR-0008](../50-decisions/ADR-0008.md)
+**Proposed** hazırlandı; bağımsız builder incelemesi önemli açık soru bulmadı.
+Tek interval cap, fiyat/current_price helper yolu+legacy uyumu ve kesin tarih
+yerine gözlem sunumu özel açık onay bekler. Üretim kodu/test/manifest değişmedi.
+Kayıt [tasarım/teslim belgesindedir](2026-11-06-ml-horizon-confidence-design.md).
+
 Simple ML-04–06 dar düzeltmeleri tamamlandı: her eğitim eski trained/cache
 durumunu iptal eder, başarısız metric başarı sayılmaz; importance gerçek RF
 feature_names_in_ metadata'sını kullanır. Nonfinite/pozitif olmayan fiyat ve
@@ -144,8 +153,8 @@ uzanması da kaynak-konum purge regresyonuyla kapandı; kalan kayıtlar açıkt�
 | ML-04 | Çözüldü: advanced ve simple yeni train denemesi eski trained/cache durumunu iptal eder. Simple sonlu olmayan metrikte de başarı yayımlamaz. | Mevcut error sözlükleri ve yeniden eğitim akışı; Simple tahmin hatası model flag'ini korur ama eski cache'i temizler. |
 | ML-05 | Çözüldü: Simple importance gerçek RF feature_names_in_ ile bütün isim/ağırlıkları eşler, partial optional schema desteklenir. | Eksik/bozuk metadata mevcut boş DataFrame fallback'ine gider; Simple UI tüketimi kanıtlanmadı. |
 | ML-06 | Çözüldü: Simple nonfinite return/current/derived değer veya pozitif olmayan fiyat error döndürür; HOLD/confidence üretilmez. | Taşan percent/fiyat ve eski cache izolasyonu testli. Geçerli sinyal/confidence formülü aynı, kalibre olasılık değildir. |
-| ML-07 | Advanced ilk ufuk aralıkları ardından yalnız 1/7/30 eşleşen ikinci cap kullanır; 3 ve 14 ufku varsayılan %10'a düşer. | Tek tutarlı ufuk kuralı için politika/onay ihtiyacını değerlendir; UI seçenekleri 3/7/14/30. Test-only estimator boundary reproducer'ıdır. |
-| ML-08 | get_model_confidence nested predicted_return bekler; predict_price float fiyat sözlüğü döndürür, aynı biçimde çağrı TypeError verir. | Kullanıcı/çıktı sözleşmesini belirlemek; aktif consumer bulunmadı. Mevcut helper testi kendi desteklenen sınırını sınar. |
+| ML-07 | Açık: Advanced iki cap uygular; 3/14/31+ ve diğer ara ufuklar ±%10 fallback'e döner. | ADR-0008 Proposed tek ilk-aralık helper'ı, 1/2–7/8–30/31+ sınırları; özel onay/uygulama bekler. Gerçek LR+constant label boundary ile yeniden üretildi. |
+| ML-08 | Açık: nested predicted_return helper'ı float fiyat sözlüğüyle TypeError verir. | ADR-0008 Proposed optional current_price fiyat yolu ve geçerli legacy uyumu; output skor aynı. Aktif UI helper consumer yok, UI yayılım formülü ayrı kalır. |
 
 Yerel ortam notu: Windows charmap stdout, predict_price içindeki Unicode uyarıyı
 yazarken hata sözlüğüne yol açtı; UTF-8 stdout ile hesaplama reproducer'ları

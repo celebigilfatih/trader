@@ -72,6 +72,15 @@ encoding'i bu dilimde değişmedi. Ayrıntı [BACKLOG](../20-execution/BACKLOG.m
 ve [execution kaydındadır](../20-execution/2026-11-06-adr0007-implementation.md).
 Simple düzeltme kanıtı [ayrı kayıttadır](../20-execution/2026-11-06-simple-ml-fixes.md).
 
+## ML-07/08 için sonraki öneri — uygulanmadı
+
+[ADR-0008](../50-decisions/ADR-0008.md) Proposed: ilk mevcut aralıkların tek
+return cap'i olması; fiyat sözlüğü için optional current_price confidence bağlamı
+ve geçerli legacy return kaydı uyumu; panelde h gözlem/0..h şematik eksen ve kesin
+takvim hedefinin kaldırılması. Fiyat sözlüğü/format1 paket/model parametreleri
+korunur; bu proposal üretim kuralı veya özel uygulama onayı değildir. UI'nın kendi
+model-yayılımı sezgisi helper'a bağlanmaz. Özel açık onaydan sonra plan/TDD gerekir.
+
 ## Prompt and Model Versioning
 
 Prompt tabanlı model yoktur; model hiperparametreleri kodda korunur. Yeni güvenilen

@@ -20,3 +20,4 @@
 | [ADR-0005](ADR-0005.md) | RSS istek bütçesi ve geçici kaynak tanıları | Accepted |
 | [ADR-0006](ADR-0006.md) | OTT başlangıç değeri ve yön serisi sözleşmesi | Accepted |
 | [ADR-0007](ADR-0007.md) | ML hedefi ve eğitimden tahmine ortak ön işleme sözleşmesi | Accepted |
+| [ADR-0008](ADR-0008.md) | ML ufuk sınırı, confidence girdisi ve gözlem ufku sunumu | Proposed |

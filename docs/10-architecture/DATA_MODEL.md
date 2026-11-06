@@ -95,3 +95,11 @@ hiçbir kullanıcı dosyası açılmadı/migrate edilmedi. Yeni train denemesi e
 state'i iptal eder; başarıda yalnız metric aşamasını da geçen modeller yayımlanır.
 Güvenilen joblib kontrolü deserialization güvenlik garantisi veya sürümler arası
 uyumluluk değildir. Kanıt [execution kaydındadır](../20-execution/2026-11-06-adr0007-implementation.md).
+
+### Proposed ML helper/ufuk sunumu — ADR-0008
+
+[ADR-0008](../50-decisions/ADR-0008.md), mevcut float price sözlüğünü koruyarak
+confidence helper'a optional current_price bağlamı ve legacy nested return uyumu
+önerir. Bozuk girdide ValueError; score alanları aynı kalır. Ayrıca ufuk cap'i tek
+aralığa, UI h gözlem sayısına bağlanır; bilinmeyen gelecek timestamp üretilmez.
+Henüz uygulanmadı/Accepted değil; format1 artifact, DB ve HTTP alanları değişmez.

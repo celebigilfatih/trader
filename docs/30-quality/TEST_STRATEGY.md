@@ -393,6 +393,23 @@ Bu ilk test diliminin tarihsel kaydıdır; sonraki ADR-0007 düzeltmeleri aşağ
   strict±.01 sinyal ve confidence/percent hesapları korunur. Yeni ADR/persistence
   schema yok. Kanıt [execution kaydı](../20-execution/2026-11-06-simple-ml-fixes.md).
 
+### Git teslimi ve ADR-0008 hazırlığı (2026-11-06)
+
+- `abfc592` için331 backend testi dış socket engelli yeniden geçti (24.007 s,
+  Windows asyncio loopback serbest). Next.js üretim build/lint/type ve üretilmiş
+  frontend üzerinde Edge10/10 deterministik senaryo başarılı; dış istek0.
+  Yalnız test için açılan yerel server kapatıldı; canlı sağlayıcı kullanılmadı.
+- ML-07 gerçek LR/gerçek scaler + bağımsız .40 target boundary ile h1/2/3/7/8/
+  14/30/31 cap tablosu; ML-08 float fiyat sözlüğü TypeError ve stale-date source
+  aritmetiği yeniden üretildi. Üretim kodu veya geçerli testler değiştirilmedi.
+- ADR-0008 Proposed kabul ölçütleri: tek cap uç/yön/eşitlik testleri, fiyat/
+  legacy/invalid helper payload/context/strict threshold ve mutation korunması;
+  kontrollü AppTest gözlem selector/kart/caption ve0..h şematik grafik. Bunlar
+  yeni test başarısı iddiası değildir; özel onay sonrası implementation/TDD.
+- Bağımsız builder review planlama için önemli açık soru bulmadı. Tasarım/teslim
+  [kaydı](../20-execution/2026-11-06-ml-horizon-confidence-design.md); upstream
+  CDSK validator yokluğu ve genel M1/accuracy/dependency kapıları sürer.
+
 ## Release Gates
 
 - P0 test başarısızsa release olmaz.

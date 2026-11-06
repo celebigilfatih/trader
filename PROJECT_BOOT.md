@@ -43,14 +43,14 @@
   tabanı başladı. Sonraki adım API-first Next.js cockpit’i ile uçtan uca akışın
   stabilizasyonu.
 - **Current focus:** ML-01–06 bilinen dar kusur dilimleri tamamlandı;
-  83 ML/331 backend testi. Sonraki öncelik ML-07 ufuk cap/ML-08 confidence
-  sözleşmesini somutlaştırmak ve kalan M1 kapanış eksikleri.
+  checkpoint `abfc592` push edildi. ML-07/08/gözlem ufku için ADR-0008 Proposed
+  hazır; özel onay ve ardından implementation planı. Genel M1 açık.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
 - **Blocking decisions:** Gerçek kullanıcı erişimi operasyon sahipliği,
   destek matrisi ve üretim kapıları. ADR-0004–0007 açık onayları uygulandı;
-  ML cap/confidence/takvim politikası bu onaylara dahil değildir.
+  ML cap/helper/UI ufku için ADR-0008 özel onayı bekleniyor.
 - **Last status update:** 2026-11-06
 
 ## 3. Repository Navigation
@@ -94,6 +94,7 @@
 | RSS istek bütçesi ve geçici kaynak tanıları | Accepted ve uygulandı | `ADR-0005`, `docs/50-decisions/ADR-0005.md` |
 | OTT seed ve yön serisi sözleşmesi | Accepted ve uygulandı | `ADR-0006`, `docs/50-decisions/ADR-0006.md` |
 | ML hedef/ön işleme ve model artifact sözleşmesi | Accepted ve uygulandı | [ADR-0007](docs/50-decisions/ADR-0007.md) |
+| ML ufuk cap, confidence girdisi ve gözlem sunumu | Proposed; özel onay bekliyor | [ADR-0008](docs/50-decisions/ADR-0008.md) |
 | 3D Web Experience profili uygulanmaz | N/A for current scope | `docs/70-experience/3D_WEB_EXPERIENCE.md` |
 
 > Yalnızca en önemli güncel kararları özetle. Kararın tam gerekçesi ve sonuçları
@@ -111,15 +112,16 @@
 - **Recent decisions:** ADR-0001–0006 kabul edildi. Kullanıcı somut ADR-0006
   onay sorusuna “onaylıyorum” dedi; başka algoritma/version/üretim onayı değildir.
   Sonraki somut ADR-0007 sorusuna “Onaylıyorum.” ile o sözleşme de Accepted oldu.
-- **Recently completed:** Simple trained/cache lifecycle, fitted feature-importance
-  adları ve finite/pozitif sonuç doğrulaması.13 yeni regresyonla83 ML/331 backend
-  testi geçti;11 mutant yakalandı, bağımsız37 hedef test incelemesi bulgusuz.
+  Commit/push isteği ADR-0008'in özel uygulama onayı değildir; Proposed kalır.
+- **Recently completed:**70 dosyalık çalışma `abfc592` ile origin'e push edildi.
+  Yeni331 backend/üretim build/Edge10 senaryo kanıtı; ADR-0008 somut tasarım ve
+  bağımsız builder incelemesi tamamlandı. Bu sonraki dilimde runtime kodu aynı.
 
 ## 7. Current Priorities
 
-1. ML-07 cap, ML-08 confidence API ve UI takvim/gözlem farkı için somut
-   politika/sözleşme tasarımı; finansal kural/API değişirse AGENTS onay kapısı.
-   Simple ML-04–06 mevcut alan/formül sınırında tamamlandı; genel M1 ayrı.
+1. Hazır ADR-0008'i özel onayla karara bağlamak; kabulünde plan/TDD: tek cap,
+   current_price helper/legacy uyumu ve panelde h gözlem/şematik eksen. Simple
+   ML-04–06 tamamlandı; genel M1 ve kalibrasyon ayrı.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
    senaryo testlerini eklemek.
@@ -190,6 +192,30 @@
 ## 11. AI Handoff
 
 ### Güncel devir — 2026-11-06
+
+- **Git teslimi:** Kullanıcı “Commit & Push yapalım” dedi;70 dosya `abfc592`
+  (`feat: harden analysis and ML reliability`) ile origin/codex/m1-pattern-signal-tests
+  dalına push edildi. Upstream kuruldu, checkpoint kontrolünde ahead/behind0/0 ve
+  clean tree doğrulandı. Merge/PR/force-push yok. Git otomatik yerel committer
+  kimliği kullandı; kimlik ayarı değiştirilmedi. Sonraki değişiklikler yalnız öneri belgeleri.
+- **Yeni kanıt:** Commit öncesi331 backend dış socket engelli (24.007 s,
+  asyncio loopback serbest); Next.js14.2.18 üretim build/lint/type geçti. Üretilen
+  frontend + Edge10/10 deterministik senaryo, dış istek0; yalnız açılan test server'ı
+  kapatıldı.60 Python compile,39 belge/11 Boot bölümü ve diff kontrolü; canlı
+  sağlayıcı yok. Upstream CDSK validator ortamda yok; tam validator iddiası yapılmaz.
+- **Sonraki adım hazır:** ADR-0008 Proposed: ilk aralıkları tek cap helper'ı,
+  price/current_price confidence ve geçerli legacy record uyumu, UI'da h gözlem/
+  şematik0..h eksen; kesin takvim tarihi kaldırılır. Gerçek LR+bağımsız .40
+  label boundary ile cap, fiyat-helper TypeError ve stale-date aritmetiği yeniden
+  üretildi. Bağımsız builder reviewer önemli açık soru bulmadı; uygulama yok.
+- **Onay/sınır:** Cap/helper/UI sözleşmesi özel açık onay bekler; commit/push
+  talebi Accepted sayılmaz. Price sözlüğü, format1 artifact ve UI'nın yayılım
+  sezgisi korunacak; yeni servis/takvim/model/dependency önerilmiyor. ML-07/08 ve
+  tarih sunumu henüz açık; genel M1/M2/accuracy/operasyon kapıları da sürer.
+  Kaynak [ADR-0008](docs/50-decisions/ADR-0008.md) ve
+  [tasarım/teslim kaydı](docs/20-execution/2026-11-06-ml-horizon-confidence-design.md).
+
+### Önceki Simple ML-04–06 kaydı — 2026-11-06
 
 - **Yapılan:** Simple ML-04–06 mevcut çıktı biçimleriyle düzeltildi. Her train
   eski flag/cache'i siler; nonfinite metric success değildir. Importance gerçek
@@ -730,6 +756,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
+| 1.49 | 2026-11-06 | abfc592 checkpoint commit/push;331 backend, üretim build ve10 Edge senaryosu tekrar geçti. ADR-0008 Proposed tasarımı/review hazır; özel onay bekliyor, runtime aynı. |
 | 1.48 | 2026-11-06 | Simple ML-04–06 kapandı;13 yeni test,83 ML/331 backend testi ve11 mutant. Model/config/dependency aynı; sonraki ML-07/08/takvim kararı, genel M1 açık. |
 | 1.47 | 2026-11-06 | ADR-0007 açık onayla uygulandı;30 yeni/70 ML testi ve318 backend testi. ML-01–03/advanced ML-04 kapandı; Simple ve kalan politika/M1 açık. |
 | 1.46 | 2026-11-06 | ML-01–03 tasarımı ve ADR-0007 Proposed; purge/train-only bounds/ortak ölçek/state/artifact sözleşmesi açık onay bekliyor. 40 mevcut ML testi geçti; üretim değişmedi. |
