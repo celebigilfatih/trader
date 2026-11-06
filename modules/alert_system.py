@@ -339,7 +339,7 @@ class AlertSystem:
         # 5. RSI Aşırı Alım/Satım Analizi
         rsi_score = 0
         rsi = latest_indicators.get('rsi')
-        if rsi and not pd.isna(rsi):
+        if rsi is not None and pd.notna(rsi):
             if rsi >= 80:
                 rsi_score = 2
                 risk_factors['rsi_overbought'] = f"RSI aşırı alım bölgesinde ({rsi:.1f})"
@@ -358,7 +358,8 @@ class AlertSystem:
         macd_score = 0
         macd = latest_indicators.get('macd')
         macd_signal = latest_indicators.get('macd_signal')
-        if macd and macd_signal and not pd.isna(macd) and not pd.isna(macd_signal):
+        if (macd is not None and macd_signal is not None
+                and pd.notna(macd) and pd.notna(macd_signal)):
             macd_histogram = macd - macd_signal
             if macd < 0 and macd_histogram < -0.1:  # Güçlü negatif momentum
                 macd_score = 1.5
@@ -893,7 +894,7 @@ class AlertSystem:
         
         # 1. RSI Analizi
         rsi = latest_indicators.get('rsi')
-        if rsi and not pd.isna(rsi):
+        if rsi is not None and pd.notna(rsi):
             if rsi <= 30:
                 bull_score += 2
                 bull_signals.append("RSI Aşırı Satım")
@@ -916,7 +917,8 @@ class AlertSystem:
         # 2. MACD Analizi
         macd = latest_indicators.get('macd')
         macd_signal = latest_indicators.get('macd_signal')
-        if macd and macd_signal and not pd.isna(macd) and not pd.isna(macd_signal):
+        if (macd is not None and macd_signal is not None
+                and pd.notna(macd) and pd.notna(macd_signal)):
             macd_histogram = macd - macd_signal
             if macd > macd_signal and macd > 0:
                 bull_score += 2
@@ -1079,7 +1081,7 @@ class AlertSystem:
             position_strength = "NÖTR"
         
         # Pozisyon büyüklüğü önerisi
-        if "GÜÇLÜ" in recommendation:
+        if "GÜÇLÜ AL" in recommendation:
             position_size = "Portföyün %75-100'ü"
         elif "AL" in recommendation and "ZAYIF" not in recommendation:
             position_size = "Portföyün %50-75'i"

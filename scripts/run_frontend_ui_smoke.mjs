@@ -13,6 +13,8 @@ const parsed = {
   email: "smoke_test_ui@example.com",
   quantity: "2",
   averageCost: "45.5",
+  deterministic: false,
+  browserChannel: undefined,
 }
 const RSI_WARNING_DETAILS_STORAGE_KEY = "trader_rsi_warning_details_visible"
 
@@ -22,6 +24,8 @@ for (let i = 0; i < args.length; i++) {
   if (args[i] === "--timeout") parsed.timeoutSeconds = Number(args[i + 1] || parsed.timeoutSeconds)
   if (args[i] === "--symbol") parsed.symbol = args[i + 1] || parsed.symbol
   if (args[i] === "--email") parsed.email = args[i + 1] || parsed.email
+  if (args[i] === "--deterministic") parsed.deterministic = true
+  if (args[i] === "--browser-channel") parsed.browserChannel = args[i + 1]
 }
 
 function log(message) {
@@ -94,7 +98,7 @@ try {
   const fallbackPath = path.resolve(process.cwd(), "frontend/node_modules/playwright")
   if (!existsSync(fallbackPath)) {
     log("Playwright bağımlılığı bulunamadı. Kurulum: npm i -D playwright && npx playwright install")
-    process.exit(0)
+    process.exit(parsed.deterministic ? 1 : 0)
   }
   try {
     const fallbackEsModulePath = path.join(fallbackPath, "index.mjs")
@@ -106,8 +110,23 @@ try {
     log(
       `Playwright modülü bulundu ancak yüklenemedi: ${_fallbackError?.message || _fallbackError}. Kurulum: npm i -D playwright && npx playwright install`
     )
-    process.exit(0)
+    process.exit(parsed.deterministic ? 1 : 0)
   }
+}
+
+if (parsed.deterministic) {
+  if (!(await waitForUrl(parsed.frontBase, parsed.timeoutSeconds))) {
+    exitWithFailure(`Frontend hazır değil: ${parsed.frontBase}`)
+  }
+  const { runDeterministicScenarios } = await import("./frontend_ui_scenarios.mjs")
+  await runDeterministicScenarios({
+    chromium,
+    frontBase: parsed.frontBase,
+    timeout: parsed.timeoutSeconds * 1000,
+    browserChannel: parsed.browserChannel,
+  })
+  log("Deterministik UI senaryoları başarılı (canlı backend/sağlayıcı kullanılmadı)")
+  process.exit(0)
 }
 
 const readyBackend = await waitForUrl(`${parsed.apiBase}/api/v1/health`, parsed.timeoutSeconds)
@@ -150,7 +169,7 @@ if (!sessionToken) {
   exitWithFailure("Session token alınamadı")
 }
 
-const browser = await chromium.launch({ headless: true })
+const browser = await chromium.launch({ headless: true, channel: parsed.browserChannel })
 const context = await browser.newContext()
 
 await context.addInitScript(
@@ -225,10 +244,11 @@ try {
     "Sembol",
     "RSI",
     "Fiyat",
-    "Veri Zamanı",
+    "Veri zamanı (son bar)",
     "Kaynak",
-    "Çekilme Zamanı",
-    "Yaşlanma",
+    "Veri niteliği",
+    "Çekilme zamanı",
+    "Veri yaşı (çekilme anında)",
   ]) {
     await page.locator(`th:has-text("${header}")`).first().waitFor({ timeout: 5000 })
   }
@@ -272,7 +292,6 @@ try {
       exitWithFailure("RSI uyarı detay tercihi sayfa yenilendiğinde korunmadı")
     }
 
-    await page.getByTestId("rsi-screen-button").click()
     const rsiRequestAfterRefresh = page.waitForResponse((response) => {
       return (
         response.url().includes("/api/v1/screeners/rsi") &&
@@ -280,6 +299,7 @@ try {
         response.status() === 200
       )
     })
+    await page.getByTestId("rsi-screen-button").click()
     const responseAfterRefresh = await rsiRequestAfterRefresh
     const payloadAfterRefresh = await responseAfterRefresh.json().catch(() => ({}))
 

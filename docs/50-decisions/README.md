@@ -16,3 +16,7 @@
 | ADR-0001 | Kapatılmış beta ürün kapsamı ve fonksiyonel sınırlar | Accepted |
 | ADR-0002 | Strangler yaklaşımıyla FastAPI + Next.js platform mimarisi | Accepted |
 | ADR-0003 | Kimlik doğrulama ve bildirim modeli | Accepted |
+| [ADR-0004](ADR-0004.md) | RSS yayın zamanı ve duygu skoru durumlarının ayrılması | Accepted |
+| [ADR-0005](ADR-0005.md) | RSS istek bütçesi ve geçici kaynak tanıları | Accepted |
+| [ADR-0006](ADR-0006.md) | OTT başlangıç değeri ve yön serisi sözleşmesi | Accepted |
+| [ADR-0007](ADR-0007.md) | ML hedefi ve eğitimden tahmine ortak ön işleme sözleşmesi | Accepted |

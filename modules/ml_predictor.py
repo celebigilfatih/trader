@@ -4,7 +4,9 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split
+from numbers import Integral, Real
+from sklearn.utils.validation import check_is_fitted
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import joblib
 from typing import Dict, List, Tuple, Optional
@@ -26,6 +28,8 @@ class MLPredictor:
         self.trained_models = {}
         self.feature_names = []
         self.is_trained = False
+        self.clip_bounds = {}
+        self.prediction_horizon = None
     
     def safe_divide(self, numerator, denominator, default_value=0):
         """Güvenli bölme işlemi - sıfıra bölme ve infinity durumlarını önler"""
@@ -48,15 +52,6 @@ class MLPredictor:
         
         # NaN değerleri forward fill ile doldur, sonra 0 ile doldur
         features = features.ffill().fillna(0)
-        
-        # Aşırı büyük değerleri clamp et (percentile tabanlı)
-        numeric_cols = features.select_dtypes(include=[np.number]).columns
-        for col in numeric_cols:
-            if col not in pct_cols:  # Percentage column'ları zaten clip ettik
-                q99 = features[col].quantile(0.99)
-                q01 = features[col].quantile(0.01)
-                if q99 != q01 and np.isfinite(q99) and np.isfinite(q01):  # Sıfır variance ve finite kontrolü
-                    features[col] = features[col].clip(lower=q01, upper=q99)
         
         # Son kontrolle tüm infinity değerleri temizle
         features = features.replace([np.inf, -np.inf], 0)
@@ -96,122 +91,119 @@ class MLPredictor:
         
         return diagnostics
         
-    def train_models(self, data: pd.DataFrame, technical_indicators: Dict, 
-                    prediction_horizon: int = 1, test_size: float = 0.2) -> Dict:
-        """Modelleri eğitir ve performans metriklerini döner"""
-        
+    @staticmethod
+    def _validate_horizon(horizon):
+        if isinstance(horizon, (bool, np.bool_)) or not isinstance(horizon, Integral) or horizon <= 0:
+            raise ValueError("prediction_horizon must be a positive integer")
+        return int(horizon)
+
+    @staticmethod
+    def _validate_data(data):
+        if not data.index.is_unique or not data.index.is_monotonic_increasing:
+            raise ValueError("OHLCV index must be unique and increasing")
+        for name in ('Open', 'High', 'Low', 'Close', 'Volume'):
+            column = data[name]
+            if (not pd.api.types.is_numeric_dtype(column.dtype)
+                    or pd.api.types.is_bool_dtype(column.dtype)
+                    or pd.api.types.is_complex_dtype(column.dtype)):
+                raise ValueError(f"{name} must contain real numeric values")
+
+    @staticmethod
+    def _fit_clip_bounds(features):
+        bounds = {}
+        for name in features.select_dtypes(include=[np.number]).columns:
+            if 'change' in name or 'return' in name:
+                continue
+            lower, upper = features[name].quantile([.01, .99])
+            if np.isfinite(lower) and np.isfinite(upper) and lower < upper:
+                bounds[name] = [float(lower), float(upper)]
+        return bounds
+
+    @staticmethod
+    def _apply_clip_bounds(features, bounds):
+        result = features.copy()
+        for name, (lower, upper) in bounds.items():
+            result[name] = result[name].clip(lower=lower, upper=upper)
+        return result
+
+    def _reset_training(self):
+        self.is_trained = False
+        self.trained_models = {}
+        self.feature_names = []
+        self.clip_bounds = {}
+        self.prediction_horizon = None
+        self.scaler = StandardScaler()
+        self.target_scaler = MinMaxScaler()
+
+    def train_models(self, data: pd.DataFrame, technical_indicators: Dict,
+                     prediction_horizon: int = 1, test_size: float = 0.2) -> Dict:
+        """Fit one coherent train-only preprocessing/model package (ADR-0007)."""
+        self._reset_training()
         try:
-            # Özellik ve hedef değişken hazırlama
+            horizon = self._validate_horizon(prediction_horizon)
+            self._validate_data(data)
             features = self.prepare_features(data, technical_indicators)
-            target = self.create_target_variable(data, prediction_horizon)
-            
-            # Feature diagnostics (debug için)
-            diagnostics = self.diagnostic_features(features)
-            if diagnostics['infinity_columns'] or diagnostics['nan_columns']:
-                print(f"⚠️ Feature sorunları tespit edildi: {diagnostics}")
-            
-            # Ek güvenlik: Son bir kez temizle
-            features = self.clean_features(features)
-            
-            # Geçerli veri noktalarını filtrele
-            valid_idx = ~(features.isna().any(axis=1) | target.isna())
-            features_clean = features[valid_idx]
-            target_clean = target[valid_idx]
-            
-            if len(features_clean) < 50:
-                return {"error": "Yeterli veri yok. En az 50 geçerli veri noktası gerekli.", 
-                       "available_data": len(features_clean)}
-            
-            # Özellik adlarını sakla
-            self.feature_names = features_clean.columns.tolist()
-            
-            # Final infinity kontrolü
-            if np.isinf(features_clean.values).any() or np.isnan(features_clean.values).any():
-                # Son çare: problematik satırları çıkar
-                finite_mask = np.isfinite(features_clean.values).all(axis=1)
-                features_clean = features_clean[finite_mask]
-                target_clean = target_clean[finite_mask]
-                
-                if len(features_clean) < 50:
-                    return {"error": "Veri temizleme sonrası yeterli veri kalmadı.", 
-                           "remaining_data": len(features_clean)}
-            
-            # Veriyi eğitim ve test setlerine ayır
-            X_train, X_test, y_train, y_test = train_test_split(
-                features_clean, target_clean, test_size=test_size, random_state=42, shuffle=False
-            )
-            
-            # Final check before scaling
-            if np.isinf(X_train.values).any() or np.isnan(X_train.values).any():
-                return {"error": "X_train matrisinde hala infinite/NaN değerler var"}
-            
-            # Özellikleri ölçeklendir
-            X_train_scaled = self.scaler.fit_transform(X_train)
-            X_test_scaled = self.scaler.transform(X_test)
-            
-            # Hedef değişkeni ölçeklendir
-            y_train_scaled = self.target_scaler.fit_transform(y_train.values.reshape(-1, 1)).ravel()
-            y_test_scaled = self.target_scaler.transform(y_test.values.reshape(-1, 1)).ravel()
-            
-            # Modelleri eğit
-            results = {}
-            for model_name, model in self.models.items():
+            target = self.create_target_variable(data, horizon)
+            valid = np.isfinite(features.to_numpy()).all(axis=1) & np.isfinite(target.to_numpy())
+            positions = np.flatnonzero(valid)
+            if len(positions) < 50:
+                return {"error": "Yeterli veri yok. En az 50 geçerli veri noktası gerekli.",
+                        "available_data": len(positions)}
+
+            train_positions, test_positions = train_test_split(
+                positions, test_size=test_size, random_state=42, shuffle=False)
+            # Labels are defined in source-row space, even when valid rows have gaps.
+            train_positions = train_positions[train_positions + horizon < test_positions[0]]
+            if len(train_positions) < 2 or len(test_positions) < 2:
+                return {"error": "At least two train/test samples required after horizon purge"}
+
+            x_train, x_test = features.iloc[train_positions], features.iloc[test_positions]
+            y_train, y_test = target.iloc[train_positions], target.iloc[test_positions]
+            bounds = self._fit_clip_bounds(x_train)
+            x_train = self._apply_clip_bounds(x_train, bounds)
+            x_test = self._apply_clip_bounds(x_test, bounds)
+            scaler, target_scaler = StandardScaler(), MinMaxScaler()
+            x_train_scaled = scaler.fit_transform(x_train)
+            x_test_scaled = scaler.transform(x_test)
+            y_train_scaled = target_scaler.fit_transform(y_train.to_numpy().reshape(-1, 1)).ravel()
+
+            results, trained = {}, {}
+            for name, model in self.models.items():
                 try:
-                    # Model eğitimi
-                    model.fit(X_train_scaled, y_train_scaled)
-                    self.trained_models[model_name] = model
-                    
-                    # Tahmin yap
-                    y_pred_train = model.predict(X_train_scaled)
-                    y_pred_test = model.predict(X_test_scaled)
-                    
-                    # Ters ölçeklendirme
-                    y_pred_train_original = self.target_scaler.inverse_transform(y_pred_train.reshape(-1, 1)).ravel()
-                    y_pred_test_original = self.target_scaler.inverse_transform(y_pred_test.reshape(-1, 1)).ravel()
-                    
-                    # Performans metrikleri
-                    train_score = r2_score(y_train, y_pred_train_original)
-                    test_score = r2_score(y_test, y_pred_test_original)
-                    rmse = np.sqrt(mean_squared_error(y_test, y_pred_test_original))
-                    mae = mean_absolute_error(y_test, y_pred_test_original)
-                    
-                    results[model_name] = {
-                        'train_score': train_score,
-                        'test_score': test_score,
-                        'rmse': rmse,
-                        'mae': mae
+                    model.fit(x_train_scaled, y_train_scaled)
+                    train_prediction = target_scaler.inverse_transform(
+                        np.asarray(model.predict(x_train_scaled)).reshape(-1, 1)).ravel()
+                    test_prediction = target_scaler.inverse_transform(
+                        np.asarray(model.predict(x_test_scaled)).reshape(-1, 1)).ravel()
+                    metrics = {
+                        'train_score': float(r2_score(y_train, train_prediction)),
+                        'test_score': float(r2_score(y_test, test_prediction)),
+                        'rmse': float(np.sqrt(mean_squared_error(y_test, test_prediction))),
+                        'mae': float(mean_absolute_error(y_test, test_prediction)),
                     }
-                    
-                except Exception as model_error:
-                    results[model_name] = {'error': str(model_error)}
-            
-            # Genel sonuçlar
-            successful_models = [name for name, result in results.items() if 'error' not in result]
-            if successful_models:
-                avg_train_score = np.mean([results[name]['train_score'] for name in successful_models])
-                avg_test_score = np.mean([results[name]['test_score'] for name in successful_models])
-                avg_rmse = np.mean([results[name]['rmse'] for name in successful_models])
-                avg_mae = np.mean([results[name]['mae'] for name in successful_models])
-                
-                self.is_trained = True
-                
-                return {
-                    'train_score': avg_train_score,
-                    'test_score': avg_test_score,
-                    'rmse': avg_rmse,
-                    'mae': avg_mae,
-                    'models': results,
-                    'successful_models': successful_models,
-                    'feature_count': len(self.feature_names),
-                    'train_samples': len(X_train),
-                    'test_samples': len(X_test)
-                }
-            else:
+                    if not all(np.isfinite(value) for value in metrics.values()):
+                        raise ValueError("Nonfinite model metrics")
+                    results[name] = metrics
+                    trained[name] = model
+                except Exception as error:
+                    results[name] = {'error': str(error)}
+            if not trained:
                 return {"error": "Hiçbir model başarıyla eğitilemedi", "model_errors": results}
-                
-        except Exception as e:
-            return {"error": f"Model eğitim hatası: {str(e)}"}
-    
+
+            self.scaler, self.target_scaler = scaler, target_scaler
+            self.feature_names = features.columns.tolist()
+            self.clip_bounds = bounds
+            self.prediction_horizon = horizon
+            self.trained_models = trained
+            self.is_trained = True
+            summary = {key: float(np.mean([results[name][key] for name in trained]))
+                       for key in ('train_score', 'test_score', 'rmse', 'mae')}
+            return {**summary, 'models': results, 'successful_models': list(trained),
+                    'feature_count': len(self.feature_names),
+                    'train_samples': len(train_positions), 'test_samples': len(test_positions)}
+        except Exception as error:
+            return {"error": f"Model eğitim hatası: {error}"}
+
     def prepare_features(self, data: pd.DataFrame, technical_indicators: Dict) -> pd.DataFrame:
         """Teknik indikatörlerden özellik matrisi hazırlar"""
         features = pd.DataFrame(index=data.index)
@@ -303,9 +295,23 @@ class MLPredictor:
     
     def create_target_variable(self, data: pd.DataFrame, prediction_horizon: int = 1) -> pd.Series:
         """Hedef değişken oluşturur (gelecekteki fiyat değişimi)"""
-        future_return = data['Close'].shift(-prediction_horizon) / data['Close'] - 1
-        return future_return.fillna(0)
-    
+        horizon = self._validate_horizon(prediction_horizon)
+        close = data['Close']
+        if close.empty:
+            return pd.Series(index=close.index, name=close.name, dtype=float)
+        if (not pd.api.types.is_numeric_dtype(close.dtype)
+                or pd.api.types.is_bool_dtype(close.dtype)
+                or pd.api.types.is_complex_dtype(close.dtype)):
+            raise ValueError("Close must contain real numeric values")
+        close = close.astype(float)
+        if horizon >= len(close):
+            return pd.Series(np.nan, index=close.index, name=close.name, dtype=float)
+        future = close.shift(-horizon)
+        valid = np.isfinite(close) & (close > 0) & np.isfinite(future) & (future > 0)
+        with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
+            target = future / close - 1
+        return target.where(valid & np.isfinite(target))
+
     def predict_price(self, data: pd.DataFrame, technical_indicators: Dict, 
                      prediction_horizon: int = 1) -> Dict:
         """Gelecek fiyat tahminleri yapar"""
@@ -314,32 +320,25 @@ class MLPredictor:
             return {"error": "Modeller henüz eğitilmemiş. Önce train_models() çağırın."}
         
         try:
-            # Son veri noktası için özellikler hazırla
+            horizon = self._validate_horizon(prediction_horizon)
+            self._validate_data(data)
+            if horizon != self.prediction_horizon:
+                raise ValueError("Prediction horizon differs from training horizon")
             features = self.prepare_features(data, technical_indicators)
             last_features = features.iloc[-1:][self.feature_names]
-            
-            # NaN kontrolü ve temizleme
-            if last_features.isna().any().any():
-                last_features = last_features.fillna(method='ffill').fillna(0)
-            
-            # Infinity kontrolü
-            if np.isinf(last_features.values).any():
-                last_features = last_features.replace([np.inf, -np.inf], 0)
-            
+            last_features = self._apply_clip_bounds(last_features, self.clip_bounds)
+            last_features_scaled = self.scaler.transform(last_features)
             current_price = data['Close'].iloc[-1]
+            if not np.isfinite(current_price) or current_price <= 0:
+                raise ValueError("Current price must be positive and finite")
             predictions = {}
             valid_predictions = []
             
             for model_name, model in self.trained_models.items():
                 try:
-                    if model_name == 'svr':
-                        # SVR için ölçeklendirilmiş veri kullan
-                        last_features_scaled = self.scaler.transform(last_features)
-                        pred_scaled = model.predict(last_features_scaled)[0]
-                        predicted_return = self.target_scaler.inverse_transform([[pred_scaled]])[0][0]
-                    else:
-                        predicted_return = model.predict(last_features)[0]
-                    
+                    pred_scaled = model.predict(last_features_scaled)[0]
+                    predicted_return = self.target_scaler.inverse_transform([[pred_scaled]])[0][0]
+
                     # NaN ve infinity kontrolü
                     if np.isnan(predicted_return) or np.isinf(predicted_return):
                         print(f"⚠️ {model_name} modeli NaN/inf döndürdü, atlanıyor")
@@ -442,22 +441,110 @@ class MLPredictor:
         
         return confidence_scores
     
+    @staticmethod
+    def _validate_model_package(package):
+        """Validate a trusted deserialized package without touching live state."""
+        try:
+            if not isinstance(package, dict) or type(package.get('format_version')) is not int or package['format_version'] != 1:
+                raise ValueError("Unsupported model format; retrain legacy models")
+            if package['is_trained'] is not True:
+                raise ValueError("Model package is not trained")
+            MLPredictor._validate_horizon(package['prediction_horizon'])
+            names = package['feature_names']
+            if (not isinstance(names, list) or not names
+                    or not all(isinstance(name, str) and name for name in names)
+                    or len(set(names)) != len(names)):
+                raise ValueError("Invalid feature schema")
+            count = len(names)
+            preprocessing = package['preprocessing']
+            if not isinstance(preprocessing, dict) or not isinstance(preprocessing.get('clip_bounds'), dict):
+                raise ValueError("Missing fitted clipping bounds")
+            for name, pair in preprocessing['clip_bounds'].items():
+                if (name not in names or 'change' in name or 'return' in name
+                        or not isinstance(pair, (list, tuple)) or len(pair) != 2
+                        or not all(isinstance(value, Real) and not isinstance(value, (bool, np.bool_))
+                                   and np.isfinite(value) for value in pair)
+                        or pair[0] >= pair[1]):
+                    raise ValueError("Invalid clipping bounds")
+
+            scaler, target = package['scaler'], package['target_scaler']
+            if not isinstance(scaler, StandardScaler) or not isinstance(target, MinMaxScaler):
+                raise ValueError("Invalid scaler type")
+            if not scaler.with_mean or not scaler.with_std or target.feature_range != (0, 1):
+                raise ValueError("Invalid scaler configuration")
+            for obj, size, attributes in (
+                    (scaler, count, ('mean_', 'var_', 'scale_')),
+                    (target, 1, ('scale_', 'min_', 'data_min_', 'data_max_', 'data_range_'))):
+                check_is_fitted(obj)
+                samples = obj.n_samples_seen_
+                if (obj.n_features_in_ != size or isinstance(samples, (bool, np.bool_))
+                        or not isinstance(samples, Real) or not np.isfinite(samples)
+                        or samples < 2 or samples != int(samples)):
+                    raise ValueError("Invalid fitted scaler dimensions")
+                for attribute in attributes:
+                    values = np.asarray(getattr(obj, attribute))
+                    if values.shape != (size,) or not np.isfinite(values).all():
+                        raise ValueError("Invalid fitted scaler parameters")
+                if np.any(np.asarray(obj.scale_) <= 0):
+                    raise ValueError("Invalid scaler scale")
+            if (np.any(np.asarray(scaler.var_) < 0) or np.any(np.asarray(target.data_range_) < 0)
+                    or np.any(target.data_max_ < target.data_min_)
+                    or not np.allclose(target.data_range_, target.data_max_ - target.data_min_)):
+                raise ValueError("Invalid scaler ranges")
+            if scaler.n_samples_seen_ != target.n_samples_seen_:
+                raise ValueError("Scaler training sample counts mismatch")
+            # sklearn's near-constant feature rule includes floating-point error.
+            var, mean = np.asarray(scaler.var_), np.asarray(scaler.mean_)
+            eps = np.finfo(np.float64).eps
+            count_seen = scaler.n_samples_seen_
+            constant = var <= count_seen * eps * var + (count_seen * mean * eps) ** 2
+            expected_scale = np.where(constant, 1., np.sqrt(var))
+            if not np.allclose(scaler.scale_, expected_scale, rtol=1e-12, atol=1e-15):
+                raise ValueError("Inconsistent standard scaler scale")
+            data_range = np.asarray(target.data_range_)
+            denominator = np.where(data_range < 10 * np.finfo(data_range.dtype).eps, 1., data_range)
+            if (not np.allclose(target.scale_, 1. / denominator, rtol=1e-12, atol=1e-15)
+                    or not np.allclose(target.min_, -target.data_min_ * target.scale_,
+                                       rtol=1e-12, atol=1e-15)):
+                raise ValueError("Inconsistent target scaler scale or offset")
+            if not np.array_equal(getattr(scaler, 'feature_names_in_', None), names):
+                raise ValueError("Scaler feature order mismatch")
+            models = package['models']
+            if not isinstance(models, dict) or not models:
+                raise ValueError("Missing trained models")
+            for name, model in models.items():
+                if not isinstance(name, str) or not name or not callable(getattr(model, 'predict', None)):
+                    raise ValueError("Invalid model entry")
+                check_is_fitted(model)
+                if model.n_features_in_ != count:
+                    raise ValueError("Model feature dimensions mismatch")
+        except (KeyError, AttributeError, TypeError, ValueError) as error:
+            raise ValueError(f"Invalid model package: {error}") from error
+
     def save_models(self, filepath: str) -> None:
-        """Eğitilmiş modelleri dosyaya kaydeder"""
+        """Save a complete format1 package; only trusted local joblib is supported."""
         model_data = {
+            'format_version': 1,
             'models': self.trained_models,
             'scaler': self.scaler,
             'target_scaler': self.target_scaler,
             'feature_names': self.feature_names,
-            'is_trained': self.is_trained
+            'is_trained': self.is_trained,
+            'preprocessing': {'clip_bounds': self.clip_bounds},
+            'prediction_horizon': self.prediction_horizon,
         }
+        self._validate_model_package(model_data)
         joblib.dump(model_data, filepath)
-    
+
     def load_models(self, filepath: str) -> None:
-        """Kaydedilmiş modelleri yükler"""
+        """Load trusted local joblib. Format checks do not secure deserialization."""
         model_data = joblib.load(filepath)
+        self._validate_model_package(model_data)
+        # Publish only after every field/model/scaler has passed validation.
         self.trained_models = model_data['models']
         self.scaler = model_data['scaler']
         self.target_scaler = model_data['target_scaler']
         self.feature_names = model_data['feature_names']
-        self.is_trained = model_data['is_trained'] 
+        self.clip_bounds = model_data['preprocessing']['clip_bounds']
+        self.prediction_horizon = int(model_data['prediction_horizon'])
+        self.is_trained = True

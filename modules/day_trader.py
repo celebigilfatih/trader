@@ -93,6 +93,13 @@ class DayTrader:
     
     def _calculate_entry_exit_points(self, data: pd.DataFrame, analyzer: TechnicalAnalyzer) -> Dict:
         """Entry ve exit noktalarını hesaplar"""
+
+        atr = self._calculate_atr(data, 14)
+        current_price = data['Close'].iloc[-1]
+        if not np.isfinite(current_price) or current_price <= 0:
+            raise ValueError("Price must be positive and finite for entry/exit calculation")
+        if not np.isfinite(atr) or atr <= 0:
+            raise ValueError("ATR must be positive and finite for entry/exit calculation")
         
         # Teknik indikatörler - doğru API kullan
         analyzer.add_indicator('rsi')
@@ -112,9 +119,6 @@ class DayTrader:
         bb_upper = analyzer.indicators.get('bb_upper', pd.Series())
         bb_middle = analyzer.indicators.get('bb_middle', pd.Series())
         bb_lower = analyzer.indicators.get('bb_lower', pd.Series())
-        
-        current_price = data['Close'].iloc[-1]
-        atr = self._calculate_atr(data, 14)
         
         # Sinyal hesaplama
         signal_score = 0
@@ -284,6 +288,8 @@ class DayTrader:
     
     def _calculate_atr(self, data: pd.DataFrame, period: int = 14) -> float:
         """Average True Range hesaplar"""
+        if len(data) < period:
+            raise ValueError(f"ATR requires at least {period} bars")
         high_low = data['High'] - data['Low']
         high_close = np.abs(data['High'] - data['Close'].shift())
         low_close = np.abs(data['Low'] - data['Close'].shift())
@@ -310,6 +316,8 @@ class DayTrader:
     def add_position(self, symbol: str, entry_price: float, position_type: str, 
                     stop_loss: float, take_profit: float, size: float):
         """Yeni pozisyon ekler"""
+        if position_type not in ('BUY', 'SELL'):
+            raise ValueError("Position type must be BUY or SELL")
         position = {
             'symbol': symbol,
             'entry_price': entry_price,
@@ -326,6 +334,8 @@ class DayTrader:
         """Pozisyon kapatır"""
         if symbol in self.active_positions:
             position = self.active_positions[symbol]
+            if position.get('type') not in ('BUY', 'SELL'):
+                raise ValueError("Position type must be BUY or SELL")
             position['exit_price'] = exit_price
             position['exit_time'] = datetime.now()
             position['close_reason'] = reason
@@ -343,4 +353,4 @@ class DayTrader:
             self.trading_history.append(position.copy())
             
             # Aktif pozisyonlardan çıkar
-            del self.active_positions[symbol] 
+            del self.active_positions[symbol]

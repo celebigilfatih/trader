@@ -1,9 +1,11 @@
-.PHONY: help deps-backend deps-frontend test test-backend test-frontend build-frontend run-dev smoke smoke-ui smoke-ui-stack smoke-all qa ci-e2e ci-full ci ci-core clean
+.PHONY: help deps-backend deps-frontend test test-backend test-frontend build-frontend run-dev smoke smoke-ui smoke-ui-deterministic smoke-ui-stack smoke-all qa ci-e2e ci-full ci ci-core clean
 
 PYTHON ?= python3
 NPM ?= npm
 SMOKE_STACK_API_PORT ?= 8010
 SMOKE_STACK_FRONT_PORT ?= 3010
+UI_FRONT_BASE ?= http://127.0.0.1:3010
+UI_BROWSER_CHANNEL ?=
 
 help:
 	@echo "Kullanılabilir hedefler:"
@@ -16,6 +18,7 @@ help:
 	@echo "  run-dev          - run_dev.py ile backend+frontend'i başlatır"
 	@echo "  smoke            - run_dev orkestrasyonu smoke testini çalıştırır"
 	@echo "  smoke-ui         - Playwright ile temel UI etkileşim smoke testi (opsiyonel)"
+	@echo "  smoke-ui-deterministic - Calisan frontend'de fixture API ile 10 tarayici senaryosu (backend gerekmez)"
 	@echo "  smoke-ui-stack   - Backend+frontend'i başlatıp Playwright UI smoke testini otomatik koşar"
 	@echo "  smoke-all        - make smoke ve make smoke-ui-stack hedeflerini sırayla koşar"
 	@echo "  qa               - make ci-e2e (günlük kapanışa yakın, UI e2e dahil)"
@@ -47,6 +50,9 @@ smoke:
 
 smoke-ui:
 	@node scripts/run_frontend_ui_smoke.mjs
+
+smoke-ui-deterministic:
+	@node scripts/run_frontend_ui_smoke.mjs --deterministic --front-base $(UI_FRONT_BASE) $(if $(UI_BROWSER_CHANNEL),--browser-channel $(UI_BROWSER_CHANNEL),)
 
 smoke-ui-stack:
 	$(PYTHON) scripts/run_frontend_ui_smoke_with_stack.py \

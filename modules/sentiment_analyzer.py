@@ -2,7 +2,9 @@ import pandas as pd
 import requests
 from typing import Dict, List, Optional
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
+from math import isfinite
 import feedparser
 from bs4 import BeautifulSoup
 import re
@@ -21,6 +23,7 @@ class SentimentAnalyzer:
             'hurriyet_ekonomi': 'https://www.hurriyet.com.tr/rss/ekonomi'
         }
         self.sentiment_cache = {}
+        self.last_fetch_diagnostics = []
         self.vader_analyzer = SentimentIntensityAnalyzer()
         self.symbol_sentiments = {
             'THYAO': 0.2,   # Türk Hava Yolları - nötr/pozitif
@@ -220,14 +223,80 @@ class SentimentAnalyzer:
         
         return pd.DataFrame(sentiments).sort_values('date')
     
+    def _fetch_rss(self, source_name: str, rss_url: str):
+        """Fetch bytes with the accepted request budget, then parse once."""
+        started = time.monotonic()
+        diagnostic = {
+            'source': source_name, 'status': 'failed', 'attempts': 0,
+            'elapsed_seconds': 0.0, 'error_code': None,
+        }
+        feed = None
+        for attempt in range(1, 4):
+            diagnostic['attempts'] = attempt
+            response = None
+            retryable = False
+            body = None
+            try:
+                response = requests.get(rss_url, timeout=(8, 8))
+                status = response.status_code
+                if 200 <= status < 300:
+                    body = response.content
+                elif status in (429, 503) and 'Retry-After' in response.headers:
+                    diagnostic['error_code'] = 'retry_after_deferred'
+                else:
+                    diagnostic['error_code'] = 'http_error'
+                    retryable = status in (408, 429, 500, 502, 503, 504)
+            except requests.Timeout:
+                diagnostic['error_code'] = 'timeout'
+                retryable = True
+            except requests.ConnectionError:
+                diagnostic['error_code'] = 'connection_error'
+                retryable = True
+            except Exception:
+                diagnostic['error_code'] = 'fetch_failed'
+            finally:
+                if response is not None:
+                    try:
+                        response.close()
+                    except Exception:
+                        diagnostic['error_code'] = 'fetch_failed'
+                        retryable = False
+                        body = None
+
+            if body is not None:
+                # Parsing is outside the transport retry boundary.
+                try:
+                    feed = feedparser.parse(body)
+                    has_entries = bool(feed.entries)
+                    if getattr(feed, 'bozo', False):
+                        diagnostic['status'] = 'partial' if has_entries else 'failed'
+                        diagnostic['error_code'] = 'parse_partial' if has_entries else 'parse_failed'
+                    else:
+                        diagnostic['status'] = 'success' if has_entries else 'empty'
+                        diagnostic['error_code'] = None
+                except Exception:
+                    diagnostic['error_code'] = 'parse_failed'
+                    feed = None
+                break
+            if not retryable or attempt == 3:
+                break
+            time.sleep(1.5 * attempt)
+
+        diagnostic['elapsed_seconds'] = max(0.0, time.monotonic() - started)
+        return feed, diagnostic
+
     def fetch_real_news(self, limit: int = 20) -> List[Dict]:
         """Gerçek RSS feed'lerden haber çeker"""
         all_news = []
+        self.last_fetch_diagnostics = []
         
         for source_name, rss_url in self.news_sources.items():
             try:
-                # RSS feed'i parse et
-                feed = feedparser.parse(rss_url)
+                feed, diagnostic = self._fetch_rss(source_name, rss_url)
+                self.last_fetch_diagnostics.append(diagnostic)
+                if feed is None:
+                    continue
+                fetched_at = datetime.now(timezone.utc).isoformat()
                 
                 for entry in feed.entries[:limit//len(self.news_sources)]:
                     # Haber detaylarını al
@@ -236,15 +305,22 @@ class SentimentAnalyzer:
                     link = entry.get('link', '')
                     published = entry.get('published', '')
                     
-                    # Tarih formatını düzenle
-                    try:
-                        if published:
-                            pub_date = datetime.strptime(published, '%a, %d %b %Y %H:%M:%S %z')
-                            formatted_date = pub_date.strftime('%Y-%m-%d %H:%M')
-                        else:
-                            formatted_date = datetime.now().strftime('%Y-%m-%d %H:%M')
-                    except:
-                        formatted_date = datetime.now().strftime('%Y-%m-%d %H:%M')
+                    # Kaynak zamanı bilinmiyorsa çekilme zamanı ile doldurma.
+                    published_at = None
+                    formatted_date = ''
+                    published_time_status = 'missing' if published in (None, '') else 'invalid'
+                    if isinstance(published, str) and published:
+                        try:
+                            # Önceki parser'ın kabul ettiği +03:00 biçimini de koru.
+                            rfc_date = re.sub(r'([+-]\d{2}):(\d{2})$', r'\1\2', published)
+                            pub_date = parsedate_to_datetime(rfc_date)
+                            if pub_date.tzinfo is not None and pub_date.utcoffset() is not None:
+                                published_at = pub_date.isoformat()
+                                formatted_date = pub_date.strftime('%Y-%m-%d %H:%M')
+                                published_time_status = 'valid'
+                        except (ValueError, TypeError, IndexError, OverflowError):
+                            # Bozuk kaynak tarihi haberin kaybolmasına neden olmaz.
+                            pass
                     
                     # Sentiment analizi yap
                     text_for_analysis = f"{title} {description}"
@@ -258,9 +334,13 @@ class SentimentAnalyzer:
                         'description': description,
                         'link': link,
                         'date': formatted_date,
+                        'published_at': published_at,
+                        'published_time_status': published_time_status,
+                        'fetched_at': fetched_at,
                         'source': source_name.replace('_', ' ').title(),
+                        'sentiment_status': 'computed' if sentiment_score is not None else 'failed',
                         'sentiment_score': sentiment_score,
-                        'sentiment_label': self._get_sentiment_label(sentiment_score),
+                        'sentiment_label': self._get_sentiment_label(sentiment_score) if sentiment_score is not None else None,
                         'detected_symbols': detected_symbols
                     }
                     
@@ -270,12 +350,16 @@ class SentimentAnalyzer:
                 print(f"RSS feed hatası ({source_name}): {str(e)}")
                 continue
         
-        # Tarihe göre sırala (en yeni önce)
-        all_news.sort(key=lambda x: x['date'], reverse=True)
+        # Farklı offset'leri aynı zaman ekseninde karşılaştır; bilinmeyenler sonda.
+        all_news.sort(
+            key=lambda item: datetime.fromisoformat(item['published_at']).astimezone(timezone.utc)
+            if item['published_at'] is not None else datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )
         return all_news[:limit]
     
-    def _analyze_text_sentiment(self, text: str) -> float:
-        """Metin sentiment analizi yapar"""
+    def _analyze_text_sentiment(self, text: str) -> Optional[float]:
+        """Metin sentiment analizi yapar; hesaplama hatasında skor üretmez."""
         try:
             # VADER sentiment analizi (İngilizce metinler için)
             vader_scores = self.vader_analyzer.polarity_scores(text)
@@ -287,12 +371,14 @@ class SentimentAnalyzer:
             
             # İki yöntemin ortalamasını al
             final_sentiment = (vader_compound + textblob_polarity) / 2
+            if not isfinite(final_sentiment):
+                return None
             
             return round(final_sentiment, 3)
             
         except Exception as e:
             print(f"Sentiment analizi hatası: {str(e)}")
-            return 0.0
+            return None
     
     def _detect_symbols_in_text(self, text: str) -> List[str]:
         """Metinde hisse sembollerini tespit eder"""
@@ -327,21 +413,12 @@ class SentimentAnalyzer:
         """Piyasa geneli haber özeti"""
         try:
             news = self.fetch_real_news(limit=30)
-            
-            if not news:
-                return {
-                    'total_news': 0,
-                    'avg_sentiment': 0.0,
-                    'positive_news': 0,
-                    'negative_news': 0,
-                    'neutral_news': 0,
-                    'top_symbols': [],
-                    'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                }
+            source_diagnostics = [dict(item) for item in self.last_fetch_diagnostics]
             
             # Sentiment istatistikleri
-            sentiments = [n['sentiment_score'] for n in news]
-            avg_sentiment = sum(sentiments) / len(sentiments)
+            sentiments = [n['sentiment_score'] for n in news
+                          if n['sentiment_status'] == 'computed' and n['sentiment_score'] is not None]
+            avg_sentiment = sum(sentiments) / len(sentiments) if sentiments else None
             
             positive_count = len([s for s in sentiments if s > 0.1])
             negative_count = len([s for s in sentiments if s < -0.1])
@@ -357,13 +434,16 @@ class SentimentAnalyzer:
             
             return {
                 'total_news': len(news),
-                'avg_sentiment': round(avg_sentiment, 3),
-                'sentiment_label': self._get_sentiment_label(avg_sentiment),
+                'scored_news': len(sentiments),
+                'failed_sentiment_count': sum(n['sentiment_status'] == 'failed' for n in news),
+                'avg_sentiment': round(avg_sentiment, 3) if avg_sentiment is not None else None,
+                'sentiment_label': self._get_sentiment_label(avg_sentiment) if avg_sentiment is not None else None,
                 'positive_news': positive_count,
                 'negative_news': negative_count,
                 'neutral_news': neutral_count,
                 'top_symbols': [{'symbol': s[0], 'mentions': s[1]} for s in top_symbols],
                 'recent_news': news[:5],
+                'source_diagnostics': source_diagnostics,
                 'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
             
@@ -371,6 +451,15 @@ class SentimentAnalyzer:
             return {
                 'error': str(e),
                 'total_news': 0,
-                'avg_sentiment': 0.0,
+                'scored_news': 0,
+                'failed_sentiment_count': 0,
+                'avg_sentiment': None,
+                'sentiment_label': None,
+                'positive_news': 0,
+                'negative_news': 0,
+                'neutral_news': 0,
+                'top_symbols': [],
+                'recent_news': [],
+                'source_diagnostics': [dict(item) for item in self.last_fetch_diagnostics],
                 'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }

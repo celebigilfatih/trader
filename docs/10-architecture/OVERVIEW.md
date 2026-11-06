@@ -77,12 +77,32 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
 
 - Finansal karar desteğinde veri tazeliği ve sahte/gerçek ayrımı kritik.
 - API provider'ında sınırlı retry/backoff ve API health endpoint'i var;
-  `timeout_seconds` gerçek fetcher çağrısına iletilmiyor. RSS ve sağlayıcı bazlı
-  hata/sağlık görünürlüğü tamamlanmış değil.
+  `timeout_seconds` artık gerçek history çağrısına iletiliyor; toplam işlem
+  deadline'ı değildir. Accepted ADR-0005 RSS connect/read timeout ve sınırlı retry
+  sağlar; RSS/Yahoo kaynak tanıları bellektedir. Merkezi üretim gözlemi açık.
 - UI ve domain hesaplamalarının büyük ölçüde tek dosyada birleşmesi değişiklik
   riskini yükseltiyor.
-- 35 backend testi çevrimdışı geçiyor (2026-11-05); legacy `test_app.py` ve
+- 331 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
+  Windows asyncio için yerel loopback serbest. Legacy `test_app.py` ve
   tarayıcı smoke akışı dış sağlayıcılara bağlı kalabilir.
+- Ayrı deterministik cockpit modu 10 senaryodur. 13 kontrollü Streamlit AppTest
+  legacy haber/ML fonksiyonlarını render eder; tam uygulama/browser kanıtı değildir.
+- BOS mevcut batch hesabında swing için çevredeki gelecek mumları da kullanır;
+  tarama sondan 10. mumu içerir, daha yeni 9 mumu dışlar. Eklenen testler bu
+  davranışı karakterize eder; canlı/causal strateji veya kârlılık kanıtı değildir.
+  BOS güç artışı 100'ü aşabilir; kombinasyon confidence değeri sezgiseldir.
+- RSI/MACD sıfır okuma ve güçlü SAT boyut etiketi düzeltildi. DayTrader geçersiz
+  ATR/entry/yön girdisini ValueError ile reddeder; hata scan'de sembol bazlı
+  yakalanır. Mevcut geçerli hesaplar/kayıt şekli korunur. Accepted ADR-0006 OTT
+  seed/yön sözleşmesi uygulanıp gerçek okuyucu zincirinde test edildi. Boş/tek
+  gözlem ve geçersiz Close davranışı belirgindir. Genel risk/pozisyon entegrasyonu
+  ve üretime hazırlık tamamlanmış değildir; canonical OTT/kârlılık kanıtı yoktur.
+- ML için83 hedef test vardır. Accepted ADR-0007 native hedef kuyruğu/purge,
+  train-only quantile ve ortak dört-model scaler/inverse, coherent advanced state
+  ve format1 joblib sözleşmesini uyguladı. Native dört-model smoke ile ayrı literal
+  label boundary hesapları ayrılır; finansal doğruluk/kalibrasyon iddiası yoktur.
+  Sonraki Simple state/importance/NaN dar düzeltmeleri mevcut çıktı biçiminde
+  tamamlandı; ufuk cap/confidence/takvim uyumu ayrı açıktır.
 - Kabul edilmiş hedef kararlar: ADR-0001 (kapsam), ADR-0002 (mimari),
   ADR-0003 (kimlik/bildirim). Demo auth, kabul edilmiş üretim davet operasyonunun
   tamamlandığı anlamına gelmez.

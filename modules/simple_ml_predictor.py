@@ -70,6 +70,8 @@ class SimpleMLPredictor:
     
     def train_quick_model(self, data: pd.DataFrame, technical_indicators: Dict) -> Dict:
         """Hızlı model eğitimi"""
+        self.is_trained = False
+        self.last_prediction = None
         try:
             # Özellik hazırlama
             features = self.prepare_features(data, technical_indicators)
@@ -99,6 +101,8 @@ class SimpleMLPredictor:
             # Performans
             mse = np.mean((y_test - y_pred) ** 2)
             mae = np.mean(np.abs(y_test - y_pred))
+            if not np.isfinite([mse, mae]).all():
+                raise ValueError("Model training metrics must be finite")
             
             self.is_trained = True
             
@@ -115,6 +119,7 @@ class SimpleMLPredictor:
     
     def predict_next_day(self, data: pd.DataFrame, technical_indicators: Dict) -> Dict:
         """Ertesi gün tahmini"""
+        self.last_prediction = None
         
         if not self.is_trained:
             train_result = self.train_quick_model(data, technical_indicators)
@@ -129,7 +134,16 @@ class SimpleMLPredictor:
             # Tahmin
             predicted_return = self.model.predict(last_features)[0]
             current_price = data['Close'].iloc[-1]
-            predicted_price = current_price * (1 + predicted_return)
+            if not np.isfinite(predicted_return):
+                raise ValueError("Predicted return must be finite")
+            if not np.isfinite(current_price) or current_price <= 0:
+                raise ValueError("Current price must be positive and finite")
+            with np.errstate(over='ignore', invalid='ignore'):
+                predicted_price = current_price * (1 + predicted_return)
+                predicted_percent = predicted_return * 100
+                price_change = predicted_price - current_price
+            if not np.isfinite([predicted_price, predicted_percent, price_change]).all() or predicted_price <= 0:
+                raise ValueError("Predicted price and derived values must be valid and finite")
             
             # Güven skoru (basit)
             confidence = min(0.8, max(0.2, 0.6 - abs(predicted_return) * 10))
@@ -137,8 +151,8 @@ class SimpleMLPredictor:
             result = {
                 'current_price': current_price,
                 'predicted_price': predicted_price,
-                'predicted_return': predicted_return * 100,
-                'price_change': predicted_price - current_price,
+                'predicted_return': predicted_percent,
+                'price_change': price_change,
                 'confidence': confidence,
                 'signal': 'BUY' if predicted_return > 0.01 else 'SELL' if predicted_return < -0.01 else 'HOLD'
             }
@@ -155,22 +169,19 @@ class SimpleMLPredictor:
             return pd.DataFrame()
         
         try:
-            importances = self.model.feature_importances_
-            feature_names = ['price_change', 'volume_change', 'high_low_ratio', 
-                           'sma_5', 'sma_20', 'price_sma_ratio', 'rsi', 
-                           'ema_5_ratio', 'ema_8_ratio', 'ema_13_ratio', 'ema_21_ratio',
-                           'vwap_ratio', 'vwap_distance',
-                           'close_lag_1', 'close_lag_3', 'return_lag_1', 'volatility']
-            
-            # Mevcut feature sayısına göre ayarla
-            available_features = min(len(importances), len(feature_names))
+            importances = np.asarray(self.model.feature_importances_)
+            feature_names = list(self.model.feature_names_in_)
+            if (importances.shape != (len(feature_names),) or not feature_names
+                    or len(set(feature_names)) != len(feature_names)
+                    or not np.isfinite(importances).all()):
+                return pd.DataFrame()
             
             df = pd.DataFrame({
-                'feature': feature_names[:available_features],
-                'importance': importances[:available_features]
+                'feature': feature_names,
+                'importance': importances
             }).sort_values('importance', ascending=False)
             
             return df
             
         except Exception:
-            return pd.DataFrame() 
+            return pd.DataFrame()

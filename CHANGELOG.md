@@ -2,6 +2,235 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — Simple ML-04–06 dar hata düzeltmeleri
+
+- Her Simple eğitim denemesi eski trained flag/cache'i temizler; nonfinite metric
+  success sayılmaz. Inference hatası eski tahmini saklamaz; geçerli retry çalışır.
+- Feature importance sabit17 ad yerine RF'nin gerçek fitted kolon metadata'sını
+  kullanır; bare10 ve partial optional isim/ağırlık eşleşmesi korunur.
+- Nonfinite return/current/derived değer, taşan percent/fiyat ve pozitif olmayan
+  fiyat mevcut error sözlüğüne gider; geçerli signal/confidence formülü aynı.
+- 13 yeni test önce29 assertion failure, sonra37 hedef green;11 geçerli mutant
+  yakalandı, bağımsız inceleme bulgusuz. Toplam331 backend testi/60 Python compile
+  ve CDSK yapı/link/ADR/diff kontrolü başarılı; upstream validator ortamda yok.
+- Advanced/config/dependency başlangıçla aynı; yeni ADR/şema/model veya commit/
+  push yok. Belgeler/handoff güncel; frontend/canlı sağlayıcı tekrar yok. Kalan
+  ML-07/08/takvim ve genel M1 açık. Plan `2026-11-06-simple-ml-fixes.md`.
+
+### 2026-11-06 — ADR-0007 onaylı ML sözleşmesi uygulandı
+
+- Kullanıcının somut soruya “Onaylıyorum.” yanıtıyla ADR-0007 Accepted. Bilinmeyen
+  hedef NaN, gerçek sıfır korunur; min50 etiket/source-position ufuk purge ve
+  train/test en az2, unique/increasing index ve pozitif integer ufuk doğrulanır.
+- Global batch quantile kaldırıldı; bounds/scaler yalnız purge edilmiş train'den.
+  Dört estimator aynı X scaler/target inverse kullanır. Başarısız advanced retrain
+  eski state'i iptal eder; yalnız metric aşamasını da geçen modeller yayımlanır.
+- Format1 joblib bounds/ufuk saklar, legacy yeniden eğitim ister. Bozuk/eksik paket
+  çalışan instance'ı değiştirmez. Review scaler türetilmiş parametre tutarlılığı
+  ve çok büyük ufuk bulguları RED→GREEN kapandı; kullanıcı artifact'ı açılmadı.
+- 30 yeni regresyonla70 ML/318 backend testi geçti;15 geçerli mutant yakalandı,
+  bağımsız re-review bulgusuz. 59 Python compile ve CDSK yapı/link/ADR/diff
+  kontrolleri geçti; upstream validator ortamda yok. Dependency/model config aynı,
+  commit/push ve frontend/canlı servis yok; Simple/kalan ML ve genel M1 açık.
+
+### 2026-11-06 — ML-01–03 düzeltme tasarımı / ADR-0007 Proposed
+
+- Hedef/ölçek/batch quantile kusurları yeniden üretildi; 40 mevcut ML testi
+  dış socket/joblib engelli geçti. Üretim ML kodu, testler ve manifestler değişmedi.
+- ADR-0007 Proposed: terminal NaN, hedef ufkuna göre train/test purge, train-only
+  bounds ve ortak dört-model scaler/inverse, tutarlı advanced state ve format1
+  joblib. Sürümsüz artifact yeniden eğitim gerektirecek; henüz uygulanmadı.
+- Seçenekler/etkiler/kabul ölçütleri/rollback tasarımı, ADR dizini, backlog,
+  mimari/veri modeli, test stratejisi ve Boot handoff güncellendi. AGENTS mimari/
+  veri modeli kapısında açık onay beklenir; genel “devam” bu öneriye özel onay değil.
+  Commit/push, frontend/canlı sağlayıcı veya yeni dependency yok.
+
+### 2026-11-06 — BL-001 ML yardımcıları testleri
+
+- 9 ortak helper, 15 simple predictor ve 16 advanced feature/eğitim testi
+  eklendi; bağımsız oran/lag/pencere/eşik/metrik beklentileri, gerçek sklearn
+  fit/scaler ve açık estimator/target boundary doubles birbirinden ayrıldı.
+- 80/80 geçerli transient mutant assertion failure verdi; bağımsız inceleme
+  40 testi doğruladı. Birleşik 288 backend testi dış ağ engelli geçti; 57 Python
+  compile, 39 belge/11 Boot bölümü ve bağlantı/ADR/diff kontrolleri başarılı.
+- Native sıfır target kuyruğu, eğitim/inference ölçek uyumsuzluğu, future-dependent
+  clipping ve diğer ML-04–08 kusurları ayrı reproducer'larla backlog'a kaydedildi.
+  Yanlış sonuçlar doğru beklenti sayılmadı; üretim ML kodu/manifestler değişmedi.
+- Test ortamına mevcut gereksinimden sklearn eklendi; destek/pin kararı, yeni
+  ADR, commit/push yok. Frontend/canlı sağlayıcı koşulmadı; genel ML doğruluğu,
+  kalibrasyon ve M1 kapanışı açık. Ayrıntı `2026-11-06-ml-helper-tests.md` kaydında.
+
+### 2026-11-06 — ADR-0006 onaylı OTT sözleşmesi
+
+- Kullanıcı “onaylıyorum” dedi; ADR-0006 Accepted ve uygulandı. OTT ilk fiyatı
+  loop öncesinde seed eder; `ott_trend` ilk gözlemde eksik, sonra ±1. Mevcut
+  VAR/config/max-min recurrence/eşitlik ve puan ağırlıkları korunur.
+- Boş/tek gözlem sözleşmesi, pozitif/sonlu Close doğrulaması ve mutasyondan
+  önce ValueError eklendi. Eski ott/ott_signal alanları ve caller veri korunur.
+- 10 contract + 6 gerçek entegrasyon testi, 18 kontrollü mutant ve bağımsız
+  inceleme ile fiyat/yön/okuyucu zinciri doğrulandı. Temporal fiyat edge'i ayrıca
+  RED→GREEN düzeltildi. Bu, canonical OTT veya finansal etkinlik kanıtı değildir.
+- Veri modeli/backlog/test stratejisi/handoff güncellendi; RP-03 onaylı kapsamı
+  kapandı. Genel M1 açık; canlı sağlayıcı/frontend tekrar koşulmadı. Commit/push,
+  yeni API/dependency/kalıcı model/migration yok.
+  Son birleşik 248 backend testi dış ağ engelli geçti; bağımsız incelemede açık bulgu yok.
+  54 Python compile, 39 belge/11 Boot bölümü ve link/ADR/diff kontrolleri geçti.
+
+### 2026-11-06 — RP-01–05 dar hata düzeltmeleri
+
+- Risk/pozisyon RSI/MACD sıfırları mevcut kurallara girer; None/NaN atlanır.
+  GÜÇLÜ SAT mevcut satış boyutunu kullanır; puan ve yüzdeler yeniden seçilmedi.
+- DayTrader eksik veri/ATR, geçersiz entry fiyatı veya yönü ValueError ile
+  hesap/kayıt mutasyonundan önce reddeder. Geçerli giriş/çıkış/P&L aynı;
+  gerçek scan hatalı sembolü atlar ve devam eder.
+- OTT pandas TypeError `.ffill()` ile çözüldü. Tam seed/ott_trend sözleşmesi
+  ADR-0006 Proposed hazırlandı; henüz uygulanmadı. Yeni alan için açık onay bekler.
+- 20 regresyon RED→GREEN, 94 hedef ve birleşik 232 dış ağ engelli test başarılı.
+  Bağımsız inceleme bulgusuz. Dependency/API/kalıcı model değişmedi; commit/push
+  yok. Frontend/canlı servis yeniden koşulmadı; genel M1/OTT kapsamı açık.
+  52 Python compile, 39 zorunlu belge/11 Boot bölümü ve bağlantı/ADR/diff kontrolleri geçti.
+
+### 2026-11-06 — BL-001 risk ve pozisyon test dilimi
+
+- 13 risk, 16 pozisyon ve 17 DayTrader testi eklendi. Puan eşikleri, volatilite,
+  stop/hedef/ATR/entry/R:R, confidence ve yerel yön/miktar P&L gerçek hesaplarla
+  ve ayrı açık kural girdileriyle doğrulandı. 104 geçerli mutant yakalandı.
+- Ayrı reproducer'lar RSI/MACD sıfır atlama, güçlü SAT boyut etiketi, OTT pandas
+  3.0.1 TypeError/alan uyumsuzluğu ve doğrudan kısa/geçersiz girdi açıklarını
+  doğruladı. Bunlar düzeltilmedi veya doğru beklenti olarak testlere yazılmadı;
+  BACKLOG RP-01–05 ve handoff'ta açık kaldı. UI/canlı erişim iddiası yapılmaz.
+- Üretim formülleri/config/API/model/dependency manifestleri değişmedi; yeni
+  ADR veya commit/push yok. Genel risk/pozisyon/BL-001/M1 kapanışı iddia edilmez.
+  Son birleşik 212 test dış ağ engelli geçti; bağımsız inceleme 46 hedef testi
+  doğruladı. 49 Python compile ve belge/bağlantı/diff kontrolleri geçti.
+
+### 2026-11-06 — BL-001 BOS ve kombinasyon testleri
+
+- 15 BOS + 12 kombinasyon testi eklendi. Gerçek OHLCV zincirleriyle iki yönlü
+  kırılma, swing/hacim/güç, kapanış/wick, lookback ve gerçek analyzer çıktıları;
+  ayrı matcher testleriyle FVG+OB/FVG+BOS eşikleri ve confidence sırası doğrulandı.
+- 40/40 geçerli bellek içi mutant assertion failure üretti, error yok; gerçek
+  kodla 27 hedef ve birleşik 166 test dış ağ engelli geçti. Üretim hesapları,
+  config/API/model/dependency manifestleri değişmedi; yeni ADR ve commit/push yok.
+- Bağımsız incelemede önemli/engelleyici bulgu yok; tarama sınırı metni düzeltildi:
+  sondan 10. mum dahil, daha yeni 9 mum hariç. Batch/future-neighbor ve sezgisel
+  güç/confidence sınırları kaydedildi; canlı strateji veya kârlılık iddiası yok.
+  Genel BL-001/M1 ve risk/pozisyon/ML kapsamı açık; frontend/canlı servis koşulmadı.
+  46 Python compile, 39 zorunlu belge/11 Boot bölümü ve bağlantı/diff kontrolleri geçti.
+
+### 2026-11-06 — BL-001 MACD/Bollinger değişken seri testleri
+
+- 5 gerçek hesaplama testi eklendi: iki yönlü MACD şoku/reversion, ayrı sinyal/
+  histogram değerleri ve warmup sınırları; Bollinger 20 fiyat penceresi,
+  popülasyon std ve aykırı değer çıkışı. Girdi/index korunması kapsandı.
+- Beklenen değerler bağımsız matematikten türetildi; 12/12 bellek içi hatalı
+  varyant assertion failure verdi, gerçek kodla 17 hedef test yeniden geçti.
+  Birleşik 139 test dış ağ engelli geçti. Üretim hesapları, config ve dependency
+  manifestleri değişmedi; yeni ADR yok, commit/push yapılmadı.
+- BACKLOG, TEST_STRATEGY, mimari test sayısı ve Project Boot handoff güncellendi.
+  Bağımsız inceleme bulgusuz; 44 Python compile, belge/bağlantı/diff kontrolleri geçti.
+  Frontend/canlı sağlayıcı doğrulaması yeniden koşulmadı; genel BL-001/M1 açık.
+
+### 2026-11-05 — ADR-0005 onaylı RSS bütçesi ve kaynak tanıları
+
+- Somut onay sorusuna “devam edelim” yanıtı kaydedildi; ADR-0005 Accepted.
+  RSS requests byte fetch → feedparser yoluna taşındı; connect/read 8/8,
+  en fazla 2 ek deneme, 1.5/3.0 bekleme, seçili retry nedenleri ve 429/503
+  Retry-After ertelemesi uygulandı. Son HTTP hata gövdesi parse edilmez;
+  parser hatası retry tetiklemez; yanıtlar kapanır ve kaynaklar bağımsız sürer.
+- RSS/Yahoo instance tanıları kaynak/durum/deneme/monotonic süre/hata kodu tutar;
+  her fetch yenilenir, haber özeti bağımsız kopya alır. Ham hata içeriği taşınmaz.
+  Legacy özet/listesi kendi kaynak durumunu ve onaylı kısmi kesinti uyarısını gösterir.
+- 22 RSS + 4 Yahoo + 5 legacy testi eklendi; 134 birleşik test dış ağ engelli
+  geçti. Önceki RSS/NLP/hata assertion'ları yeni transport fixture'larına taşındı.
+  Bağımsız inceleme bulgusuz; 44 Python compile ve belge/bağlantı/diff kontrolleri geçti.
+  Yeni endpoint, kalıcı şema, dependency manifesti veya frontend değişikliği yok.
+  Canlı sağlayıcı ve frontend build/UI yeniden koşulmadı; toplam hard deadline,
+  global rate limit veya üretim gözlem kabiliyeti iddia edilmez. Genel M1 açık.
+
+### 2026-11-05 — BL-003 hata yolları ve timeout iletimi
+
+- Provider'ın mevcut `timeout_seconds` alanı gerçek Yahoo history çağrısına
+  taşındı; legacy override yokluğu ve 8/2/1.5 varsayılanları korundu. History
+  timeout'u toplam işlem/SDK deadline'ı olarak sunulmaz.
+- RSS'in görünür HTTP >=400 hata gövdesindeki entry'leri haber sayması ayrı
+  red→green düzeltildi; bozo ve 301 metadata uyumu/kaynak izolasyonu korundu.
+- 6 provider, 5 gerçek adaptör ve 10 RSS kesinti testi eklendi. 24 hedef ve
+  birleşik 103 test dış socket engelli geçti; 43 Python sözdizimi kontrolü başarılı.
+  Bağımsız incelemede önemli/engelleyici bulgu yok. Frontend veya canlı sağlayıcı
+  doğrulaması bu backend diliminde yeniden koşulmadı; manifest değişmedi.
+- INTEGRATIONS/OBSERVABILITY/API_CONVENTIONS mevcut/hedef çelişkileri düzeltildi.
+  Yeni RSS timeout/retry, geçici tanı ve kaynak uyarısı ADR-0005 Proposed olarak
+  hazırlandı; açık onay bekler. Yeni politika henüz uygulanmadı; BL-003/M1 açık.
+
+### 2026-11-05 — BL-002 onaylı uygulama
+
+- Kullanıcı A metinleri ve ADR-0004 sorusuna “devam et” dedi; onay kaydedildi.
+  Cockpit kaynak/nitelik/zamanı gösterir, yatırım uyarısı ve doğru boş/hata
+  metinlerini kullanır; eski/sembol/oturum yanıtları güncel sonucu geri getirmez.
+- RSS yayın/çekilme zamanı ayrıldı; bilinmeyen tarih bugünün saati olmaz. NLP
+  hatası/nonfinite skor nullable/failed, gerçek sıfır nötrdür; özet ve filtreler
+  yalnız hesaplanmış skorları kullanır. Gerçek skorsuz haber listede kalır.
+- Legacy haber/ML metinleri güncellendi. Sabit olasılıklar kaldırıldı; geçersiz
+  yayılımda ±%5 fallback senaryo/bant ve türetilmiş uyum/risk kartı gösterilmez.
+  Geçerli tahmin/sinyal formülleri, ufuk ve sentiment eşikleri değişmedi.
+- 14 RSS/NLP ve 8 kontrollü Streamlit AppTest ile toplam 82 test dış ağ engelli
+  geçti; 10/10 üretim cockpit senaryosu ve Next.js build başarılı. Node/Python
+  sözdizimi (41 Python dosyası), bağımsız inceleme ve diff kontrolü tamamlandı.
+  İnceleme sonrası bozuk metadata tipi red→green ile düzeltildi.
+- Mevcut requirements paketleri yalnız yerel `.venv` içine kuruldu; manifest
+  veya dependency politikası değişmedi. Canlı sağlayıcı/tam legacy browser
+  koşulmadı; Next.js/deprecation ve CDSK validator ortam sınırları sürüyor.
+  Genel M1/M2 kapanmadı; commit/push yapılmadı.
+
+### 2026-11-05 — BL-002 incelemesi ve onay paketi
+
+- Cockpit ve legacy haber/ML kaynakları incelendi; analiz metadata'sının
+  görünmemesi/eski analiz, gerçek zaman iddiası, sezgisel ML uyum ve görsel bant
+  sunumu için kesin ekran metinleri Proposed belgeye alındı.
+- Aktif haber ekranının gerçek RSS kullandığı ve mock yardımcılar için diğer
+  Python modüllerinde doğrudan çağrı bulunmadığı kaynak/AST ile doğrulandı.
+- RSS yayın tarihi eksik/geçersizse bugünün zamanının yazılması ve NLP hatasının
+  nötr skorla birleşmesi için ADR-0004 Proposed hazırlandı; nullable skor/zaman
+  sözleşmesi açık onay bekliyor. ADR indeksi, AI/veri modeli notları, backlog ve
+  handoff güncellendi. Üretim kodu veya bağımlılık değişmedi; BL-002/M1 açık.
+- Bağımsız incelemede bulunan sabit ML senaryo olasılıkları öneride giderilecek
+  kapsam olarak eklendi; geçersiz yayılım, tahmin ufku ve sentiment eşik borçları
+  görünür kılındı. Bu kayıtlar uygulanmış hesaplama düzeltmesi değildir.
+
+### 2026-11-05 — Deterministik cockpit tarayıcı senaryoları
+
+- Mevcut UI smoke'a ayrı `--deterministic` modu ve test route fixture'ları
+  eklendi. Beş senaryo auth/watchlist/analiz/paper/RSI başarı, boş/kısmi/veri
+  yokluğu, iki yönlü RSI tercih kalıcılığı ve 503 sonrası yeniden denemeyi sınar.
+- Gerçek Next.js ekranı kullanılır; API/sağlayıcı yanıtları test içindedir.
+  Beklenmeyen API/dış istek ve eksik Playwright deterministik modu başarısız kılar.
+  Canlı smoke'un yenileme sonrası response bekleyicisi tıklamanın önüne alındı.
+- `make smoke-ui-deterministic`, isteğe bağlı browser channel ve README komutları
+  eklendi. Üretim UI/API ve dependency bildirimleri değişmedi; yeni ADR yok.
+- Doğrulama: Playwright 1.62.1/headless Edge ile 5/5 senaryo dev ve üretim
+  ekranlarında, Next.js üretim derlemesi ve iki Node sözdizimi kontrolü geçti.
+  Bozulmuş tercih kaydı test tarafından yakalandı; eksik Playwright exit 1 verdi.
+  Bağımsız incelemede engelleyici bulgu yok. Canlı sağlayıcı smoke'u ve 60 backend
+  testi bu frontend adımında yeniden koşulmadı; M1 açık. Next.js kurulum güvenlik
+  uyarısı ve tam CDSK validator'ın ortamda bulunmaması devam ediyor.
+
+### 2026-11-05 — M1 patern/sinyal doğrulaması ve devam
+
+- Kullanıcının devam talebiyle bekleme kaldırıldı; BL-001 için 14 patern ve
+  11 sinyal testi eklendi. Sentetik mum/tepe/dip, FVG/dolum, order block,
+  RSI/kesişim/trend, Bollinger/hacim ve çoğunluk kuralları kapsandı.
+- 60 backend testi normal ve dış socket bağlantıları engellenmiş koşuda geçti;
+  Windows asyncio için loopback bağlantıları serbest bırakıldı. Dört bellek içi
+  hatalı hesaplama varyantı yeni assertion'larla yakalandı.
+- 39 Python dosyasının sözdizimi ve 39 CDSK zorunlu dosyası/11 Boot bölümü
+  yapısal kontrolü geçti. Belgelenen upstream CDSK validator bu Windows
+  ortamında yok; frontend build/canlı UI smoke çalıştırılmadı.
+- Üretim hesaplamaları, şema ve dependency bildirimleri değişmedi. Yerel test
+  ortamı Python 3.12.14 ile hazırlandı; Starlette/httpx deprecation uyarısı açık.
+  Handoff/backlog güncellendi; sıradaki iş kontrollü tarayıcı senaryoları.
+  BL-001 ve M1 tamamlanmış sayılmaz; yeni ADR alınmadı.
+
 ### 2026-11-05 — Git teslim hazırlığı
 
 - Kullanıcı commit + push istedi; CDSK belgeleri, kalan iş planı ve mevcut

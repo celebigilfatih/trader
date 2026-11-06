@@ -47,6 +47,16 @@ Geçiş tamamlandığında:
 - **Port 8501 kullanımda:** mevcut Streamlit sürecini güvenli biçimde kapat veya
   manuel Streamlit komutunda farklı port seç.
 
+## Yerel ML modeli kurtarma — ADR-0007
+
+- Sürümsüz/eski joblib paketini yeni kod otomatik migrate etmez; model yeniden
+  eğitilir. Kullanıcı dosyası silinmez veya üstüne otomatik yazılmaz.
+- Yeni eğitim başarısızsa eski model tahmine açık kalmaz; veri/ufuk ve en az50
+  geçerli etiket sınırı kontrol edilir (eksiksiz seride en az50+h ham gözlem).
+- Save/load yalnız güvenilen yerel artifact içindir. Bozuk paket yükleme çalışan
+  instance'ı değiştirmez; format kontrolü joblib deserialization güvenliği sağlamaz.
+  Desteklenen sürümler matrisi ayrı açık iştir.
+
 ## Escalation and Ownership
 
 Kod sahibi/operasyon sorumlusu repository'de tanımlı değildir (`TBD`). Finansal

@@ -1,9 +1,22 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 const DEFAULT_API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000"
 const RSI_WARNING_DETAILS_STORAGE_KEY = "trader_rsi_warning_details_visible"
+
+function sourceName(source) {
+  return typeof source === "string" && source.trim() ? source : "Kaynak belirtilmedi"
+}
+
+function dataDisclosure(source) {
+  const normalized = typeof source === "string" ? source.trim().toLowerCase() : ""
+  if (normalized === "yahoo_finance") return "Sağlayıcı verisi — Yahoo Finance"
+  if (["mock", "demo", "test-fixture"].includes(normalized)) {
+    return "Demo / sentetik veri — gerçek piyasa verisi değildir."
+  }
+  return "Veri niteliği belirtilmedi"
+}
 
 function useSessionStorage() {
   const [session, setSession] = useState(null)
@@ -50,27 +63,66 @@ export default function Home() {
 
   const [newSymbol, setNewSymbol] = useState("")
   const [analysis, setAnalysis] = useState(null)
+  const [analysisMeta, setAnalysisMeta] = useState(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const analysisRequest = useRef(0)
   const [portfolio, setPortfolio] = useState([])
   const [rsiRows, setRsiRows] = useState([])
   const [rsiSkippedSymbols, setRsiSkippedSymbols] = useState([])
   const [rsiWarnings, setRsiWarnings] = useState([])
+  const [rsiState, setRsiState] = useState("initial")
+  const [rsiLoading, setRsiLoading] = useState(false)
+  const rsiRequest = useRef(0)
   const [portfolioSymbol, setPortfolioSymbol] = useState("")
   const [portfolioQuantity, setPortfolioQuantity] = useState("")
   const [portfolioAverageCost, setPortfolioAverageCost] = useState("")
 
   const [loading, setLoading] = useState(false)
+  const busy = loading || analysisLoading || rsiLoading
+
+  const resetAnalysis = () => {
+    analysisRequest.current += 1
+    setAnalysis(null)
+    setAnalysisMeta(null)
+    setAnalysisLoading(false)
+  }
+
+  const resetRsi = () => {
+    rsiRequest.current += 1
+    setRsiRows([])
+    setRsiSkippedSymbols([])
+    setRsiWarnings([])
+    setRsiState("initial")
+    setRsiLoading(false)
+  }
+
+  useEffect(() => {
+    analysisRequest.current += 1
+    setAnalysis(null)
+    setAnalysisMeta(null)
+    setAnalysisLoading(false)
+  }, [selectedSymbol, apiBase, session])
+
+  useEffect(() => {
+    rsiRequest.current += 1
+    setRsiRows([])
+    setRsiSkippedSymbols([])
+    setRsiWarnings([])
+    setRsiState("initial")
+    setRsiLoading(false)
+  }, [apiBase, session])
 
   const formatDateTime = (value) => {
-    if (!value) return "-"
+    if (typeof value !== "string" || !value.trim()) return "Kaydedilmemiş"
     const parsed = new Date(value)
-    if (Number.isNaN(parsed.getTime())) return value
-    return `${parsed.toLocaleDateString("tr-TR")} ${parsed.toLocaleTimeString("tr-TR")}`
+    if (Number.isNaN(parsed.getTime())) return "Kaydedilmemiş"
+    return `${parsed.toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul" })} ${parsed.toLocaleTimeString("tr-TR", { timeZone: "Europe/Istanbul" })}`
   }
 
   const formatStaleness = (value) => {
-    if (value === null || value === undefined || Number.isNaN(value)) return "-"
+    if (!["number", "string"].includes(typeof value) || (typeof value === "string" && !value.trim())) return "Kaydedilmemiş"
     const numeric = typeof value === "number" ? value : Number(value)
-    if (Number.isNaN(numeric)) return "-"
+    if (!Number.isFinite(numeric) || numeric < 0) return "Kaydedilmemiş"
     return `${numeric.toFixed(0)} sn`
   }
 
@@ -249,40 +301,58 @@ export default function Home() {
 
   const analyzeSymbol = async () => {
     if (!selectedSymbol) return
-    setLoading(true)
+    const requestId = ++analysisRequest.current
+    setAnalysis(null)
+    setAnalysisMeta(null)
+    setAnalysisLoading(true)
     setStatus("Analiz çekiliyor...")
     try {
       const response = await runRequest(
         `/api/v1/analysis/${encodeURIComponent(selectedSymbol)}?period=6mo&interval=1d`
       )
-      setAnalysis(response?.data || null)
+      if (requestId !== analysisRequest.current) return
+      if (!response?.data) throw new Error("Missing analysis")
+      setAnalysis(response.data)
+      setAnalysisMeta(response.meta || {})
       setStatus("Analiz hazır.")
     } catch (error) {
-      setStatus(error.message)
+      if (requestId !== analysisRequest.current) return
+      setAnalysis(null)
+      setAnalysisMeta(null)
+      setStatus("Analiz alınamadı. Yeniden deneyin.")
     } finally {
-      setLoading(false)
+      if (requestId === analysisRequest.current) setAnalysisLoading(false)
     }
   }
 
   const runRSIScreen = async () => {
-    setLoading(true)
+    const requestId = ++rsiRequest.current
+    setRsiRows([])
+    setRsiSkippedSymbols([])
+    setRsiWarnings([])
+    setRsiState("loading")
+    setRsiLoading(true)
     setStatus("RSI tarayıcı çalışıyor...")
     try {
       const response = await runRequest("/api/v1/screeners/rsi", {
         method: "POST",
         body: JSON.stringify({ symbols: watchlist }),
       })
+      if (requestId !== rsiRequest.current) return
       setRsiRows(response?.data?.results || [])
       setRsiSkippedSymbols(response?.data?.skipped_symbols || [])
       setRsiWarnings(response?.data?.warnings || [])
+      setRsiState("complete")
       setStatus("RSI tarama tamam.")
     } catch (error) {
+      if (requestId !== rsiRequest.current) return
       setRsiRows([])
       setRsiSkippedSymbols([])
       setRsiWarnings([])
-      setStatus(error.message)
+      setRsiState("error")
+      setStatus("Tarama tamamlanamadı. Yeniden deneyin.")
     } finally {
-      setLoading(false)
+      if (requestId === rsiRequest.current) setRsiLoading(false)
     }
   }
 
@@ -357,6 +427,7 @@ export default function Home() {
     <div className="container">
       <h1>Trader Cockpit (MVP)</h1>
       <p className="muted">FastAPI backend ile çalışan karar destek kabuğu</p>
+      <p data-testid="research-disclaimer">Araştırma ve karar desteği içindir. Yatırım tavsiyesi değildir.</p>
 
       <div className="card">
         <h2>Genel</h2>
@@ -365,7 +436,7 @@ export default function Home() {
             API Base URL:
             <input
               value={apiBase}
-              onChange={(e) => setApiBase(e.target.value)}
+              onChange={(e) => { resetAnalysis(); resetRsi(); setApiBase(e.target.value) }}
               style={{ marginLeft: 8, width: 260 }}
             />
           </label>
@@ -408,7 +479,7 @@ export default function Home() {
         <div className="card">
           <h2>Oturum</h2>
               <p className="muted">{sessionEmail || "Bilinen e-posta yok"} ({session.slice(0, 10)}...)</p>
-          <button onClick={clearSession} data-testid="logout-button">
+          <button onClick={() => { resetAnalysis(); resetRsi(); clearSession() }} data-testid="logout-button">
             Çıkış yap
           </button>
         </div>
@@ -425,7 +496,7 @@ export default function Home() {
                 onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
                 data-testid="watchlist-symbol-input"
               />
-              <button onClick={addWatchlistSymbol} data-testid="watchlist-add-button">
+              <button onClick={addWatchlistSymbol} disabled={busy} data-testid="watchlist-add-button">
                 Ekle
               </button>
             </div>
@@ -437,17 +508,17 @@ export default function Home() {
           <div className="card">
             <h2>Teknik analiz</h2>
             <div className="row">
-              <select value={selectedSymbol} onChange={(e) => setSelectedSymbol(e.target.value)}>
+              <select value={selectedSymbol} onChange={(e) => { resetAnalysis(); setSelectedSymbol(e.target.value) }}>
                 {watchlist.length
                   ? watchlist.map((symbol) => <option key={symbol}>{symbol}</option>)
                   : symbols.map((row) => <option key={row.symbol}>{row.symbol}</option>)}
               </select>
-              <button onClick={analyzeSymbol} disabled={loading || !selectedSymbol}>
+              <button onClick={analyzeSymbol} disabled={busy || !selectedSymbol}>
                 Analizi getir
               </button>
               <button
                 onClick={runRSIScreen}
-                disabled={loading || !watchlist.length}
+                disabled={busy || !watchlist.length}
                 data-testid="rsi-screen-button"
               >
                 Watchlist RSI taraması
@@ -455,6 +526,15 @@ export default function Home() {
             </div>
             {analysis && (
               <>
+                <div data-testid="analysis-provenance">
+                  <strong>{dataDisclosure(analysisMeta?.source)}</strong>
+                  <dl>
+                    <dt>Kaynak</dt><dd>{sourceName(analysisMeta?.source)}</dd>
+                    <dt>Veri zamanı (son bar)</dt><dd>{formatDateTime(analysisMeta?.as_of || analysis.as_of)}</dd>
+                    <dt>Çekilme zamanı</dt><dd>{formatDateTime(analysisMeta?.fetched_at)}</dd>
+                    <dt>Veri yaşı (çekilme anında)</dt><dd>{formatStaleness(analysisMeta?.staleness_seconds)}</dd>
+                  </dl>
+                </div>
                 <pre>{JSON.stringify(analysis, null, 2)}</pre>
               </>
             )}
@@ -553,10 +633,11 @@ export default function Home() {
                   <th>Sembol</th>
                   <th>RSI</th>
                   <th>Fiyat</th>
-                  <th>Veri Zamanı</th>
+                  <th>Veri zamanı (son bar)</th>
                   <th>Kaynak</th>
-                  <th>Çekilme Zamanı</th>
-                  <th>Yaşlanma</th>
+                  <th>Veri niteliği</th>
+                  <th>Çekilme zamanı</th>
+                  <th>Veri yaşı (çekilme anında)</th>
                 </tr>
               </thead>
               <tbody>
@@ -566,14 +647,21 @@ export default function Home() {
                     <td>{row.rsi?.toFixed(2)}</td>
                     <td>{row.price?.toFixed(2)}</td>
                     <td>{formatDateTime(row.as_of)}</td>
-                    <td>{row.source || "-"}</td>
+                    <td>{sourceName(row.source)}</td>
+                    <td>{dataDisclosure(row.source)}</td>
                     <td>{formatDateTime(row.fetched_at)}</td>
                     <td>{formatStaleness(row.staleness_seconds)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {!rsiRows.length && <p className="muted">Henüz tarama yapılmadı.</p>}
+            {!rsiRows.length && <p className="muted" data-testid="rsi-empty-state">{
+              rsiState === "initial" ? "Henüz tarama yapılmadı." :
+              rsiState === "loading" ? "RSI tarayıcı çalışıyor..." :
+              rsiState === "error" ? "Tarama tamamlanamadı. Yeniden deneyin." :
+              rsiWarnings.length ? "Kullanılabilir tarama sonucu yok; atlanan sembolleri kontrol edin." :
+              "Tarama tamamlandı; sonuç bulunamadı."
+            }</p>}
           </div>
 
           <div className="card">
@@ -605,7 +693,7 @@ export default function Home() {
               />
               <button
                 onClick={addPortfolioHolding}
-                disabled={loading || !portfolioSymbol || !portfolioQuantity || !portfolioAverageCost}
+                disabled={busy || !portfolioSymbol || !portfolioQuantity || !portfolioAverageCost}
                 data-testid="portfolio-add-button"
               >
                 Ekle
@@ -631,7 +719,7 @@ export default function Home() {
                     <td>
                       <button
                         onClick={() => removePortfolioHolding(holding.symbol)}
-                        disabled={loading}
+                        disabled={busy}
                         data-testid={`portfolio-delete-${holding.symbol}`}
                       >
                         Sil

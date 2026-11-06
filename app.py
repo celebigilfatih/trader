@@ -1820,7 +1820,7 @@ def main():
         """, unsafe_allow_html=True)
         
         # AI Predictions
-        if st.button("🤖 AI Tahminleri", key="ai_btn", use_container_width=True,
+        if st.button("🤖 Deneysel AI Tahminleri", key="ai_btn", use_container_width=True,
                     type="primary" if current_menu == "ai" else "secondary"):
             st.session_state.selected_menu = "ai"
             st.rerun()
@@ -4236,10 +4236,10 @@ def show_modern_dashboard():
         with col2:
             st.markdown("""
             <div class="info-card">
-                <div class="info-card-title">Yapay Zeka Tahminleri</div>
+                <div class="info-card-title">Deneysel AI Tahminleri</div>
                 <div class="info-card-content">
-                    Makine öğrenmesi modelleri, gelecekteki fiyat hareketlerini 
-                    güven skorları ile tahmin etmek için geçmiş verileri analiz eder.
+                    Yerel makine öğrenmesi modelleri geçmiş verilerden deneysel
+                    tahmin üretir. Model uyumu doğruluk veya gerçekleşme olasılığı değildir.
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -4447,13 +4447,12 @@ def show_ai_predictions():
     """AI tahminleri sayfası - Gelişmiş AI/ML Dashboard"""
     st.markdown("""
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h1 style="margin: 0;">🤖 AI Tahminleri</h1>
+        <h1 style="margin: 0;">🤖 Deneysel AI Tahminleri</h1>
         <span style="color: rgba(255,255,255,0.8); font-size: 1.1rem;">Çok modelli makine öğrenmesi ile gelişmiş fiyat tahmini ve analizi</span>
     </div>
     """, unsafe_allow_html=True)
-    
+    st.warning("Deneysel model çıktısıdır. Yatırım tavsiyesi değildir; gelecekteki fiyatı veya getiriyi garanti etmez.")
 
-    
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
@@ -4523,6 +4522,9 @@ def show_ai_predictions():
                         data[col] = data[col].where(data[col] > 0, data[col].rolling(3, min_periods=1).mean())
                 
                 st.success(f"✅ {selected_symbol} verisi hazır: {len(data)} gün")
+                st.caption(f"Kaynak: Yahoo Finance • Veri zamanı (son bar): {data.index[-1].isoformat()}")
+                st.caption(f"Kullanılan veri aralığı: {data.index[0].isoformat()} — {data.index[-1].isoformat()}")
+                st.caption("Çekilme zamanı: Kaydedilmemiş")
                 
                 # Teknik analiz
                 analyzer = TechnicalAnalyzer(data)
@@ -4623,7 +4625,8 @@ def show_ai_predictions():
                 
                 # Model confidence (based on agreement)
                 prediction_std = np.std(model_predictions)
-                confidence = max(0.3, min(0.95, 1 - (prediction_std / current_price)))
+                spread_valid = bool(np.isfinite(prediction_std) and prediction_std >= 0)
+                confidence = max(0.3, min(0.95, 1 - (prediction_std / current_price))) if spread_valid else None
                 
                 # Generate signal
                 if ensemble_return > 2:
@@ -4681,9 +4684,9 @@ def show_ai_predictions():
                     with col1:
                         st.markdown(f"""
                         <div class="metric-card-modern">
-                            <div class="metric-title">Mevcut Fiyat</div>
+                            <div class="metric-title">Son veri fiyatı</div>
                             <div class="metric-value">₺{current_price:.2f}</div>
-                            <div class="metric-change neutral">Canlı Piyasa</div>
+                            <div class="metric-change neutral">Kaynak: Yahoo Finance</div>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -4698,15 +4701,16 @@ def show_ai_predictions():
                         """, unsafe_allow_html=True)
                     
                     with col3:
-                        confidence_class = "positive" if confidence > 0.7 else "negative" if confidence < 0.5 else "neutral"
-                        st.markdown(f"""
-                        <div class="metric-card-modern">
-                            <div class="metric-title">AI Güveni</div>
-                            <div class="metric-value">{confidence:.0%}</div>
-                            <div class="metric-change {confidence_class}">Model Uyumu</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
+                        if spread_valid:
+                            confidence_class = "positive" if confidence > 0.7 else "negative" if confidence < 0.5 else "neutral"
+                            st.markdown(f"""
+                            <div class="metric-card-modern">
+                                <div class="metric-title">Model uyumu (sezgisel)</div>
+                                <div class="metric-value">{confidence:.0%}</div>
+                                <div class="metric-change {confidence_class}">Sezgisel uyum</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
                     with col4:
                         signal_map = {
                             'AL': ('🚀', 'Güçlü Al', 'positive'), 
@@ -4723,6 +4727,7 @@ def show_ai_predictions():
                         """, unsafe_allow_html=True)
                     
                     st.markdown('</div>', unsafe_allow_html=True)
+                    st.caption("Model tahminlerinin birbirine yakınlığını özetler; doğruluk veya gerçekleşme olasılığı değildir.")
                     
                 # === MODEL COMPARISON ===
                 if model_type == "all_models":
@@ -4759,56 +4764,50 @@ def show_ai_predictions():
                 
                 scenario_col1, scenario_col2, scenario_col3 = st.columns(3)
                 
-                # Güvenli scenario hesaplama
-                if np.isnan(prediction_std) or np.isinf(prediction_std):
-                    prediction_std = abs(ensemble_prediction * 0.05)  # %5 default std
-                
-                # Optimistic scenario (+1 std)
-                optimistic = ensemble_prediction + prediction_std
-                optimistic_return = ((optimistic - current_price) / current_price) * 100
-                
-                # Pessimistic scenario (-1 std)
-                pessimistic = ensemble_prediction - prediction_std
-                pessimistic_return = ((pessimistic - current_price) / current_price) * 100
-                
-                # NaN kontrolü
-                if np.isnan(optimistic) or np.isnan(pessimistic):
-                    st.warning("⚠️ Senaryo analizi hesaplanamadı")
-                    optimistic = ensemble_prediction * 1.05
-                    pessimistic = ensemble_prediction * 0.95
-                    optimistic_return = 5.0
-                    pessimistic_return = -5.0
-                
-                with scenario_col1:
-                    st.markdown(f"""
-                    <div class="scenario-card optimistic">
-                        <h4>🌟 İyimser</h4>
-                        <div class="scenario-price">₺{optimistic:.2f}</div>
-                        <div class="scenario-return">{optimistic_return:+.2f}%</div>
-                        <div class="scenario-prob">%30 Olasılık</div>
+                # No synthetic fallback: scenarios need finite model spread and values.
+                with np.errstate(over='ignore', invalid='ignore'):
+                    optimistic = ensemble_prediction + prediction_std
+                    pessimistic = ensemble_prediction - prediction_std
+                    optimistic_return = ((optimistic - current_price) / current_price) * 100
+                    pessimistic_return = ((pessimistic - current_price) / current_price) * 100
+                spread_valid = bool(
+                    np.isfinite(prediction_std) and prediction_std >= 0
+                    and np.isfinite([optimistic, pessimistic, optimistic_return, pessimistic_return]).all()
+                )
+                if not spread_valid:
+                    st.warning("Model yayılımı hesaplanamadı; senaryo ve bant gösterilemiyor.")
+
+                if spread_valid:
+                    with scenario_col1:
+                        st.markdown(f"""
+                        <div class="scenario-card optimistic">
+                            <h4>Üst yayılım senaryosu</h4>
+                            <div class="scenario-price">₺{optimistic:.2f}</div>
+                            <div class="scenario-return">{optimistic_return:+.2f}%</div>
+                            <div class="scenario-prob">Görsel senaryo — gerçekleşme olasılığı hesaplanmamıştır.</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                    with scenario_col2:
+                        st.markdown(f"""
+                        <div class="scenario-card neutral">
+                            <h4>Model ortalaması</h4>
+                            <div class="scenario-price">₺{ensemble_prediction:.2f}</div>
+                            <div class="scenario-return">{ensemble_return:+.2f}%</div>
+                            <div class="scenario-prob">Görsel senaryo — gerçekleşme olasılığı hesaplanmamıştır.</div>
                         </div>
                         """, unsafe_allow_html=True)
-                
-                with scenario_col2:
-                    st.markdown(f"""
-                    <div class="scenario-card neutral">
-                        <h4>🎯 Beklenen</h4>
-                        <div class="scenario-price">₺{ensemble_prediction:.2f}</div>
-                        <div class="scenario-return">{ensemble_return:+.2f}%</div>
-                        <div class="scenario-prob">%40 Olasılık</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with scenario_col3:
-                    st.markdown(f"""
-                    <div class="scenario-card pessimistic">
-                        <h4>⚠️ Kötümser</h4>
-                        <div class="scenario-price">₺{pessimistic:.2f}</div>
-                        <div class="scenario-return">{pessimistic_return:+.2f}%</div>
-                        <div class="scenario-prob">%30 Olasılık</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
+
+                    with scenario_col3:
+                        st.markdown(f"""
+                        <div class="scenario-card pessimistic">
+                            <h4>Alt yayılım senaryosu</h4>
+                            <div class="scenario-price">₺{pessimistic:.2f}</div>
+                            <div class="scenario-return">{pessimistic_return:+.2f}%</div>
+                            <div class="scenario-prob">Görsel senaryo — gerçekleşme olasılığı hesaplanmamıştır.</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
                 # === PREDICTION VISUALIZATION ===
                 st.markdown(f"### 📈 Tahmin Görselleştirmesi ({prediction_horizon} Gün İleriye)")
                 
@@ -4847,34 +4846,35 @@ def show_ai_predictions():
                     x=future_dates,
                     y=prediction_points,
                     mode='lines+markers',
-                    name=f'{prediction_horizon} Gün Tahmini',
+                    name='Şematik tahmin yolu',
                     line=dict(color='#ef4444', width=3, dash='dash'),
                     marker=dict(size=8)
                 ))
                 
-                # Confidence band
-                upper_band = prediction_points + prediction_std
-                lower_band = prediction_points - prediction_std
-                
-                fig.add_trace(go.Scatter(
-                    x=future_dates,
-                    y=upper_band,
-                    mode='lines',
-                    name='Üst Güven Sınırı',
-                    line=dict(color='rgba(239, 68, 68, 0.2)', width=0),
-                    showlegend=False
-                ))
-                
-                fig.add_trace(go.Scatter(
-                    x=future_dates,
-                    y=lower_band,
-                    mode='lines',
-                    name='Güven Bandı',
-                    line=dict(color='rgba(239, 68, 68, 0.2)', width=0),
-                    fill='tonexty',
-                    fillcolor='rgba(239, 68, 68, 0.1)'
-                ))
-                
+                if spread_valid:
+                    # Confidence band
+                    upper_band = prediction_points + prediction_std
+                    lower_band = prediction_points - prediction_std
+
+                    fig.add_trace(go.Scatter(
+                        x=future_dates,
+                        y=upper_band,
+                        mode='lines',
+                        name='Üst yayılım sınırı',
+                        line=dict(color='rgba(239, 68, 68, 0.2)', width=0),
+                        showlegend=False
+                    ))
+
+                    fig.add_trace(go.Scatter(
+                        x=future_dates,
+                        y=lower_band,
+                        mode='lines',
+                        name='Model yayılımı (görsel)',
+                        line=dict(color='rgba(239, 68, 68, 0.2)', width=0),
+                        fill='tonexty',
+                        fillcolor='rgba(239, 68, 68, 0.1)'
+                    ))
+
                 fig.update_layout(
                     title=f'{selected_symbol} - {prediction_horizon} Gün AI Fiyat Tahmini',
                     xaxis_title='Tarih',
@@ -4888,6 +4888,8 @@ def show_ai_predictions():
                 unique_key = f"ai_predictions_chart_{selected_symbol}_{prediction_horizon}_{model_type}"
                 st.plotly_chart(fig, use_container_width=True, key=unique_key)
                 
+                st.caption("Çizgi, son fiyat ile hedef tahmin arasındaki görsel geçiştir; ara günler için ayrı model tahmini değildir. Bant istatistiksel güven aralığı değildir.")
+
                 # === FEATURE IMPORTANCE ===
                 importance_df = ml_predictor.get_feature_importance('random_forest')
                 if not importance_df.empty:
@@ -4931,21 +4933,23 @@ def show_ai_predictions():
                 max_drawdown = ((data['Close'] / data['Close'].expanding().max()) - 1).min()
                 
                 # Risk score based on volatility, prediction confidence, and market conditions
-                risk_score = (volatility * 0.4) + ((1 - confidence) * 0.4) + (abs(ensemble_return/100) * 0.2)
-                risk_level = "DÜŞÜK" if risk_score < 0.3 else "ORTA" if risk_score < 0.6 else "YÜKSEK"
-                risk_color = "positive" if risk_level == "DÜŞÜK" else "neutral" if risk_level == "ORTA" else "negative"
-                
+                if spread_valid:
+                    risk_score = (volatility * 0.4) + ((1 - confidence) * 0.4) + (abs(ensemble_return/100) * 0.2)
+                    risk_level = "DÜŞÜK" if risk_score < 0.3 else "ORTA" if risk_score < 0.6 else "YÜKSEK"
+                    risk_color = "positive" if risk_level == "DÜŞÜK" else "neutral" if risk_level == "ORTA" else "negative"
+
                 risk_col1, risk_col2, risk_col3 = st.columns(3)
                 
-                with risk_col1:
-                    st.markdown(f"""
-                    <div class="metric-card-modern">
-                        <div class="metric-title">Risk Seviyesi</div>
-                        <div class="metric-value">{risk_level}</div>
-                        <div class="metric-change {risk_color}">Skor: {risk_score:.2f}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
+                if spread_valid:
+                    with risk_col1:
+                        st.markdown(f"""
+                        <div class="metric-card-modern">
+                            <div class="metric-title">Risk Seviyesi</div>
+                            <div class="metric-value">{risk_level}</div>
+                            <div class="metric-change {risk_color}">Skor: {risk_score:.2f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
                 with risk_col2:
                     st.markdown(f"""
                     <div class="metric-card-modern">
@@ -6084,13 +6088,31 @@ def show_stock_screener():
 
 def show_news_feed():
     """Haber akışı sayfası"""
+    def show_source_diagnostics(diagnostics, label):
+        if not diagnostics:
+            return
+        if any(item['status'] in ('failed', 'partial') for item in diagnostics):
+            st.warning("Bazı haber kaynaklarına erişilemedi; sonuçlar eksik olabilir.")
+        status_labels = {
+            'success': 'Başarılı',
+            'partial': 'Kısmi veri',
+            'empty': 'Haber yok',
+            'failed': 'Erişilemedi',
+        }
+        st.caption(label)
+        for item in diagnostics:
+            status = status_labels.get(item['status'], 'Bilinmiyor')
+            st.caption(f"{item['source']}: {status}")
+
     st.markdown("""
     <div class="page-header">
         <h1>📰 Haber Akışı</h1>
-        <p>Gerçek zamanlı finans haberleri ve sentiment analizi</p>
+        <p>RSS haberleri ve deneysel metin duygu analizi</p>
     </div>
     """, unsafe_allow_html=True)
     
+    st.caption("Duygu skoru, haber metninden hesaplanan deneysel bir sınıflandırmadır; haberin doğruluğunu veya fiyat yönünü doğrulamaz.")
+
     # Sentiment analyzer'ı başlat
     from modules.sentiment_analyzer import SentimentAnalyzer
     sentiment_analyzer = SentimentAnalyzer()
@@ -6134,34 +6156,40 @@ def show_news_feed():
         
         try:
             market_summary = sentiment_analyzer.get_market_news_summary()
+            show_source_diagnostics(market_summary.get('source_diagnostics', []), "Özet kaynak durumu")
             
             if 'error' not in market_summary:
                 # Sentiment kartları
                 sentiment_score = market_summary['avg_sentiment']
                 sentiment_label = market_summary['sentiment_label']
                 
-                # Sentiment rengini belirle
-                if sentiment_score > 0.1:
-                    sentiment_color = "#00C851"  # Yeşil
-                elif sentiment_score < -0.1:
-                    sentiment_color = "#FF4444"  # Kırmızı
+                if market_summary['scored_news'] == 0 or sentiment_score is None:
+                    st.info("Özet için hesaplanmış duygu skoru yok.")
                 else:
-                    sentiment_color = "#FFA500"  # Turuncu
-                
-                st.markdown(f"""
-                <div style="
-                    background: linear-gradient(135deg, {sentiment_color}20, {sentiment_color}10);
-                    border-left: 4px solid {sentiment_color};
-                    padding: 1rem;
-                    border-radius: 8px;
-                    margin-bottom: 1rem;
-                ">
-                    <h4 style="margin: 0; color: {sentiment_color};">Genel Sentiment</h4>
-                    <h2 style="margin: 0.5rem 0; color: {sentiment_color};">{sentiment_label}</h2>
-                    <p style="margin: 0; opacity: 0.8;">Skor: {sentiment_score:.3f}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
+                    # Sentiment rengini belirle
+                    if sentiment_score > 0.1:
+                        sentiment_color = "#00C851"  # Yeşil
+                    elif sentiment_score < -0.1:
+                        sentiment_color = "#FF4444"  # Kırmızı
+                    else:
+                        sentiment_color = "#FFA500"  # Turuncu
+
+                    st.markdown(f"""
+                    <div style="
+                        background: linear-gradient(135deg, {sentiment_color}20, {sentiment_color}10);
+                        border-left: 4px solid {sentiment_color};
+                        padding: 1rem;
+                        border-radius: 8px;
+                        margin-bottom: 1rem;
+                    ">
+                        <h4 style="margin: 0; color: {sentiment_color};">Genel Sentiment</h4>
+                        <h2 style="margin: 0.5rem 0; color: {sentiment_color};">{sentiment_label}</h2>
+                        <p style="margin: 0; opacity: 0.8;">Skor: {sentiment_score:.3f}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                st.caption(f"Hesaplanan haber: {market_summary['scored_news']} • Duygu skoru hesaplanamayan: {market_summary['failed_sentiment_count']}")
+
                 # İstatistikler
                 col_pos, col_neg, col_neu = st.columns(3)
                 
@@ -6207,13 +6235,13 @@ def show_news_feed():
                         </div>
                         """, unsafe_allow_html=True)
                 
-                st.markdown(f"<small>Son güncelleme: {market_summary['last_updated']}</small>", unsafe_allow_html=True)
+                st.caption(f"Özet oluşturulma zamanı: {market_summary['last_updated']}")
             
             else:
-                st.error(f"Haber özeti alınamadı: {market_summary['error']}")
+                st.info("Haber bulunamadı veya kaynaklara erişilemedi.")
                 
         except Exception as e:
-            st.error(f"Haber özeti hatası: {str(e)}")
+            st.error("Haber özeti alınamadı. Yeniden deneyin.")
     
     with col1:
         # Haber listesi
@@ -6225,9 +6253,14 @@ def show_news_feed():
                 news_list = sentiment_analyzer.get_symbol_specific_news(selected_symbol, news_limit)
             else:
                 news_list = sentiment_analyzer.fetch_real_news(news_limit)
+
+            show_source_diagnostics(getattr(sentiment_analyzer, 'last_fetch_diagnostics', []), "Haber listesi kaynak durumu")
             
+            had_news = bool(news_list)
+
             # Sentiment filtresini uygula
             if sentiment_filter != "Tümü":
+                news_list = [n for n in news_list if n['sentiment_status'] == 'computed' and n['sentiment_score'] is not None]
                 if sentiment_filter == "Pozitif":
                     news_list = [n for n in news_list if n['sentiment_score'] > 0.1]
                 elif sentiment_filter == "Negatif":
@@ -6237,24 +6270,30 @@ def show_news_feed():
             
             if news_list:
                 for news in news_list:
-                    # Sentiment rengini belirle
                     sentiment_score = news['sentiment_score']
-                    if sentiment_score > 0.1:
-                        sentiment_color = "#00C851"
-                        sentiment_icon = "📈"
+                    scored = news['sentiment_status'] == 'computed' and sentiment_score is not None
+                    sentiment_label = news['sentiment_label'] if scored else "Duygu skoru hesaplanamadı."
+                    if not scored:
+                        sentiment_color, sentiment_bg, sentiment_icon = "#a0aec0", "rgba(160, 174, 192, 0.1)", "?"
+                    elif sentiment_score > 0.1:
+                        sentiment_color, sentiment_bg, sentiment_icon = "#28a745", "rgba(40, 167, 69, 0.1)", "📈"
                     elif sentiment_score < -0.1:
-                        sentiment_color = "#FF4444"
-                        sentiment_icon = "📉"
+                        sentiment_color, sentiment_bg, sentiment_icon = "#dc3545", "rgba(220, 53, 69, 0.1)", "📉"
                     else:
-                        sentiment_color = "#FFA500"
-                        sentiment_icon = "➖"
-                    
+                        sentiment_color, sentiment_bg, sentiment_icon = "#ffc107", "rgba(255, 193, 7, 0.1)", "➖"
+
                     # Minimal haber kartı - Streamlit native components ile
                     # Kısa açıklama (sadece ilk 120 karakter)
                     description = news['description'][:120] + ('...' if len(news['description']) > 120 else '')
                     
                     # Alt bilgiler tek satırda
-                    meta_info = f"📰 {news['source']} • {news['date']}"
+                    if news['published_time_status'] == 'valid' and news['published_at']:
+                        publication = f"Yayın zamanı: {news['published_at']}"
+                    elif news['published_time_status'] == 'missing':
+                        publication = "Yayın zamanı kaynakta belirtilmemiş."
+                    else:
+                        publication = "Yayın zamanı doğrulanamadı."
+                    meta_info = f"📰 {news['source']} • {publication} • Çekilme zamanı: {news['fetched_at']}"
                     if news['detected_symbols']:
                         symbols = ', '.join(news['detected_symbols'][:2])  # Sadece ilk 2 sembol
                         if len(news['detected_symbols']) > 2:
@@ -6262,17 +6301,6 @@ def show_news_feed():
                         meta_info += f" • 🏷️ {symbols}"
                     
                     # Haber kartı - Tam HTML ile
-                    # Sentiment rengi belirleme
-                    if sentiment_score > 0.1:
-                        sentiment_color = "#28a745"
-                        sentiment_bg = "rgba(40, 167, 69, 0.1)"
-                    elif sentiment_score < -0.1:
-                        sentiment_color = "#dc3545"
-                        sentiment_bg = "rgba(220, 53, 69, 0.1)"
-                    else:
-                        sentiment_color = "#ffc107"
-                        sentiment_bg = "rgba(255, 193, 7, 0.1)"
-                    
                     # HTML escape
                     safe_title = news['title'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
                     safe_description = description.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
@@ -6324,7 +6352,7 @@ def show_news_feed():
                                 font-weight: 500;
                                 white-space: nowrap;
                                 flex-shrink: 0;
-                            ">{sentiment_icon} {news['sentiment_label']}</div>
+                            ">{sentiment_icon} {sentiment_label}</div>
                         </div>
                     </div>
                     """
@@ -6332,10 +6360,13 @@ def show_news_feed():
                     st.markdown(card_html, unsafe_allow_html=True)
             
             else:
-                st.info("Seçilen kriterlere uygun haber bulunamadı.")
+                if had_news:
+                    st.info("Seçilen kriterlere uygun haber bulunamadı.")
+                else:
+                    st.info("Haber bulunamadı veya kaynaklara erişilemedi.")
                 
         except Exception as e:
-            st.error(f"Haberler yüklenirken hata oluştu: {str(e)}")
+            st.error("Haberler yüklenemedi. Yeniden deneyin.")
             st.info("Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.")
 
 def show_pattern_analysis():

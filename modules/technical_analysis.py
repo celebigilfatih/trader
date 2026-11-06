@@ -355,6 +355,24 @@ class TechnicalAnalyzer:
         
     def _calculate_ott(self, indicator_name: str) -> None:
         """Optimized Trend Tracker (OTT) hesaplar"""
+        if self.data.empty:
+            self.indicators['ott'] = pd.Series(index=self.data.index, dtype=float)
+            self.indicators['ott_signal'] = pd.Series(index=self.data.index, dtype=str)
+            self.indicators['ott_trend'] = pd.Series(index=self.data.index, dtype=float)
+            return
+
+        try:
+            close = pd.to_numeric(self.data['Close'], errors='raise')
+            temporal_close = (pd.api.types.is_datetime64_any_dtype(self.data['Close'])
+                              or pd.api.types.is_timedelta64_dtype(self.data['Close']))
+            valid_close = (not temporal_close and not pd.api.types.is_complex_dtype(close)
+                           and close.notna().all() and np.isfinite(close).all()
+                           and (close > 0).all())
+        except (TypeError, ValueError):
+            valid_close = False
+        if not valid_close:
+            raise ValueError("Close must be positive and finite for OTT calculation")
+
         config = INDICATORS_CONFIG[indicator_name]
         period = config.get('period', 2)
         percent = config.get('percent', 1.4)
@@ -373,20 +391,24 @@ class TechnicalAnalyzer:
         # OTT sinyal çizgisi
         ott = pd.Series(index=self.data.index, dtype=float)
         ott_signal = pd.Series(index=self.data.index, dtype=str)
+        ott_trend = pd.Series(index=self.data.index, dtype=float)
+        ott.iloc[0] = self.data['VAR'].iloc[0]
 
         for i in range(1, len(self.data)):
             if self.data['VAR'].iloc[i] > ott.iloc[i-1]:
                 ott.iloc[i] = max(ott.iloc[i-1], self.data['long_stop'].iloc[i])
                 ott_signal.iloc[i] = 'buy'
+                ott_trend.iloc[i] = 1.0
             else:
                 ott.iloc[i] = min(ott.iloc[i-1], self.data['short_stop'].iloc[i])
                 ott_signal.iloc[i] = 'sell'
+                ott_trend.iloc[i] = -1.0
         
-        ott.iloc[0] = self.data['VAR'].iloc[0]
-        ott = ott.fillna(method='ffill')
+        ott = ott.ffill()
 
         self.indicators['ott'] = ott
         self.indicators['ott_signal'] = ott_signal
+        self.indicators['ott_trend'] = ott_trend
     
     def _calculate_vwap(self, indicator_name: str) -> None:
         """VWAP (Volume Weighted Average Price) hesaplar"""

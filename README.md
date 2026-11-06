@@ -196,6 +196,39 @@ npm i -D playwright
 npm exec playwright install
 ```
 
+### 10.3. Deterministik tarayıcı senaryoları (backend gerekmez)
+
+Frontend bağımlılıklarını lockfile ile kurun ve Playwright Chromium'u hazırlayın:
+
+```bash
+cd frontend
+npm ci
+npm exec playwright install chromium
+npm run dev -- --hostname 127.0.0.1 --port 3010
+```
+
+Frontend çalışırken repository kökünde ikinci terminalde:
+
+```bash
+node scripts/run_frontend_ui_smoke.mjs --deterministic --front-base http://127.0.0.1:3010
+# Alternatif:
+make smoke-ui-deterministic
+```
+
+Bu mod gerçek cockpit ekranında on senaryoyu her koşuda sınar: auth/watchlist/
+analiz/paper/RSI başarı, boş sonuç, kısmi veri ve RSI detay tercihinin açık/kapalı
+kalıcılığı, tüm sembollerde veri yokluğu, HTTP hatası sonrası yeniden deneme;
+analiz/RSI kaynak türleri ve eksik metadata, eski analizin hata/sembol değişiminde
+temizlenmesi, geç gelen yanıt ve oturum değişiminde eski veri görünmemesi.
+API istekleri test içindeki sabit fixture'larla karşılanır; backend, Yahoo/RSS
+ve SMTP kullanılmaz. Beklenmeyen API/dış istek veya eksik Playwright başarısız
+çıkış üretir. Her senaryo temiz browser context'iyle çalışır.
+
+Yerelde kurulu Edge için Chromium indirmeden `--browser-channel msedge`
+eklenebilir. Makefile karşılığı:
+`make smoke-ui-deterministic UI_FRONT_BASE=http://127.0.0.1:3010 UI_BROWSER_CHANNEL=msedge`.
+Canlı smoke ve `make ci` ayrı akışlardır; bu mod mevcut CI'ye otomatik eklenmedi.
+
 ### 11. Hızlı yerel görevler (`Makefile`)
 
 ```bash
@@ -204,6 +237,7 @@ make test            # backend testlerini çalıştır
 make build-frontend  # frontend build
 make smoke           # kısa run_dev smoke check'i
 make smoke-ui        # isteğe bağlı tarayıcı tabanlı UI smoke
+make smoke-ui-deterministic # çalışan frontend'de fixture API ile tarayıcı senaryoları
 make smoke-ui-stack  # stack başlatıp UI smoke çalıştırır
 make smoke-all       # smoke + smoke-ui-stack ardışık koşar
 make ci-e2e          # make ci-core + make smoke-ui-stack

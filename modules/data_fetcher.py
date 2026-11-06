@@ -15,7 +15,10 @@ class BISTDataFetcher:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
     
-    def get_stock_data(self, symbol: str, period: str = "1y", interval: str = "1d") -> Optional[pd.DataFrame]:
+    def get_stock_data(
+        self, symbol: str, period: str = "1y", interval: str = "1d", *,
+        timeout_seconds: Optional[float] = None,
+    ) -> Optional[pd.DataFrame]:
         """
         Hisse verilerini çeker
         
@@ -23,6 +26,8 @@ class BISTDataFetcher:
             symbol: Hisse kodu (örn: "THYAO.IS")
             period: Zaman aralığı (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)
             interval: Veri aralığı (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo)
+            timeout_seconds: İsteğe bağlı history HTTP timeout'u; None mevcut
+                yfinance varsayılanını korur. Toplam işlem deadline'ı değildir.
         
         Returns:
             DataFrame: OHLCV verileri
@@ -30,7 +35,13 @@ class BISTDataFetcher:
         try:
             # Yahoo Finance kullanarak veri çek
             ticker = yf.Ticker(symbol)
-            df = ticker.history(period=period, interval=interval, auto_adjust=False, prepost=False, actions=True)
+            history_options = {
+                'period': period, 'interval': interval, 'auto_adjust': False,
+                'prepost': False, 'actions': True,
+            }
+            if timeout_seconds is not None:
+                history_options['timeout'] = timeout_seconds
+            df = ticker.history(**history_options)
             
             if df.empty:
                 print(f"Veri bulunamadı: {symbol}")
