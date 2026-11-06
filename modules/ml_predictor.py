@@ -312,6 +312,18 @@ class MLPredictor:
             target = future / close - 1
         return target.where(valid & np.isfinite(target))
 
+    @staticmethod
+    def get_prediction_return_bounds(prediction_horizon: int) -> Tuple[float, float]:
+        """Experimental output limits by observation count, not market limits."""
+        horizon = MLPredictor._validate_horizon(prediction_horizon)
+        if horizon == 1:
+            return (-0.10, 0.10)
+        if horizon <= 7:
+            return (-0.25, 0.25)
+        if horizon <= 30:
+            return (-0.50, 0.50)
+        return (-0.70, 1.00)
+
     def predict_price(self, data: pd.DataFrame, technical_indicators: Dict, 
                      prediction_horizon: int = 1) -> Dict:
         """Gelecek fiyat tahminleri yapar"""
@@ -324,6 +336,7 @@ class MLPredictor:
             self._validate_data(data)
             if horizon != self.prediction_horizon:
                 raise ValueError("Prediction horizon differs from training horizon")
+            lower, upper = self.get_prediction_return_bounds(horizon)
             features = self.prepare_features(data, technical_indicators)
             last_features = features.iloc[-1:][self.feature_names]
             last_features = self._apply_clip_bounds(last_features, self.clip_bounds)
@@ -344,45 +357,14 @@ class MLPredictor:
                         print(f"⚠️ {model_name} modeli NaN/inf döndürdü, atlanıyor")
                         continue
                     
-                    # Zaman dilimine göre gerçekçi sınırlar
-                    if prediction_horizon <= 1:
-                        # 1 günlük tahmin: Çok sınırlı hareket
-                        max_daily_change = 0.10  # %10
-                        predicted_return = np.clip(predicted_return, -max_daily_change, max_daily_change)
-                    elif prediction_horizon <= 7:
-                        # 1 haftalık tahmin: Orta düzey hareket
-                        max_weekly_change = 0.25  # %25
-                        predicted_return = np.clip(predicted_return, -max_weekly_change, max_weekly_change)
-                    elif prediction_horizon <= 30:
-                        # 1 aylık tahmin: Daha geniş hareket
-                        max_monthly_change = 0.50  # %50
-                        predicted_return = np.clip(predicted_return, -max_monthly_change, max_monthly_change)
-                    else:
-                        # Çok uzun vadeli: Maksimum sınır
-                        predicted_return = np.clip(predicted_return, -0.70, 1.0)
-                    
+                    predicted_return = np.clip(predicted_return, lower, upper)
+
                     predicted_price = current_price * (1 + predicted_return)
                     
                     # Final kontrol
                     if np.isnan(predicted_price) or np.isinf(predicted_price) or predicted_price <= 0:
                         print(f"⚠️ {model_name} modeli geçersiz fiyat döndürdü, atlanıyor")
                         continue
-                    
-                    # Ek güvenlik: Fiyat değişim oranını tekrar kontrol et
-                    price_change_ratio = abs((predicted_price - current_price) / current_price)
-                    max_allowed_change = {
-                        1: 0.10,    # 1 gün: %10
-                        7: 0.25,    # 1 hafta: %25  
-                        30: 0.50    # 1 ay: %50
-                    }.get(prediction_horizon, 0.10)
-                    
-                    if price_change_ratio > max_allowed_change:
-                        # Aşırı değişimi sınırla
-                        if predicted_price > current_price:
-                            predicted_price = current_price * (1 + max_allowed_change)
-                        else:
-                            predicted_price = current_price * (1 - max_allowed_change)
-                        print(f"⚠️ {model_name} modeli aşırı tahmin düzeltildi: {price_change_ratio:.2%} -> {max_allowed_change:.0%}")
                     
                     predictions[model_name] = predicted_price
                     valid_predictions.append(predicted_price)
@@ -422,25 +404,50 @@ class MLPredictor:
         
         return pd.DataFrame()
     
-    def get_model_confidence(self, predictions: Dict) -> Dict:
-        """Model güven skorları hesaplar"""
-        confidence_scores = {}
-        
-        for model_name, pred in predictions.items():
-            if model_name == 'ensemble':
-                continue
-                
-            # Basit güven skoru (tahmin edilen değişimin mutlak değeri ile ters orantılı)
-            abs_change = abs(pred['predicted_return'])
-            confidence = max(0, min(1, 1 - abs_change * 10))  # 0-1 arası normalize et
-            
-            confidence_scores[model_name] = {
+    def get_model_confidence(self, predictions: Dict, current_price: Optional[float] = None) -> Dict:
+        """Magnitude heuristic for price mappings or legacy return records."""
+        def number(value, positive=False):
+            if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
+                raise ValueError("Expected a finite real scalar")
+            try:
+                result = float(value)
+            except (OverflowError, TypeError, ValueError) as error:
+                raise ValueError("Expected a finite real scalar") from error
+            if not np.isfinite(result) or (positive and result <= 0):
+                raise ValueError("Expected a positive finite value" if positive else "Expected a finite value")
+            return result
+
+        if not isinstance(predictions, dict) or 'error' in predictions:
+            raise ValueError("Expected a prediction mapping without an error result")
+        current = number(current_price, positive=True) if current_price is not None else None
+        entries = [(name, value) for name, value in predictions.items() if name != 'ensemble']
+        if any(not isinstance(name, str) or not name for name, _ in entries):
+            raise ValueError("Model names must be nonempty strings")
+        if not entries:
+            return {}
+        records = [isinstance(value, dict) for _, value in entries]
+        if any(records) and not all(records):
+            raise ValueError("Cannot mix prices and legacy return records")
+        if not any(records) and current is None:
+            raise ValueError("current_price is required for price predictions")
+
+        scores = {}
+        for name, value in entries:
+            if all(records):
+                if 'predicted_return' not in value:
+                    raise ValueError("Missing legacy predicted_return")
+                change = number(value['predicted_return'])
+            else:
+                price = number(value, positive=True)
+                change = number(price / current - 1)
+            # Saturation avoids overflowing 10*abs(change) for large valid returns.
+            confidence = 0.0 if abs(change) >= .1 else max(0.0, min(1.0, 1 - 10 * abs(change)))
+            scores[name] = {
                 'confidence': confidence,
-                'prediction_strength': 'High' if confidence > 0.7 else 'Medium' if confidence > 0.4 else 'Low'
+                'prediction_strength': 'High' if confidence > .7 else 'Medium' if confidence > .4 else 'Low',
             }
-        
-        return confidence_scores
-    
+        return scores
+
     @staticmethod
     def _validate_model_package(package):
         """Validate a trusted deserialized package without touching live state."""

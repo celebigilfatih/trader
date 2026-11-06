@@ -42,15 +42,15 @@
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
   tabanı başladı. Sonraki adım API-first Next.js cockpit’i ile uçtan uca akışın
   stabilizasyonu.
-- **Current focus:** ML-01–06 bilinen dar kusur dilimleri tamamlandı;
-  checkpoint `abfc592` push edildi. ML-07/08/gözlem ufku için ADR-0008 Proposed
-  hazır; özel onay ve ardından implementation planı. Genel M1 açık.
+- **Current focus:** Accepted ADR-0008 uygulandı; ML-01–08 bilinen dar dilimleri
+  ve gözlem ufku sunumu tamamlandı.349 backend testi; sonraki iş M1 kabul kapıları
+  ve kalan P0 eksikleri için somut kapanış listesi. Genel M1 açık.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
 - **Blocking decisions:** Gerçek kullanıcı erişimi operasyon sahipliği,
-  destek matrisi ve üretim kapıları. ADR-0004–0007 açık onayları uygulandı;
-  ML cap/helper/UI ufku için ADR-0008 özel onayı bekleniyor.
+  destek matrisi ve üretim kapıları. ADR-0004–0008 açık onayları uygulandı;
+  UI yayılım kalibrasyonu/finansal etkinlik bu onaylara dahil değildir.
 - **Last status update:** 2026-11-06
 
 ## 3. Repository Navigation
@@ -94,7 +94,7 @@
 | RSS istek bütçesi ve geçici kaynak tanıları | Accepted ve uygulandı | `ADR-0005`, `docs/50-decisions/ADR-0005.md` |
 | OTT seed ve yön serisi sözleşmesi | Accepted ve uygulandı | `ADR-0006`, `docs/50-decisions/ADR-0006.md` |
 | ML hedef/ön işleme ve model artifact sözleşmesi | Accepted ve uygulandı | [ADR-0007](docs/50-decisions/ADR-0007.md) |
-| ML ufuk cap, confidence girdisi ve gözlem sunumu | Proposed; özel onay bekliyor | [ADR-0008](docs/50-decisions/ADR-0008.md) |
+| ML ufuk cap, confidence girdisi ve gözlem sunumu | Accepted ve uygulandı | [ADR-0008](docs/50-decisions/ADR-0008.md) |
 | 3D Web Experience profili uygulanmaz | N/A for current scope | `docs/70-experience/3D_WEB_EXPERIENCE.md` |
 
 > Yalnızca en önemli güncel kararları özetle. Kararın tam gerekçesi ve sonuçları
@@ -112,16 +112,16 @@
 - **Recent decisions:** ADR-0001–0006 kabul edildi. Kullanıcı somut ADR-0006
   onay sorusuna “onaylıyorum” dedi; başka algoritma/version/üretim onayı değildir.
   Sonraki somut ADR-0007 sorusuna “Onaylıyorum.” ile o sözleşme de Accepted oldu.
-  Commit/push isteği ADR-0008'in özel uygulama onayı değildir; Proposed kalır.
-- **Recently completed:**70 dosyalık çalışma `abfc592` ile origin'e push edildi.
-  Yeni331 backend/üretim build/Edge10 senaryo kanıtı; ADR-0008 somut tasarım ve
-  bağımsız builder incelemesi tamamlandı. Bu sonraki dilimde runtime kodu aynı.
+  Sonraki “onayladım, devam edelim” yanıtı somut ADR-0008'i Accepted yaptı.
+- **Recently completed:** Tek bounds/clip, price-current helper ve legacy
+  uyumu; panel h gözlem/actual last_index/0..h şematik eksen.18 yeni testle349
+  backend/97 ML core/17 controlled UI; bağımsız59 hedef test incelemesi önemli bulgusuz.
 
 ## 7. Current Priorities
 
-1. Hazır ADR-0008'i özel onayla karara bağlamak; kabulünde plan/TDD: tek cap,
-   current_price helper/legacy uyumu ve panelde h gözlem/şematik eksen. Simple
-   ML-04–06 tamamlandı; genel M1 ve kalibrasyon ayrı.
+1. M1 kabul kapılarını kalan P0 eksikleriyle eşlemek; çekirdek test/veri
+   güvenilirliği ve hata/kaynak görünürlüğü için somut kapanış listesi çıkarmak.
+   Bilinen ML-01–08 dilimleri kapandı; genel M1 ve kalibrasyon ayrı.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
    senaryo testlerini eklemek.
@@ -140,7 +140,8 @@
   düzeltildi. Bu mevcut prototip recurrence'idir; canonical OTT veya finansal
   etkinlik kanıtı değildir. Genel bağımlılık destek matrisi/audit tamamlanmadı.
 - ADR-0007 ML-01–03/advanced ML-04 ve sonraki Simple ML-04–06 dilimi kapandı.
-  Ufuk cap/confidence/takvim uyumsuzlukları BACKLOG'da açıktır.
+  Ufuk cap/helper/gözlem sunumu ADR-0008 ile kapandı. UI dispersion/ensemble
+  tercihi, kalibrasyon, Windows Unicode log ve warning susturma ayrı sınırlardır.
   Sürümsüz joblib yeniden eğitim ister; format kontrolü deserialization güvenliği
   veya dependency sürümleri arası uyumluluk değildir. Model accuracy kanıtı yoktur.
 - Repository geçmişten kalan `__pycache__/*.pyc` dosyalarını izliyor.
@@ -184,7 +185,7 @@
 - [x] Çevrimdışı market-data/API/teknik hesaplama, patern/sinyal ve RSS/NLP ile
   kontrollü Streamlit, ADR-0005 transport/tanı ve değişken MACD/Bollinger testleri
   ile temel BOS/kombolar ve risk/pozisyon/DayTrader testleri eklendi; toplam
-  backend test sayısı331;83 ML testini ve13 yeni Simple regresyonunu içerir.
+  backend test sayısı349;97 ML core testi ve17 kontrollü Streamlit testi içerir.
   Bu, M1'in bütün kabul kriterlerinin kapandığı anlamına gelmez.
 - [x] On deterministik tarayıcı senaryosu üretim frontend'inde ve Next.js
   üretim derlemesi geçti; canlı sağlayıcı smoke'u bu adımda çalıştırılmadı.
@@ -192,6 +193,30 @@
 ## 11. AI Handoff
 
 ### Güncel devir — 2026-11-06
+
+- **Onay/uygulama:** Somut ADR-0008 sorusuna “onayladım, devam edelim”;
+  Accepted ve uygulandı. Tek h bounds ve bir kez clip; price/current_price
+  confidence+legacy/mixed-invalid doğrulaması. Panel gözlem/gerçek last_index ve
+  0..h şematik line/actual0 anchor, bands1..h; kesin takvim tarihi kaldırıldı.
+- **Kanıt:**14 core+4 AppTest yeni test; ilk core RED9 failure/61 eksik API
+  hatası, UI7 failure/0 error.42 core/17 UI green. Bağımsız59 hedef test (7.610 s)
+  geçti; önemli bulgu yok, eski test açıklaması güncellendi.16 core+3 UI=19
+  geçerli mutant assertion failure, error yok. İlk numeric error-key kaçağı yeni
+  payload ile kapandı; disk mutation yok. Son349 backend dış socket engelli;
+  asyncio loopback serbest.62 Python compile/39 belge/11 Boot bölümü ve link/ADR/
+  whitespace/diff kontrolleri; upstream validator yokluğu ayrı, başarı iddiası yok.
+- **Uyum/sınırlar:** Price/format1/model/feature/purge ve Simple aynı. UI yayılım
+  formülü değiştirilmedi; fixture gerçek ensemble alanıyla tamamlandı, oracles
+  sqrt(8/3). Fiyat cap'i deneysel sınırdır; accuracy/kalibrasyon/piyasa limiti değil.
+  AppTest gerçek extracted function+controlled IO'dur, tam browser/live-provider
+  değildir. Next.js kaynakları aynı, önceki build/UI10 tekrar koşulmadı.
+- **Git/sonraki adım:** Başlangıç `1aaed7b`, aynı codex dalı; önceki Commit &
+  Push yetkisiyle doğrulanmış devam işi aynı upstream'e gönderilir. Kullanıcı
+  dosyası/migration/newdependency/servis yok. Sonraki iş M1 kabul kapıları ve
+  kalan P0 kapanış listesi; genel M1/M2, Constitution Draft ve operasyon kapıları
+  açık. Kanıt [execution kaydında](docs/20-execution/2026-11-06-adr0008-implementation.md).
+
+### Önceki Git teslimi / ADR-0008 tasarım kaydı — 2026-11-06
 
 - **Git teslimi:** Kullanıcı “Commit & Push yapalım” dedi;70 dosya `abfc592`
   (`feat: harden analysis and ML reliability`) ile origin/codex/m1-pattern-signal-tests
@@ -756,6 +781,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
+| 1.50 | 2026-11-06 | ADR-0008 özel onayla uygulandı;18 yeni/349 backend testi,97 ML core/17 controlled UI. Tek cap/helper/gözlem sunumu kapandı; genel M1 açık, aynı dalda teslim. |
 | 1.49 | 2026-11-06 | abfc592 checkpoint commit/push;331 backend, üretim build ve10 Edge senaryosu tekrar geçti. ADR-0008 Proposed tasarımı/review hazır; özel onay bekliyor, runtime aynı. |
 | 1.48 | 2026-11-06 | Simple ML-04–06 kapandı;13 yeni test,83 ML/331 backend testi ve11 mutant. Model/config/dependency aynı; sonraki ML-07/08/takvim kararı, genel M1 açık. |
 | 1.47 | 2026-11-06 | ADR-0007 açık onayla uygulandı;30 yeni/70 ML testi ve318 backend testi. ML-01–03/advanced ML-04 kapandı; Simple ve kalan politika/M1 açık. |

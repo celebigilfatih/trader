@@ -96,10 +96,11 @@ state'i iptal eder; başarıda yalnız metric aşamasını da geçen modeller ya
 Güvenilen joblib kontrolü deserialization güvenlik garantisi veya sürümler arası
 uyumluluk değildir. Kanıt [execution kaydındadır](../20-execution/2026-11-06-adr0007-implementation.md).
 
-### Proposed ML helper/ufuk sunumu — ADR-0008
+### Accepted ML helper/ufuk sunumu — ADR-0008
 
-[ADR-0008](../50-decisions/ADR-0008.md), mevcut float price sözlüğünü koruyarak
-confidence helper'a optional current_price bağlamı ve legacy nested return uyumu
-önerir. Bozuk girdide ValueError; score alanları aynı kalır. Ayrıca ufuk cap'i tek
-aralığa, UI h gözlem sayısına bağlanır; bilinmeyen gelecek timestamp üretilmez.
-Henüz uygulanmadı/Accepted değil; format1 artifact, DB ve HTTP alanları değişmez.
+[ADR-0008](../50-decisions/ADR-0008.md) uygulandı: float price sözlüğü aynı,
+confidence helper optional current_price ile price/current-1 kullanır; legacy
+nested return yolunu korur. Mixed/invalid/error payload ValueError, skor alanları
+aynı; ensemble skoru üretilmez. Tek aralık cap helper'ı model ve caption'ı besler.
+UI h gözlem/gerçek son index gösterir, bilinmeyen timestamp üretmez; şematik0..h
+ekseninde0 actual anchor, h hedef, yayılım1..h. Format1/DB/HTTP alanları aynı.

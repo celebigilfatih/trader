@@ -4465,17 +4465,12 @@ def show_ai_predictions():
     
     with col2:
         prediction_horizon = st.selectbox(
-            "⏰ Tahmin Süresi",
+            "Tahmin ufku (gözlem)",
             options=[3, 7, 14, 30],
-            format_func=lambda x: {
-                3: "3 gün sonra", 
-                7: "1 hafta sonra",
-                14: "2 hafta sonra",
-                30: "1 ay sonra"
-            }.get(x, f"{x} gün sonra"),
+            format_func=lambda x: f"{x} gözlem ilerisi",
             index=0,
             key="prediction_horizon",
-            help="AI modeli seçilen süre kadar sonrasını tahmin eder. Örneğin '1 hafta sonra' seçerseniz, modelin tahmini 7 gün sonraki fiyat için olacaktır."
+            help="Ufuk, model hedefinde kullanılan gelecek veri gözlemi sayısıdır; takvim günü veya kesin tarih değildir."
         )
     
     with col3:
@@ -4639,43 +4634,33 @@ def show_ai_predictions():
                 # === PREDICTION DASHBOARD ===
                 st.markdown("### 🎯 AI Tahmin Paneli")
                 
-                # Hedef tarih hesaplama ve Türkçe formatla
-                today = datetime.now()
-                target_date = today + timedelta(days=prediction_horizon)
-                
-                # Türkçe aylar ve günler
-                turkish_months = {
-                    1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 
-                    5: 'Mayıs', 6: 'Haziran', 7: 'Temmuz', 8: 'Ağustos',
-                    9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık'
-                }
-                turkish_days = {
-                    0: 'Pazartesi', 1: 'Salı', 2: 'Çarşamba', 3: 'Perşembe',
-                    4: 'Cuma', 5: 'Cumartesi', 6: 'Pazar'
-                }
-                
-                target_day_tr = turkish_days[target_date.weekday()]
-                target_month_tr = turkish_months[target_date.month]
-                target_date_str = f"{target_date.day} {target_month_tr} {target_date.year}, {target_day_tr}"
-                
+                last_observation = str(data.index[-1])
+                lower_bound, upper_bound = ml_predictor.get_prediction_return_bounds(prediction_horizon)
                 st.markdown(f"""
-                <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); 
+                <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
                            color: white; padding: 15px; border-radius: 10px; margin: 15px 0;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h4 style="margin: 0; color: hsl(210, 40%, 98%);">📅 Tahmin Hedefi</h4>
+                            <h4 style="margin: 0; color: hsl(210, 40%, 98%);">🎯 Tahmin ufku</h4>
                             <p style="margin: 5px 0 0 0; color: #f0f0f0;">
-                                <strong>{target_date_str}</strong> tarihindeki fiyat tahmini
+                                Son veri gözleminden {prediction_horizon} gözlem ilerisi.
+                            </p>
+                            <p style="margin: 5px 0 0 0; color: #f0f0f0;">
+                                Son veri gözlemi: {last_observation}
                             </p>
                         </div>
                         <div style="text-align: right;">
                             <div style="font-size: 24px; font-weight: bold;">{prediction_horizon}</div>
-                            <div style="font-size: 14px;">gün sonra</div>
+                            <div style="font-size: 14px;">gözlem ilerisi</div>
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
+                st.caption(
+                    f"Deneysel model çıktısına uygulanan sınır: {lower_bound:+.0%} ile {upper_bound:+.0%}. "
+                    "Bu sınır, modelin doğruluk ölçüsü değildir."
+                )
+
                 if model_type == "ensemble" or model_type == "all_models":
                     st.markdown('<div class="metric-grid">', unsafe_allow_html=True)
                     
@@ -4694,7 +4679,7 @@ def show_ai_predictions():
                         change_class = "positive" if ensemble_return > 0 else "negative"
                         st.markdown(f"""
                         <div class="metric-card-modern">
-                            <div class="metric-title">{prediction_horizon} Gün Tahmini</div>
+                            <div class="metric-title">{prediction_horizon} gözlem ilerisi tahmini</div>
                             <div class="metric-value">₺{ensemble_prediction:.2f}</div>
                             <div class="metric-change {change_class}">{ensemble_return:+.2f}%</div>
                         </div>
@@ -4809,41 +4794,27 @@ def show_ai_predictions():
                         """, unsafe_allow_html=True)
 
                 # === PREDICTION VISUALIZATION ===
-                st.markdown(f"### 📈 Tahmin Görselleştirmesi ({prediction_horizon} Gün İleriye)")
+                st.markdown(f"### 📈 Tahmin Görselleştirmesi ({prediction_horizon} gözlem ilerisi)")
                 
-                # Create prediction chart
-                last_30_days = data.tail(30).copy()
-                
-                # Generate future dates
-                last_date = last_30_days.index[-1]
-                future_dates = pd.date_range(
-                    start=last_date + timedelta(days=1), 
-                    periods=prediction_horizon, 
-                    freq='D'
-                )
-                
-                # Create prediction line
-                prediction_points = np.linspace(
-                    current_price, 
-                    ensemble_prediction, 
-                    prediction_horizon + 1
-                )[1:]  # Exclude the first point (current price)
-                
+                # Schematic steps do not invent future observation dates.
+                prediction_steps = list(range(prediction_horizon + 1))
+                prediction_points = np.linspace(current_price, ensemble_prediction, prediction_horizon + 1)
+
                 # Plot
                 fig = go.Figure()
                 
-                # Historical data
+                # Only the observed anchor is an actual price at step zero.
                 fig.add_trace(go.Scatter(
-                    x=last_30_days.index,
-                    y=last_30_days['Close'],
-                    mode='lines',
-                    name='Geçmiş Fiyat',
-                    line=dict(color='#3b82f6', width=2)
+                    x=[0],
+                    y=[current_price],
+                    mode='markers',
+                    name='Son veri fiyatı',
+                    marker=dict(color='#3b82f6', size=8)
                 ))
-                
+
                 # Prediction line
                 fig.add_trace(go.Scatter(
-                    x=future_dates,
+                    x=prediction_steps,
                     y=prediction_points,
                     mode='lines+markers',
                     name='Şematik tahmin yolu',
@@ -4853,11 +4824,11 @@ def show_ai_predictions():
                 
                 if spread_valid:
                     # Confidence band
-                    upper_band = prediction_points + prediction_std
-                    lower_band = prediction_points - prediction_std
+                    upper_band = prediction_points[1:] + prediction_std
+                    lower_band = prediction_points[1:] - prediction_std
 
                     fig.add_trace(go.Scatter(
-                        x=future_dates,
+                        x=prediction_steps[1:],
                         y=upper_band,
                         mode='lines',
                         name='Üst yayılım sınırı',
@@ -4866,7 +4837,7 @@ def show_ai_predictions():
                     ))
 
                     fig.add_trace(go.Scatter(
-                        x=future_dates,
+                        x=prediction_steps[1:],
                         y=lower_band,
                         mode='lines',
                         name='Model yayılımı (görsel)',
@@ -4876,8 +4847,8 @@ def show_ai_predictions():
                     ))
 
                 fig.update_layout(
-                    title=f'{selected_symbol} - {prediction_horizon} Gün AI Fiyat Tahmini',
-                    xaxis_title='Tarih',
+                    title=f'{selected_symbol} - {prediction_horizon} gözlem ilerisi AI fiyat tahmini (şematik)',
+                    xaxis=dict(title='Şematik gözlem adımı', range=[0, prediction_horizon]),
                     yaxis_title='Fiyat (₺)',
                     height=500,
                     showlegend=True,
@@ -4888,7 +4859,7 @@ def show_ai_predictions():
                 unique_key = f"ai_predictions_chart_{selected_symbol}_{prediction_horizon}_{model_type}"
                 st.plotly_chart(fig, use_container_width=True, key=unique_key)
                 
-                st.caption("Çizgi, son fiyat ile hedef tahmin arasındaki görsel geçiştir; ara günler için ayrı model tahmini değildir. Bant istatistiksel güven aralığı değildir.")
+                st.caption("Çizgi, son fiyat ile hedef tahmin arasındaki görsel geçiştir; ara adımlar için ayrı model tahmini değildir. Bant istatistiksel güven aralığı değildir.")
 
                 # === FEATURE IMPORTANCE ===
                 importance_df = ml_predictor.get_feature_importance('random_forest')

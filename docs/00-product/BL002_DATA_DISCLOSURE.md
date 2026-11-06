@@ -66,7 +66,7 @@ ekranı veya servis açmak bu işin kapsamına alınmaz.
 | M-04 / “AI Güveni” yerine | **“Model uyumu (sezgisel)”** |
 | M-05 / uyum skoru açıklaması | **“Model tahminlerinin birbirine yakınlığını özetler; doğruluk veya gerçekleşme olasılığı değildir.”** |
 | M-06 / grafik lejandı | **“Şematik tahmin yolu”**, **“Model yayılımı (görsel)”**, **“Üst yayılım sınırı”** |
-| M-07 / grafik açıklaması | **“Çizgi, son fiyat ile hedef tahmin arasındaki görsel geçiştir; ara günler için ayrı model tahmini değildir. Bant istatistiksel güven aralığı değildir.”** |
+| M-07 / grafik açıklaması | **“Çizgi, son fiyat ile hedef tahmin arasındaki görsel geçiştir; ara adımlar için ayrı model tahmini değildir. Bant istatistiksel güven aralığı değildir.”** Sonraki Accepted ADR-0008 gözlem sunumu uyarlaması. |
 | M-08 / veri penceresi | **“Kullanılan veri aralığı”**; yalnız eldeki DataFrame başlangıç/bitiş zamanı. Bu alan, modelin kesin eğitim penceresi diye adlandırılmaz. |
 | M-09 / üç senaryo kartı başlığı | **“Üst yayılım senaryosu”**, **“Model ortalaması”**, **“Alt yayılım senaryosu”** |
 | M-10 / sabit %30/%40/%30 olasılık metinleri yerine | **“Görsel senaryo — gerçekleşme olasılığı hesaplanmamıştır.”** |
@@ -102,12 +102,13 @@ ekranı veya servis açmak bu işin kapsamına alınmaz.
 | RSS kaynak yayın zamanı / elde etme zamanı | Eski `date`, geçersiz yayın tarihiyle elde etme zamanını ayırt etmiyordu. | [ADR-0004](../50-decisions/ADR-0004.md) Accepted ve uygulandı: yayın zamanı/durumu ile çekilme zamanı ayrılır; bilinmeyende sahte tarih üretilmez. |
 | NLP hata durumu | Eski hata sonucu `0.0`, gerçek nötr skorla birleşiyordu. | [ADR-0004](../50-decisions/ADR-0004.md) Accepted ve uygulandı: başarısız skor `None` olur; hesaplanmış nötrden ve özetten ayrılır. |
 | ML kesin eğitim penceresi / model değerlendirmesi | Ham DataFrame aralığı, temizlenmiş özellik/target eğitim aralığı değildir; uyum skoru doğruluk metriği değildir. | BL-001 ve AI evaluation işleri; bu onay model kalitesini veya kalibrasyonu doğrulamaz. |
-| ML tahmin ufku / hedef tarihi | Model hedefi `shift(-prediction_horizon)` ile gelecek veri satırlarını kullanır; hedef kartı bugünden, grafik son bardan takvim günü ekler. | İşlem barı/takvim günü ve tarih başlangıcı anlamı ayrıca kararlaştırılıp test edilmeli; A onayı bu tutarsızlığı çözmüş sayılmaz. |
+| ML tahmin ufku / hedef tarihi | A aşamasında model gözlem hedefi ile kart/grafiğin iki farklı takvim başlangıcı uyumsuzdu. | Sonraki [ADR-0008](../50-decisions/ADR-0008.md) özel onayla uygulandı: h gözlem, gerçek son index, kesin hedef tarihi yok;0..h şematik eksen. A onayı tek başına bu kararı kapsamıyordu. |
 | Sentiment etiket / filtre eşikleri | Etiket helper'ı ±0.2, özet sayacı/filtreler ±0.1 kullanır. | ADR-0004 mevcut eşikleri korur. Eşik uyumu ayrı hesaplama kararıdır; sessizce değiştirilmez. |
 
 Bu sözleşme RSS sağlayıcısının yayın zamanının doğruluğunu bağımsız doğrulamaz;
 yalnız eksik/belirsiz zamanı biliniyor gibi sunma hatasını giderir. ML model
-doğruluğu, tarih/ufuk anlamı ve eşik uyumu ayrı kapanış işleridir.
+doğruluğu ve sentiment eşik uyumu ayrı kapanış işleridir. Tarih/ufuk sunumu
+sonraki Accepted ADR-0008 kapsamında düzeltildi; işlem takvimi hesaplanmaz.
 
 ## Kabul ve doğrulama
 

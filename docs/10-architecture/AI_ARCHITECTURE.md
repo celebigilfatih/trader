@@ -37,16 +37,15 @@ akışı çalışmaya devam edebilmelidir.
 
 - Legacy ML üst uyarısı ve girişleri deneyseldir. Sezgisel skor “Model uyumu”
   olarak açıklanır; doğruluk veya gerçekleşme olasılığı değildir. Grafik ara
-  günleri şematik geçiş, bandı model yayılımıdır; güven aralığı iddiası kaldırıldı.
+  adımları şematik geçiş, bandı model yayılımıdır; güven aralığı iddiası kaldırıldı.
 - Sabit %30/%40/%30 senaryo olasılıkları kaldırıldı; geçersiz model yayılımında
   ±%5 fallback senaryosu/bandı gösterilmez. Geçerli model hesapları değişmedi.
 - RSS bilinmeyen yayın zamanını bugünün saatiyle doldurmaz; NLP hatası veya
   sonlu olmayan sonuç `None/failed` olur. Hesaplanmış nötr ile ayrılır.
 - Ekran metinleri `docs/00-product/BL002_DATA_DISCLOSURE.md` ve RSS/NLP
   sözleşmesi `ADR-0004` 2026-11-05 tarihinde kullanıcıca onaylandı.
-- Açık borç: Eğitim ufkunun gelecek veri satırlarıyla tanımı ile UI hedef
-  tarihinin takvim günü hesabı uyumlu hale getirilmedi. Sentiment etiket/filtre
-  eşik farkı ve model kalibrasyonu ayrı işlerdir; bu adımda değiştirilmedi.
+- ADR-0008 gözlem ufku/takvim sunumu farkını kesin hedef tarihi kaldırarak kapattı.
+  Sentiment etiket/filtre eşik farkı ve model kalibrasyonu ayrı açık işlerdir.
 
 ## ML hedef/ön işleme ve artifact — Accepted ADR-0007
 
@@ -57,7 +56,7 @@ Feature temizlik stateless; %1/%99 bounds ve iki scaler yalnız tutulan train'de
 öğrenilir. Dört estimator fit/inference aynı scaled X ve inverse y kullanır.
 Başarısız retrain eski advanced paketi kullanıma açık bırakmaz.
 
-83 hedef ML testi, native dört-model smoke ve ayrı sabit label boundary ile
+97 hedef ML testi, native dört-model smoke ve ayrı sabit label boundary ile
 literal160→164 oracle'ı içerir. Her modelde feature sırası/ölçek zinciri ve gerçek
 joblib temp roundtrip doğrulanır. Kaynak indicator'ların causal olduğu, piyasa
 accuracy/kalibrasyon/kârlılığı veya genel M1 kapanışı iddia edilmez.
@@ -66,20 +65,23 @@ ML-01–06 bilinen dilimleri kapandı. Simple her eğitimde trained flag/cache'i
 temizler; sonlu olmayan metric başarı sayılmaz. Importance RF'nin fitted kolon
 metadata'sını kullanır; invalid inference error ve boş son tahmin cache'i bırakır.
 Geçerli forest/signal/confidence/çıktı biçimleri aynı; yeni model veya artifact yok.
-Ufuk cap'leri (3/14 varsayılan sınır), confidence helper interface ve UI takvim
-günü/gözlem farkı açık kalır. Process-wide warning susturma ve Windows uyarı
+Ufuk cap/helper/gözlem sunumu da Accepted ADR-0008 ile aşağıda düzeltildi.
+Process-wide warning susturma ve Windows uyarı
 encoding'i bu dilimde değişmedi. Ayrıntı [BACKLOG](../20-execution/BACKLOG.md)
 ve [execution kaydındadır](../20-execution/2026-11-06-adr0007-implementation.md).
 Simple düzeltme kanıtı [ayrı kayıttadır](../20-execution/2026-11-06-simple-ml-fixes.md).
 
-## ML-07/08 için sonraki öneri — uygulanmadı
+## ML-07/08 ve gözlem sunumu — Accepted ADR-0008 uygulandı
 
-[ADR-0008](../50-decisions/ADR-0008.md) Proposed: ilk mevcut aralıkların tek
-return cap'i olması; fiyat sözlüğü için optional current_price confidence bağlamı
-ve geçerli legacy return kaydı uyumu; panelde h gözlem/0..h şematik eksen ve kesin
-takvim hedefinin kaldırılması. Fiyat sözlüğü/format1 paket/model parametreleri
-korunur; bu proposal üretim kuralı veya özel uygulama onayı değildir. UI'nın kendi
-model-yayılımı sezgisi helper'a bağlanmaz. Özel açık onaydan sonra plan/TDD gerekir.
+[ADR-0008](../50-decisions/ADR-0008.md) özel “onayladım, devam edelim” yanıtıyla
+Accepted ve uygulandı. Tek get_prediction_return_bounds helper'ı h1±.10,
+2–7±.25,8–30±.50,31+[-.70,1.00] verir; inverse sonrası bir kez clip edilir.
+Fiyat sözlüğü için current_price bağlamı ve geçerli legacy return uyumu vardır;
+mixed/invalid payload ValueError, sezgisel skor/strict eşikler aynı kalır.
+Panel h gözlem/gerçek last_index/0..h şematik eksen ve aynı helper caption'ını
+kullanır; gelecekteki kesin tarih üretilmez. Fiyat sözlüğü/format1/model parametreleri
+aynı; UI'nın model-yayılımı sezgisi yeni helper'a bağlanmadı/kalibre edilmedi.
+Kanıt [execution kaydında](../20-execution/2026-11-06-adr0008-implementation.md).
 
 ## Prompt and Model Versioning
 

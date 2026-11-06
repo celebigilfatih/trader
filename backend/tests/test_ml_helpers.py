@@ -94,8 +94,8 @@ class TestMlHelpers(unittest.TestCase):
         pd.testing.assert_frame_equal(data, before)
 
     def test_confidence_helper_valid_return_records_use_absolute_change_and_edges(self):
-        # This helper accepts return records, not predict_price's price mapping;
-        # that interface mismatch is separately reported, not normalized here.
+        # Legacy return-record compatibility keeps its original units/thresholds;
+        # price mappings with current_price are separately tested under ADR-0008.
         for change, expected, strength in ((0., 1., "High"), (.029, .71, "High"),
                                             (.03, .7, "Medium"), (.059, .41, "Medium"),
                                             (.06, .4, "Low"), (-.05, .5, "Medium"),

@@ -1,7 +1,9 @@
 # ML-07/08 ve gözlem ufku tasarımı / Git teslim kaydı
 
 - **Date:** 2026-11-06
-- **Status:** Tasarım hazır; [ADR-0008](../50-decisions/ADR-0008.md) Proposed.
+- **Status:** Tasarım aşaması kaydı; sonraki özel onayla ADR-0008 Accepted ve
+  uygulandı. Güncel kanıt [execution kaydında](2026-11-06-adr0008-implementation.md).
+  Aşağıdaki Proposed/onay bekleme ifadeleri o önceki tasarım aşamasına aittir.
 - **Başlangıç:** Teslim edilmiş checkpoint `abfc592`; aynı codex dalı.
 
 ## Commit & push — tamamlandı

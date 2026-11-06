@@ -45,7 +45,7 @@
   haliyle yanlış negatif üretebilir).
 - **Unit / offline API:** `make test-backend` veya
   `python3 -m unittest discover -s backend/tests -p 'test_*.py'`.
-  2026-11-06 güncel doğrulaması: 331 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
+  2026-11-06 güncel doğrulaması: 349 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
   sabit sentetik OHLCV ile sınar; `test_api_contracts.py` hem sözleşme doubles'ını
   hem gerçek hesaplayıcıyla analiz/RSI akışlarını kapsar. Beklenen değerler
   hesaplayıcının kendi çıktısından türetilmez. RSI mevcut konfigürasyonda 22 dönemdir.
@@ -409,6 +409,31 @@ Bu ilk test diliminin tarihsel kaydıdır; sonraki ADR-0007 düzeltmeleri aşağ
 - Bağımsız builder review planlama için önemli açık soru bulmadı. Tasarım/teslim
   [kaydı](../20-execution/2026-11-06-ml-horizon-confidence-design.md); upstream
   CDSK validator yokluğu ve genel M1/accuracy/dependency kapıları sürer.
+
+### Accepted ADR-0008 doğrulaması (2026-11-06)
+
+- `test_ml_horizon_confidence.py`14 yeni test: literal interval uçları/huge h,
+  iki yön/eşitlik/skip/ensemble, shared-helper consumer, price/legacy/invalid
+  payload/context/strict thresholds ve ratio overflow. Estimator boundary +
+  gerçek identity scaler ayrı tanımlanır; native dört-model smoke korunur.
+- `test_legacy_ml_horizon.py`4 yeni controlled AppTest: raw numeric selector,
+  stale data last_index/kesin tarih yokluğu, bütün UI h caption'ları ve0 anchor/
+  0..h line/1..h bands. Gerçek extracted panel, fake IO/estimator ve gerçek
+  bounds helper kullanır; full monolith/browser/live-provider kanıtı değildir.
+- İlk14 core test9 assertion failure/61 eksik API-sözleşme hatası; ilk4 panel
+  testi7 assertion failure/0 error verdi. Son42 core/17 AppTest hedefleri green;
+  bağımsız reviewer59 testi yeniden koştu (7.610 s), önemli bulgu yok.
+- Fixture artık gerçek response gibi ensemble içerir:108/112/110 için mean110,
+  std=sqrt(8/3); production UI spread formülü değişmedi. Eski numeric oracles
+  buna göre düzeltildi; testler helper'ın UI skoruna bağlanmasını da reddeder.
+- 16 core+3 UI=19 geçerli bellek içi mutant assertion failure verdi; error yok.
+  İlk numeric error-key mutantı kaçtı; payload{"error":103.} eklendi ve yakalandı.
+  Disk mutation yok, restore hedefler green. Genel mutation coverage iddiası yok.
+- Birleşik349 backend testi dış socket engelli;97 ML core/17 controlled Streamlit.
+  62 Python compile,39 zorunlu belge/11 Boot bölümü, Accepted ADR1–8/link/diff.
+  Upstream validator ortamda yok; yapı kontrolü onun sonucu değil. Next.js kaynakları
+  aynı olduğundan build/browser tekrarı yok, canlı sağlayıcı çalıştırılmadı. Ayrıntı
+  [execution kaydı](../20-execution/2026-11-06-adr0008-implementation.md).
 
 ## Release Gates
 

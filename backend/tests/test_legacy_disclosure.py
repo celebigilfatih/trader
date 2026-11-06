@@ -75,7 +75,7 @@ with patch.dict("sys.modules", {"modules.sentiment_analyzer": sentiment_module, 
 ''').run(timeout=15)
 
 
-def ml_app(spread=None):
+def ml_app(spread=None, start="2026-01-01"):
     setup = f'''
 import streamlit as st
 import numpy as actual_np
@@ -84,6 +84,7 @@ import plotly.graph_objects as go
 import types
 from datetime import datetime, timedelta
 from unittest.mock import patch
+from modules.ml_predictor import MLPredictor as ActualMLPredictor
 BIST_SYMBOLS = {{"TEST.IS": "Fixture"}}
 class NumpyFixture:
     def __getattr__(self, name): return getattr(actual_np, name)
@@ -93,15 +94,17 @@ class NumpyFixture:
 np = NumpyFixture()
 class BISTDataFetcher:
     def get_stock_data(self, *args, **kwargs):
-        return pd.DataFrame({{key: [100.] * 120 for key in ["Open", "High", "Low", "Close", "Volume"]}}, index=pd.date_range("2026-01-01", periods=120))
+        return pd.DataFrame({{key: [100.] * 120 for key in ["Open", "High", "Low", "Close", "Volume"]}}, index=pd.date_range({start!r}, periods=120))
 class TechnicalAnalyzer:
     def __init__(self, data): self.indicators = {{}}
     def add_indicator(self, name): pass
 class FixtureML:
+    get_prediction_return_bounds = staticmethod(ActualMLPredictor.get_prediction_return_bounds)
     def prepare_features(self, *args): return pd.DataFrame({{"feature": [1.]}})
     def train_models(self, *args, **kwargs): return {{"successful_models": ["a", "b"]}}
-    def predict_price(self, *args, **kwargs): return {{"a": 108., "b": 112.}}
+    def predict_price(self, *args, **kwargs): return {{"a": 108., "b": 112., "ensemble": 110.}}
     def get_feature_importance(self, *args): return pd.DataFrame()
+    def get_model_confidence(self, *args, **kwargs): raise AssertionError("must not replace UI spread")
 ml_module = types.ModuleType("modules.ml_predictor")
 ml_module.MLPredictor = FixtureML
 '''
@@ -252,16 +255,16 @@ class LegacyMLDisclosureTests(unittest.TestCase):
         self.assertFalse(app.error)
         self.assertFalse(app.exception)
         text = text_of(app)
-        for expected in ["Son veri fiyatı", "Kaynak: Yahoo Finance", "Veri zamanı (son bar)", "Kullanılan veri aralığı", "2026-01-01", "2026-04-30", "Çekilme zamanı: Kaydedilmemiş", "Model uyumu (sezgisel)", "Model tahminlerinin birbirine yakınlığını özetler; doğruluk veya gerçekleşme olasılığı değildir.", "Üst yayılım senaryosu", "Model ortalaması", "Alt yayılım senaryosu", "₺112.00", "₺110.00", "₺108.00", "Güçlü Al", "95%", "Görsel senaryo — gerçekleşme olasılığı hesaplanmamıştır.", "Bant istatistiksel güven aralığı değildir."]:
+        for expected in ["Son veri fiyatı", "Kaynak: Yahoo Finance", "Veri zamanı (son bar)", "Kullanılan veri aralığı", "2026-01-01", "2026-04-30", "Çekilme zamanı: Kaydedilmemiş", "Model uyumu (sezgisel)", "Model tahminlerinin birbirine yakınlığını özetler; doğruluk veya gerçekleşme olasılığı değildir.", "Üst yayılım senaryosu", "Model ortalaması", "Alt yayılım senaryosu", "₺111.63", "₺110.00", "₺108.37", "Güçlü Al", "95%", "Görsel senaryo — gerçekleşme olasılığı hesaplanmamıştır.", "Bant istatistiksel güven aralığı değildir."]:
             self.assertIn(expected, text)
         for forbidden in ["%30 Olasılık", "%40 Olasılık", "Canlı Piyasa", "AI Güveni"]:
             self.assertNotIn(forbidden, text)
         chart = json.loads(app.get("plotly_chart")[0].proto.spec)
-        self.assertEqual([t["name"] for t in chart["data"]], ["Geçmiş Fiyat", "Şematik tahmin yolu", "Üst yayılım sınırı", "Model yayılımı (görsel)"])
-        self.assertEqual(len(chart["data"][1]["x"]), 3)
+        self.assertEqual([t["name"] for t in chart["data"]], ["Son veri fiyatı", "Şematik tahmin yolu", "Üst yayılım sınırı", "Model yayılımı (görsel)"])
+        self.assertEqual(len(chart["data"][1]["x"]), 4)
         self.assertEqual(chart_values(chart["data"][1])[-1], 110.)
-        self.assertEqual(chart_values(chart["data"][2])[-1], 112.)
-        self.assertEqual(chart_values(chart["data"][3])[-1], 108.)
+        self.assertAlmostEqual(chart_values(chart["data"][2])[-1], 110. + (8/3)**.5)
+        self.assertAlmostEqual(chart_values(chart["data"][3])[-1], 110. - (8/3)**.5)
 
     def test_invalid_spread_hides_scenarios_and_band_without_five_percent_fallback(self):
         for spread in ["nan", "inf", "-1"]:

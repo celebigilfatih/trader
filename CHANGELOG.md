@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — ADR-0008 onaylı ufuk/helper/panel uygulaması
+
+- Kullanıcı “onayladım, devam edelim” dedi; ADR-0008 Accepted ve uygulandı. Tek
+  aralık bounds helper'ı, inverse sonrası bir kez clipping;3/14/31+ fallback kalktı.
+- Confidence helper fiyat/current_price ve geçerli legacy return yollarını destekler;
+  mixed/invalid/error ValueError. Mevcut skor/strict eşikler ve price response aynı.
+- Panel h gözlem, gerçek son index ve0..h şematik çizgi/actual0 anchor gösterir;
+  kesin takvim hedefi kaldırıldı, caption ortak bounds helper'ından. UI yayılım
+  formülü aynı; fixture tam ensemble sözlüğü ve elle sqrt(8/3) oracle'ıyla düzeltildi.
+- 14 çekirdek+4 AppTest yeni test;349 backend/97 ML/17 kontrollü Streamlit test.
+  19 geçerli mutant yakalandı, bağımsız59 hedef test incelemesi önemli bulgusuz.
+  Docs/handoff güncel;62 Python/CDSK yapı/link/diff kontrolü. Next.js/canlı
+  sağlayıcı tekrar yok; kalibrasyon ve genel M1 açık. Önceki commit/push akışı sürer.
+
 ### 2026-11-06 — Git checkpoint teslimi ve ADR-0008 Proposed
 
 - Kullanıcı Commit & Push talebiyle70 dosyalık M1 güvenilirlik çalışması `abfc592`
