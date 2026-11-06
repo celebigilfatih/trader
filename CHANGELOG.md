@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — ADR-0009 Accepted ve OS-01 düzeltmesi
+
+- Somut `stoch=%K` onay sorusuna “Sıradaki Adım ile devam edelim.” yanıtı bu
+  tek uygulamanın onayı kaydedildi. ADR-0009 Accepted; yalnız analiz API
+  projeksiyonu stoch→stoch_k eşler. Dış skaler/null anahtarı ve core/legacy seriler aynı.
+- 7 HTTP regresyonu önce5 assertion failure/0 error, ardından7/7; K≠D,
+  gerçek0, warmup/flat-null, mixed/meta/price, query400 ve oturum401 doğrulandı.
+  Hedef38/38; tam373 backend testi dış socket engelli /27.902 saniye /OK.
+- 10 geçerli transient mutant assertion failure/0 error, restore7/7; iki
+  geçici harness hatası başarı sayılmadı.64 compile/39 belge/11 Boot/9 Accepted
+  ADR ve belge kontrolleri; frontend/canlı/uzak CI tekrar yok, upstream validator yok.
+- OS-01 dar dilimi kapandı; backlog/kapanış/API/mimari/kalite ve Boot1.54 güncel.
+  Sıradaki VWEMA/Supertrend ve aktif okuyucu testleri; genel M1 açık.
+  Bağımsız son inceleme bulgusuz; reviewer7 HTTP regresyonunu yeniden çalıştırdı.
+
 ### 2026-11-06 — OS-01 Stochastic API sözleşmesi Proposed
 
 - Kök neden API seçici/seri anahtar eşleşmesidir. Gerçek HTTP/fixture akışında

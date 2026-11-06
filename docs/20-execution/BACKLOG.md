@@ -2,6 +2,18 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+Somut ADR-0009 A onay sorusuna “Sıradaki Adım ile devam edelim.” yanıtı bu
+eşlemeye uygulama onayı kaydedildi; **Accepted ve uygulandı**. Yalnız API
+projeksiyonunda `stoch` → `stoch_k`; dış skaler/null ad, core/legacy, auth ve
+diğer seçiciler aynı. OS-01 dar dilimi kapandı; genel M1 açık.
+7 yeni gerçek HTTP testi önce5 assertion failure/0 error, sonra7/7; mevcut
+API/momentum ile38/38 ve tam373 backend testi dış socket engelli /27.902 s /OK.
+10 geçerli transient mutant assertion failure/0 error; restore7/7.
+Plan/kanıt [execution kaydında](2026-11-06-adr0009-implementation.md).
+Sıradaki iş M1-P0-01'in kalan VWEMA/Supertrend hesapları ve aktif okuyucu bağlantıları.
+
+### Önceki OS-01 sözleşme tasarımı
+
 OS-01 için [ADR-0009](../50-decisions/ADR-0009.md) **Proposed** hazır:
 `data.indicators.stoch` = son %K (float/null); K/D alanları veya yeni query
 seçicisi eklenmez. K≠D/zero/null/mixed/meta/400/401 kabul ölçütleri
@@ -148,7 +160,7 @@ RSS bütçe/tanı ve legacy kaynak görünürlüğü uygulama kaydı:
 - **CDSK:** 0.1.0 belge/çalışma iskeleti kurulu; M0 tamamlandı olarak kayıtlı.
   Yapısal validator'ın geçmesi, tüm ürün veya operasyon gereksinimlerinin
   tamamlandığı anlamına gelmez. Constitution hâlâ Draft ve TBD alanları var.
-- **M1:** Kısmi; 366 backend testi (momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
+- **M1:** Kısmi; 373 backend testi (Stochastic API/momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
   dış ağ engelli geçti. Cockpit seti 10/10 deterministik senaryodur. İlk dört
   işin ve onaylı RSS politikasının dar dilimleri uygulandı; BL-001 ve genel kapanış kriterleri açık.
 - **M2:** Yerel demo auth, watchlist ve paper portföy temeli var; gerçek davet

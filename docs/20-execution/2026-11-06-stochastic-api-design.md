@@ -1,7 +1,9 @@
 # OS-01 — Stochastic API sözleşme incelemesi
 
-- **Status:** Tasarım tamamlandı; [ADR-0009](../50-decisions/ADR-0009.md) Proposed,
-  özel eşleme onayı bekleniyor. Runtime/test/config dosyaları değiştirilmedi.
+- **Status:** Tasarım aşaması tamamlandı; ardından somut A sorusuna verilen
+  devam yanıtıyla [ADR-0009](../50-decisions/ADR-0009.md) Accepted ve uygulandı.
+  [Sonraki execution kaydı](2026-11-06-adr0009-implementation.md).
+  Aşağıdaki kanıtlar ilk tasarımın runtime/test değiştirmeyen tarihsel kaydıdır.
 - **Başlangıç:** `8dd5ddd`, `codex/m1-pattern-signal-tests`, temiz çalışma ağacı.
 - **Amaç:** M1-P0-01 OS-01 için seçici → seri anlamını somut ve incelenebilir yapmak.
 
@@ -63,13 +65,14 @@ Onay sonrası uygulama için kontrol listesi:
 - API/momentum hedefi, tam dış ağ engelli backend, compile/CDSK yapı/link/diff
   ve bağımsız uygulama incelemesi tamamlanır. Finansal etkinlik veya genel M1 kapanışı iddia edilmez.
 
-## Karar ve teslim sınırı
+## Tasarım aşamasındaki karar ve teslim sınırı
 
-Yeni eşleme henüz uygulanmadı; OS-01 açık, ADR-0001–0008 Accepted kalır.
+O aşamada yeni eşleme uygulanmamıştı; OS-01 açık, ADR-0001–0008 Accepted idi.
 AGENTS'in “Veri modeli/migration ... açık kullanıcı onayı” kapısı, burada
 seçiciye ilk kez verilen K/D anlamı için uygulanıyor; bütün bug fix'lere yeni
-onay gerektiği şeklinde yorumlanmıyor. Genel devam talebi özel A onayı değildir.
-Sonraki adım A onaylanırsa dar TDD uygulaması; ardından VWEMA/Supertrend ve aktif okuyucu testleri.
+onay gerektiği şeklinde yorumlanmıyor. Öneri sunulmadan verilen genel devam
+talebi özel A onayı sayılmadı. Sonraki somut soruya verilen yanıt ve TDD uygulaması
+Accepted ADR/execution kaydındadır; kalan VWEMA/Supertrend ve aktif okuyucu testleri izlenir.
 
 Frontend build/browser, canlı Yahoo/RSS/SMTP ve uzak CI çalışması bu belge
 adımında yeniden doğrulanmadı. CDSK upstream validator ortamda yok; yapısal

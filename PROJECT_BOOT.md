@@ -1,6 +1,6 @@
 # BIST Teknik Analiz Uygulaması — Project Boot
 
-- **Document version:** 1.53
+- **Document version:** 1.54
 - **CDSK version:** 0.1.0
 - **Last updated:** 2026-11-06
 
@@ -41,18 +41,18 @@
 - **Version:** Release etiketi yok (`TBD`).
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
   tabanı In Progress. Güncel kabul kanıtı ve kalan işler M1_CLOSEOUT kaydında.
-- **Current focus:** OS-01 sözleşme incelemesi tamamlandı; ADR-0009 Proposed,
-  `stoch` skaler/null alanı son %K'ya eşlensin önerisi özel onay bekliyor.
-  Mevcut31 API/momentum testi yeniden geçti; tam366 test önceki dilim kanıtıdır.
-  Runtime değişmedi, OS-01 ve genel M1 açık. Onay sonrası dar API düzeltmesi;
-  ardından VWEMA/Supertrend ve aktif okuyucu boşlukları.
+- **Current focus:** Somut A sorusuna devam yanıtıyla ADR-0009 Accepted ve
+  uygulandı; API `stoch` son %K skaler/null döner.7 HTTP regresyonu,38 hedef
+  ve373 tam backend testi geçti. OS-01 dar dilimi kapandı; sıradaki iş
+  VWEMA/Supertrend hesapları ve aktif okuyucu bağlantıları. Genel M1 açık.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
 - **Blocking decisions:** Gerçek kullanıcı erişimi operasyon sahipliği,
   destek matrisi ve üretim kapıları. ADR-0004–0008 açık onayları uygulandı;
   UI yayılım kalibrasyonu/finansal etkinlik bu onaylara dahil değildir.
-  ADR-0009 ilk K/D anlam eşlemesi özel karar bekliyor; Accepted sayılmaz.
+  ADR-0009 somut A sorusundan sonra verilen devam yanıtıyla Accepted uygulandı;
+  diğer çoklu çıktı API genişlemeleri bu karara dahil değildir.
 - **Last status update:** 2026-11-06
 
 ## 3. Repository Navigation
@@ -97,7 +97,7 @@
 | OTT seed ve yön serisi sözleşmesi | Accepted ve uygulandı | `ADR-0006`, `docs/50-decisions/ADR-0006.md` |
 | ML hedef/ön işleme ve model artifact sözleşmesi | Accepted ve uygulandı | [ADR-0007](docs/50-decisions/ADR-0007.md) |
 | ML ufuk cap, confidence girdisi ve gözlem sunumu | Accepted ve uygulandı | [ADR-0008](docs/50-decisions/ADR-0008.md) |
-| Stochastic API `stoch` seçicisini son %K'ya eşleme | Proposed; özel karar bekliyor | [ADR-0009](docs/50-decisions/ADR-0009.md) |
+| Stochastic API `stoch` seçicisini son %K'ya eşleme | Accepted ve uygulandı | [ADR-0009](docs/50-decisions/ADR-0009.md) |
 | 3D Web Experience profili uygulanmaz | N/A for current scope | `docs/70-experience/3D_WEB_EXPERIENCE.md` |
 
 > Yalnızca en önemli güncel kararları özetle. Kararın tam gerekçesi ve sonuçları
@@ -116,14 +116,16 @@
   onay sorusuna “onaylıyorum” dedi; başka algoritma/version/üretim onayı değildir.
   Sonraki somut ADR-0007 sorusuna “Onaylıyorum.” ile o sözleşme de Accepted oldu.
   Sonraki “onayladım, devam edelim” yanıtı somut ADR-0008'i Accepted yaptı.
-- **Recently completed:** OS-01 kök neden/gerçek HTTP reproducer ve Proposed
-  ADR-0009 alternatif/kabul/rollback kaydı.31 mevcut API/momentum testi yeniden
-  geçti. Önceki17 yeni test/34-mutant/tam366 ve ADR-0008 kayıtları tarihsel kanıttır.
+  ADR-0009 somut “stoch=%K” onay sorusuna “Sıradaki Adım ile devam edelim.”
+  yanıtı yalnız bu A eşlemesinin uygulama onayı olarak kaydedildi.
+- **Recently completed:** Accepted ADR-0009 OS-01 API alias düzeltmesi;
+  7 yeni HTTP testi/10 geçerli mutant,38 hedef/373 tam test. Core/legacy, auth,
+  diğer seçiciler, CI/dependency/kalıcı şema aynı; genel M1 açık.
 
 ## 7. Current Priorities
 
-1. M1 kapanış listesini uygulamak: Proposed ADR-0009 A eşlemesine özel karar;
-   onaydan sonra OS-01 TDD düzeltmesi, ardından VWEMA/Supertrend/aktif okuyucu testleri.
+1. M1 kapanış listesini uygulamak: OS-01 kapandı; kalan VWEMA/Supertrend hesapları
+   ve aktif okuyucu bağlantılarını bağımsız beklenen değerlerle sınamak.
    Momentum çekirdeği ve ML-01–08 dar dilimleri kapandı; genel M1/kalibrasyon açık.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
@@ -188,8 +190,8 @@
 - [x] Çevrimdışı market-data/API/teknik hesaplama, patern/sinyal ve RSS/NLP ile
   kontrollü Streamlit, ADR-0005 transport/tanı ve değişken MACD/Bollinger testleri
   ile temel BOS/kombolar ve risk/pozisyon/DayTrader testleri eklendi; toplam
-  backend test sayısı366;97 ML core testi ve17 kontrollü Streamlit testi içerir.
-  Son momentum dilimi17 gerçek hesaplama testi ekledi; OS-01 API okuyucusu açık.
+  backend test sayısı373;97 ML core testi ve17 kontrollü Streamlit testi içerir.
+  Momentum17 ve sonraki Stochastic API7 testi dar dilimleri kapattı; genel M1 açık.
   Bu, M1'in bütün kabul kriterlerinin kapandığı anlamına gelmez.
 - [x] On deterministik tarayıcı senaryosu üretim frontend'inde ve Next.js
   üretim derlemesi geçti; canlı sağlayıcı smoke'u bu adımda çalıştırılmadı.
@@ -197,6 +199,26 @@
 ## 11. AI Handoff
 
 ### Güncel devir — 2026-11-06
+
+- **Onay/uygulama:** Somut ADR-0009 “stoch=%K” sorusuna “Sıradaki Adım ile
+  devam edelim.”; Accepted kaydedilip uygulandı. API sonuç döngüsünde yalnız
+  stoch→stoch_k alias'ı; dış ad skaler/null ve diğer yollar aynı. Yeni alan/query,
+  core/legacy/config/CI/dependency/kalıcı şema değişikliği yok.
+- **Kanıt:**7 yeni HTTP testi önce5 assertion failure/0 error, sonra7/7;
+  K75≠D200/3, real0, warmup/flat-null, mixed/price/meta,400/401. Hedef38/38
+  (0.337 s); tam373 dış socket engelli (27.902 s), asyncio loopback serbest.
+  10 geçerli bellek içi mutant assertion failure/0 error; restore7/7. İlk iki
+  harness hatası başarı sayılmadı.64 compile/39 belge/11 Boot/9 Accepted ADR kontrolü.
+  Bağımsız son inceleme bulgusuz; reviewer7 HTTP testini0.088 s'de yeniden doğruladı.
+- **Sınırlar / sonraki:** OS-01 dar dilimi kapandı; kalan VWEMA/Supertrend ve
+  aktif okuyucu bağlantıları sırada. M1/M2/finansal etkinlik tamamlanmadı.
+  Frontend build/browser, canlı sağlayıcı ve uzak CI tekrar yok; CDSK upstream
+  validator ortamda yok. Önceki Next.js/Starlette/Streamlit uyarıları sürer.
+- **Git/devir:** Başlangıçd00af38, aynı codex dalı; önceki açık commit/push
+  yetkisi sürer. Teslim SHA'sı Git/remote ref'ten izlenir.
+  [Execution kaydı](docs/20-execution/2026-11-06-adr0009-implementation.md).
+
+### Önceki OS-01 tasarım devri — 2026-11-06
 
 - **OS-01 önerisi:** [ADR-0009](docs/50-decisions/ADR-0009.md) Proposed;
   [tasarım/kabul kaydı](docs/20-execution/2026-11-06-stochastic-api-design.md).
@@ -847,6 +869,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
+| 1.54 | 2026-11-06 | Somut A sorusuna devam yanıtıyla ADR-0009 Accepted uygulandı;7 yeni HTTP testi/10 geçerli mutant,373 tam test. OS-01 kapandı; sıradaki VWEMA/Supertrend/aktif okuyucular, genel M1 açık. |
 | 1.53 | 2026-11-06 | OS-01 gerçek HTTP500 ve komşu sözleşme kanıtı;31 mevcut test geçti. ADR-0009 skaler stoch=%K Proposed, özel onay bekliyor; runtime aynı ve M1 açık. |
 | 1.52 | 2026-11-06 | Momentum çekirdeğine17 test/34 geçerli mutant;366 backend testi dış socket engelli geçti. Runtime değişmedi; OS-01 Stochastic API okuyucu kusuru açık ve sonraki öncelik, genel M1 açık. |
 | 1.51 | 2026-11-06 | M1 kabul/kanıt matrisi ve sıralı P0 kapanış listesi;349 test dış socket engelli yeniden geçti. Requirement/CI/release belge çelişkileri uyumlandı; sonraki dilim Stochastic/Williams %R/CCI, M1 açık. |

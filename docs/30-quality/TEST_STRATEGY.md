@@ -1,6 +1,22 @@
 # Test Strategy
 
-## OS-01 sözleşme incelemesi — 2026-11-06
+## Accepted ADR-0009 uygulama doğrulaması — 2026-11-06
+
+`test_stochastic_api.py`7 gerçek HTTP regresyonu ekledi: analyzer/ta ve auth
+gerçek, yalnız provider/state sınırı kontrollü. %K75≠%D200/3, geçerli0,13-bar
+warmup ve20-bar flat-null; mixed seçimde diğer scalar/null, fiyat/meta/correlation,
+query400 ve oturum401. Dış socket'ler engelli, asyncio loopback serbest.
+Önce5 assertion failure/0 error (HTTP500≠200), dar API alias'ından sonra7/7.
+Mevcut API/momentum ile **38/38 /0.337 s /OK**; tam paket
+**373 test /27.902 s /OK**. 10 geçerli bellek içi alias/D/bar/alan/null-zero
+mutantı assertion failure/0 error; restore7/7. İlk iki geçici harness başlatma/
+restore hatası mutant başarısı sayılmadı; diskte üretim mutasyonu yok.
+64 Python compile/39 CDSK dosyası/11 Boot/9 Accepted ADR kontrolü geçti.
+Frontend build/browser, canlı sağlayıcı ve uzak CI yeniden koşulmadı;
+upstream validator yokluğu sürer. Genel M1/finansal etkinlik kapanışı değildir.
+[Uygulama kaydı](../20-execution/2026-11-06-adr0009-implementation.md).
+
+## Önceki OS-01 sözleşme incelemesi — 2026-11-06
 
 Üretim/test dosyaları değişmeden gerçek FastAPI TestClient + fixture provider
 ile `stoch`500, Williams200(-25), CCI200(null warmup), EMA200; `stoch_k/stoch_d`
@@ -8,7 +24,7 @@ ile `stoch`500, Williams200(-25), CCI200(null warmup), EMA200; `stoch_k/stoch_d`
 ve17 momentum testi **31/31 /0.237 s /OK**, dış socket engelli (loopback serbest).
 Bu koşu düzeltme kanıtı değildir;500 normatif passing test yapılmadı. Önerilen
 200/%K, zero/null/mixed/meta/400/401 regresyonları onay sonrası yazılacaktır.
-[ADR-0009](../50-decisions/ADR-0009.md) Proposed;
+[ADR-0009](../50-decisions/ADR-0009.md) o aşamada Proposed idi;
 [tasarım/kabul kaydı](../20-execution/2026-11-06-stochastic-api-design.md).
 Tam366-test kaydı önceki dilime aittir; bu belge adımında frontend/canlı/uzak CI
 ve upstream CDSK tekrar doğrulanmadı. Runtime/manifest/CI değişikliği yoktur.
@@ -93,7 +109,7 @@ Bu belge adımında frontend build/browser ve canlı sağlayıcılar tekrar koş
   haliyle yanlış negatif üretebilir).
 - **Unit / offline API:** `make test-backend` veya
   `python3 -m unittest discover -s backend/tests -p 'test_*.py'`.
-  2026-11-06 güncel doğrulaması: 366 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
+  2026-11-06 güncel doğrulaması: 373 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
   sabit sentetik OHLCV ile sınar; `test_api_contracts.py` hem sözleşme doubles'ını
   hem gerçek hesaplayıcıyla analiz/RSI akışlarını kapsar. Beklenen değerler
   hesaplayıcının kendi çıktısından türetilmez. RSI mevcut konfigürasyonda 22 dönemdir.

@@ -188,7 +188,8 @@ def analyze_symbol(
     latest_row = analyzer.data.iloc[-1]
     latest_indicators: Dict[str, Optional[float]] = {}
     for indicator_name in available:
-        latest_indicators[indicator_name] = _safe_float(analyzer.indicators[indicator_name].iloc[-1])
+        series_name = "stoch_k" if indicator_name == "stoch" else indicator_name
+        latest_indicators[indicator_name] = _safe_float(analyzer.indicators[series_name].iloc[-1])
 
     payload = {
         "symbol": normalized_symbol,

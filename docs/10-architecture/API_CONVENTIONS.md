@@ -34,11 +34,12 @@ interval=..., timeout_seconds=...)` keyword'ünü kabul etmelidir. Gerçek
 çağrılar override vermeden aynı davranışı korur. Bu iç adaptör sözleşmesi
 yeni HTTP endpoint veya response alanı eklemez.
 
-## Stochastic seçicisi — Proposed sözleşme
+## Stochastic seçicisi — Accepted ADR-0009
 
-OS-01: `stoch` seçimi gerçek hesaplayıcıda `stoch_k/stoch_d` üretirken route
-`stoch` anahtarını arar ve HTTP500 verir. Mevcut yanıt seçilen ad başına
-skaler/null biçimindedir; K/D anlamı tanımlanmamıştır.
-[ADR-0009](../50-decisions/ADR-0009.md) Proposed: dış `stoch` anahtarını %K'ya
-eşlemek, D'yi/yeni alanları API'ye eklememek. Özel karar onayı ve uygulaması
-bekleniyor; bu bölüm mevcut çalışan API davranışı iddiası değildir.
+`GET /api/v1/analysis/{symbol}?indicators=stoch` dış `stoch` anahtarı altında
+son %K'yı float/null verir. Yalnız API projeksiyonu mevcut `stoch_k` serisine
+eşler; hesaplayıcı/legacy K/D serileri değişmez. K=0 →0.0; warmup/flat NaN →null.
+Karma istekte diğer seçiciler ve metadata korunur; D alanı/query seçicisi
+eklenmez, `stoch_k/stoch_d` query adları400 kalır. Accepted
+[ADR-0009](../50-decisions/ADR-0009.md) uygulaması OS-01 HTTP500 hatasını kapattı;
+[gerçek HTTP regresyon kanıtı](../20-execution/2026-11-06-adr0009-implementation.md).

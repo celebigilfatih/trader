@@ -1,14 +1,26 @@
 # M1 kapanış kontrolü
 
 - **Tarih / durum:** 2026-11-06 — In Progress; bu kayıt M1'i kapatmaz.
-- **İncelenen kaynak:** `b6f07c6` ve değişmemiş uygulama/test kaynakları.
+- **İlk inceleme kaynağı:** `b6f07c6`; sonraki test/uygulama dilimleri aşağıda kayıtlıdır.
 - **Amaç:** Mevcut kabul ölçütlerini kanıta bağlamak ve kalan P0 işlerini sıralamak.
   Yeni MVP kapsamı, mimari, sağlayıcı veya finansal politika tanımlanmaz.
 - **Yetki:** [Roadmap](../00-product/ROADMAP.md), [milestone](MILESTONES.md),
   [gereksinimler](../00-product/REQUIREMENTS.md), BL-001/002/003 ve Accepted
-  ADR-0004–0008. Constitution Draft olarak kalır.
+  ADR-0004–0009. Constitution Draft olarak kalır.
 
-## Güncel ilerleme — momentum test dilimi
+## Güncel ilerleme — OS-01 uygulandı
+
+Somut A onay sorusuna verilen “Sıradaki Adım ile devam edelim.” yanıtıyla
+ADR-0009 Accepted kaydedilip uygulandı. API `stoch` seçicisi mevcut `stoch_k`
+serisine eşlenir; son %K skaler/null döner. Core/legacy formül ve K/D serileri,
+diğer seçiciler, auth ve metadata korunur. OS-01'in bu dar dilimi kapandı.
+7 yeni HTTP testi RED5 assertion failure/0 error →GREEN7/7; hedef38/38 ve
+tam **373 test /27.902 s /OK**, dış socket engelli, asyncio loopback serbest.
+10 geçerli transient mutant assertion failure/0 error; restore7/7.
+[Uygulama ve kabul kanıtı](2026-11-06-adr0009-implementation.md).
+Sonraki iş VWEMA/Supertrend ve aktif okuyucu bağlantıları; M1 In Progress kalır.
+
+## Önceki sözleşme ve momentum incelemesi
 
 OS-01 sonraki sözleşme incelemesi tamamlandı: [ADR-0009](../50-decisions/ADR-0009.md)
 **Proposed**, `stoch` altında skaler %K önerir. Gerçek HTTP/fixture akışında
@@ -27,9 +39,8 @@ Plan ve ayrıntı [momentum execution kaydındadır](2026-11-06-momentum-indicat
 üretirken API seçici anahtarı okumaktadır. Williams/CCI aynı reproducer'da
 sayısal yanıt verir. Bu, çekirdek hesabın veya API Stochastic entegrasyonunun
 tamamlandığı iddiası değildir. Hatalı API davranışı passing test yapılmadı.
-OS-01 sözleşme önerisi ADR-0009'da hazır; özel onaydan sonra dar eşleme ve
-gerçek HTTP regresyonu uygulanır. Ardından kalan VWEMA/Supertrend ve aktif
-okuyucu bağlantıları izlenir.
+Bu önceki incelemedeki OS-01 açıklığı sonraki Accepted uygulamayla yukarıda
+kapatıldı; kayıt mevcut hatanın hâlâ sürdüğü şeklinde okunmamalıdır.
 
 ## Kabul ölçütü ve kanıt matrisi
 
@@ -38,7 +49,7 @@ kanıtının eksik olduğunu belirtir. Test sayısı bir kabul eşiği değildir
 
 | Mevcut M1 ölçütü | Kanıt | Durum / kalan iş |
 |---|---|---|
-| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 366 backend testi dış socket bağlantıları engelli geçti. Teknik analiz, patern/BOS/kombolar, sinyal, risk/pozisyon, OTT, ML ve Stochastic/Williams %R/CCI çekirdeği için bağımsız beklenen değerler ve mutation kayıtları var. | **Kısmi.** OS-01 Stochastic API okuyucusu, kalan VWEMA/Supertrend/aktif bağlantılar ve legacy `StockScreener` zincirleri açık. P0-01/02. |
+| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 373 backend testi dış socket bağlantıları engelli geçti. Teknik analiz, patern/BOS/kombolar, sinyal, risk/pozisyon, OTT, ML, momentum ve onaylı Stochastic API dilimi için bağımsız beklenen değerler/mutation kayıtları var. | **Kısmi.** OS-01 kapandı; kalan VWEMA/Supertrend/aktif bağlantılar ve legacy `StockScreener` zincirleri açık. P0-01/02. |
 | Veri ve mock/deneysel kaynaklar açıkça etiketlenir (REQ-005/006, BL-002) | Cockpit analiz/RSI için 10 deterministik tarayıcı senaryosu; legacy haber/ML için 17 kontrollü AppTest. Accepted A metinleri, ADR-0004 zaman/skor ve ADR-0008 gözlem ufku uygulandı. | **Onaylı dilim doğrulandı; genel kapsam kısmi.** Diğer aktif legacy sonuçların kaynak/son bar/deneysel nitelik ve hata sonrası eski sonuç davranışı ekran envanterine bağlanmalı. P0-03. |
 | Entegrasyon hatası görünürdür (REQ-001, BL-003) | OHLCV provider/adaptör ve RSS transport/tanı testleri; partial/failed RSS uyarıları ve cockpit veri yok/503/yeniden deneme senaryoları var. Sentetik fiyat veya başarısız NLP için sahte nötr skor üretilmez. | **Kısmi.** Legacy tarayıcı bazı istisnaları `continue` ile atlar; boş sonuç ile kesinti ayrımı ayrıca sınanmalı. Diğer aktif Yahoo yolları için bütçe/tanı ve okuyucu kapsamı netleşmeli. P0-02/04. |
 
@@ -96,13 +107,13 @@ beklenir. Bilinen bir kusur passing beklenti olarak sabitlenmemelidir.
 
 | Sıra / kayıt | Kapsam | Somut kapanış kanıtı | Karar sınırı |
 |---|---|---|---|
-| **1 — M1-P0-01 / BL-001** | Stochastic, Williams %R ve CCI çekirdek test dilimi tamamlandı; OS-01 API okuyucu kusuru açık. Kalan VWEMA, Supertrend ve FVG/OB aktif okuyucu bağlantıları; trend gücü/özet önce aktif kullanım veya gerekçeli N/A açısından sınıflandırılır. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
+| **1 — M1-P0-01 / BL-001** | Momentum çekirdek testleri ve OS-01 Accepted ADR-0009 dar API dilimi tamamlandı. Kalan VWEMA, Supertrend ve FVG/OB aktif okuyucu bağlantıları; trend gücü/özet önce aktif kullanım veya gerekçeli N/A açısından sınıflandırılır. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
 | **2 — M1-P0-02 / BL-001/003** | UI'nın gerçekten çağırdığı legacy `StockScreener` yolları; önce RSI, ardından boğa taramaları ve haftalık/aylık performans. | Gerçek analyzer + enjekte OHLCV ile dahil/dışarıda/eşitlik/sıralama; interval-period iletimi; boş/yetersiz veri, bir sembolün hatası ve tüm kaynakların kesintisi. Sağlayıcı ağı ve gerçek sleep kullanılmaz; boş sonuç/kesinti görünürlüğü ayrıca kontrol edilir. | Yeni çıktı alanı veya hata sözleşmesi gerekiyorsa önce somutlaştırılır; mevcut kusur sessizce doğru kabul edilmez. |
 | **3 — M1-P0-03 / BL-002** | Aktif legacy analiz/tarama sonuçlarını onaylı kaynak/deneysel metinler ve hata sonrası durumla eşleştiren ekran envanteri. | Her aktif sonuç için kaynak, veri zamanı, veri niteliği ve eksik/hatalı durumda gösterim kanıtı veya gerekçeli N/A; yanlış “canlı/gerçek” iddiası ve eski sonucun güncel sunulması kalmaz. Bağlanmayan mock yardımcılar ayrı kaydedilir. | Kabul edilmiş metinlerin uygulanması kapsamındadır; yeni ekran/model/metadata sözleşmesi ayrıca onay gerektirebilir. |
 | **4 — M1-P0-04 / BL-003** | OHLCV provider dışındaki aktif Yahoo/SDK çağrılarını ve hata okuyucularını sınıflandırma. | Her aktif yol için mevcut timeout/retry/hata dönüşü ve kullanıcı görünürlüğü; kontrollü başarı/boş/kesinti testi. Kullanılmayan yöntemler gerekçeli N/A. `.info` kullanan yardımcılar ortak OHLCV bütçesi altında diye raporlanmaz. | Yeni SDK bütçe/retry/transport politikası Accepted ADR-0005'in otomatik uzantısı değildir; gerekirse Proposed ADR ve açık onay. Üretim merkezi monitoring bu dilime eklenmez. |
 
-**Hemen sonraki adım:** Proposed ADR-0009'un A eşlemesine açık karar;
-onaylanırsa dar OS-01 uygulaması, ardından kalan VWEMA/Supertrend/aktif bağlantılar.
+**Hemen sonraki adım:** M1-P0-01 kalan VWEMA/Supertrend hesapları ve aktif
+okuyucu bağlantılarını bağımsız beklenen değerlerle sınamak.
 Çekirdek testlerinin geçmesi bütün okuyucuların çalıştığını göstermez.
 
 ## Tekrarlanabilirlik ve CI sınırı
@@ -153,4 +164,5 @@ veya yetkili kapsam kararıyla gerekçeli N/A olduğunda yeniden değerlendirile
 P0 test/hata görünürlüğü veya veri niteliği açığı varken **Completed** yapılmaz.
 Genel Definition of Done şablonu bu belgeyle topluca işaretlenmez. İlk kapanış
 kontrolü yalnız belgeleri değiştirdi; sonraki momentum dilimi 17 test ekledi.
-Çalışma zamanı, CI, veri modeli, bağımlılıklar ve kabul edilmiş ADR'ler değişmedi.
+Sonraki Accepted ADR-0009 yalnız API alias'ı ve7 HTTP testi ekledi; CI,
+kalıcı veri modeli, bağımlılık ve diğer Accepted ADR'ler değişmedi.

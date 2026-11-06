@@ -21,4 +21,4 @@
 | [ADR-0006](ADR-0006.md) | OTT başlangıç değeri ve yön serisi sözleşmesi | Accepted |
 | [ADR-0007](ADR-0007.md) | ML hedefi ve eğitimden tahmine ortak ön işleme sözleşmesi | Accepted |
 | [ADR-0008](ADR-0008.md) | ML ufuk sınırı, confidence girdisi ve gözlem ufku sunumu | Accepted |
-| [ADR-0009](ADR-0009.md) | Stochastic API seçicisinin skaler %K eşlemesi | Proposed |
+| [ADR-0009](ADR-0009.md) | Stochastic API seçicisinin skaler %K eşlemesi | Accepted |
