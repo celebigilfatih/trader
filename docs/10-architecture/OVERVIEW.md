@@ -82,7 +82,7 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   sağlar; RSS/Yahoo kaynak tanıları bellektedir. Merkezi üretim gözlemi açık.
 - UI ve domain hesaplamalarının büyük ölçüde tek dosyada birleşmesi değişiklik
   riskini yükseltiyor.
-- 373 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
+- 386 backend testi dış ağ bağlantıları engellenerek geçiyor (2026-11-06);
   Windows asyncio için yerel loopback serbest. Legacy `test_app.py` ve
   tarayıcı smoke akışı dış sağlayıcılara bağlı kalabilir.
 - Stochastic/Williams %R/CCI çekirdeği 17 gerçek hesaplama testiyle sınandı.
@@ -90,6 +90,11 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   eşleyerek OS-01'i kapattı.7 gerçek HTTP testi K≠D,zero/null,mixed/meta ve400/401
   doğrular; dış ad/skaler biçim ve core/legacy seriler korunur.
   [Uygulama kanıtı](../20-execution/2026-11-06-adr0009-implementation.md).
+- VWEMA/Supertrend için13 test geçerli sabit-seed/yeterli veri alt kümesini,
+  gerçek API ve sinyal okuyucularını kapsar. VST-01 VWEMA seed lookahead,
+  VST-02 başlangıç sonrası pozitif hacmin sadeleşmesi ve VST-03 kısa Supertrend
+  fiyat/yön/seed tutarsızlığı açıktır. Mevcut temel bant hesabı canonical
+  trailing Supertrend diye doğrulanmadı; [test ve karşı örnek kaydı](../20-execution/2026-11-06-vwema-supertrend-tests.md).
 - Ayrı deterministik cockpit modu 10 senaryodur. 17 kontrollü Streamlit AppTest
   legacy haber/ML fonksiyonlarını render eder; tam uygulama/browser kanıtı değildir.
 - BOS mevcut batch hesabında swing için çevredeki gelecek mumları da kullanır;

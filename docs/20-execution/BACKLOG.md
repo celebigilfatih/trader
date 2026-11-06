@@ -2,6 +2,19 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+VWEMA/Supertrend geçerli hesaplama ve okuyucu dilimine13 test eklendi:
+12 gerçek core,1 gerçek API. Hedef27/27 ve tam386 backend testi dış socket
+engelli /28.692 s /OK;32 geçerli transient mutant assertion failure/0 error.
+Core/ta/pandas, public generate_signal ve VWEMA API okuyucuları gerçek;
+yalnız ATR exception fallback'ine kontrollü hata enjekte edildi. Üretim değişmedi.
+[Plan/kanıt ve açık VST-01–03](2026-11-06-vwema-supertrend-tests.md): VWEMA seed
+lookahead/pozitif hacmin sadeleşmesi; Supertrend kısa veri fiyat/yön ve
+seed geçmişi tutarsızlığı ayrı karşı örneklerle kayıtlı. Bunlar passing
+beklenti yapılmadı; sonraki iş dar sözleşme/düzeltme kapsamını somutlaştırmak.
+FVG/OB aktif bağlantıları/legacy tarayıcılar ve genel M1 açık kalır.
+
+### Önceki ADR-0009 uygulaması
+
 Somut ADR-0009 A onay sorusuna “Sıradaki Adım ile devam edelim.” yanıtı bu
 eşlemeye uygulama onayı kaydedildi; **Accepted ve uygulandı**. Yalnız API
 projeksiyonunda `stoch` → `stoch_k`; dış skaler/null ad, core/legacy, auth ve
@@ -160,7 +173,7 @@ RSS bütçe/tanı ve legacy kaynak görünürlüğü uygulama kaydı:
 - **CDSK:** 0.1.0 belge/çalışma iskeleti kurulu; M0 tamamlandı olarak kayıtlı.
   Yapısal validator'ın geçmesi, tüm ürün veya operasyon gereksinimlerinin
   tamamlandığı anlamına gelmez. Constitution hâlâ Draft ve TBD alanları var.
-- **M1:** Kısmi; 373 backend testi (Stochastic API/momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
+- **M1:** Kısmi; 386 backend testi (VWEMA/Supertrend/Stochastic API/momentum/ML/OTT/RSS/NLP/provider ve kontrollü Streamlit dahil)
   dış ağ engelli geçti. Cockpit seti 10/10 deterministik senaryodur. İlk dört
   işin ve onaylı RSS politikasının dar dilimleri uygulandı; BL-001 ve genel kapanış kriterleri açık.
 - **M2:** Yerel demo auth, watchlist ve paper portföy temeli var; gerçek davet

@@ -1,6 +1,6 @@
 # BIST Teknik Analiz Uygulaması — Project Boot
 
-- **Document version:** 1.54
+- **Document version:** 1.55
 - **CDSK version:** 0.1.0
 - **Last updated:** 2026-11-06
 
@@ -41,10 +41,10 @@
 - **Version:** Release etiketi yok (`TBD`).
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
   tabanı In Progress. Güncel kabul kanıtı ve kalan işler M1_CLOSEOUT kaydında.
-- **Current focus:** Somut A sorusuna devam yanıtıyla ADR-0009 Accepted ve
-  uygulandı; API `stoch` son %K skaler/null döner.7 HTTP regresyonu,38 hedef
-  ve373 tam backend testi geçti. OS-01 dar dilimi kapandı; sıradaki iş
-  VWEMA/Supertrend hesapları ve aktif okuyucu bağlantıları. Genel M1 açık.
+- **Current focus:** VWEMA/Supertrend geçerli hesaplama ve API/sinyal okuyucu
+  dilimine13 test eklendi; tam386 test geçti. VST-01–03 seed/hacim/kısa veri
+  açıklıkları ayrı kayıtlı; sonraki iş dar sözleşme/düzeltme kapsamını
+  somutlaştırmak. Üretim değişmedi, genel M1 açık; OS-01 kapalı kalır.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
@@ -118,14 +118,14 @@
   Sonraki “onayladım, devam edelim” yanıtı somut ADR-0008'i Accepted yaptı.
   ADR-0009 somut “stoch=%K” onay sorusuna “Sıradaki Adım ile devam edelim.”
   yanıtı yalnız bu A eşlemesinin uygulama onayı olarak kaydedildi.
-- **Recently completed:** Accepted ADR-0009 OS-01 API alias düzeltmesi;
-  7 yeni HTTP testi/10 geçerli mutant,38 hedef/373 tam test. Core/legacy, auth,
-  diğer seçiciler, CI/dependency/kalıcı şema aynı; genel M1 açık.
+- **Recently completed:**13 VWEMA/Supertrend core/API testi,32 geçerli mutant;
+  hedef27/27 ve tam386 test. Gerçek sinyal/API okuyucuları ve literal/rasyonel
+  hesaplar; VST-01–03 ayrı karşı örneklerdir. Runtime/ADR değişmedi; M1 açık.
 
 ## 7. Current Priorities
 
-1. M1 kapanış listesini uygulamak: OS-01 kapandı; kalan VWEMA/Supertrend hesapları
-   ve aktif okuyucu bağlantılarını bağımsız beklenen değerlerle sınamak.
+1. M1 kapanış listesi: VST-01–03 VWEMA başlangıç/hacim ve Supertrend kısa veri
+   açıklıklarını dar sözleşme/düzeltme kararına dönüştürmek; ardından FVG/OB ve legacy tarayıcı bağlantıları.
    Momentum çekirdeği ve ML-01–08 dar dilimleri kapandı; genel M1/kalibrasyon açık.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
@@ -136,6 +136,11 @@
 
 ## 8. Known Constraints
 
+- VWEMA seed'i ilerideki başlangıç barlarından etkilenir, pozitif hacim
+  büyüklüğü sonraki Close*V/V hesabında sadeleşir. Supertrend kısa veride
+  fiyat yokken yön+1 verebilir;9 barlık kontrollü pozisyon okuyucusunda skor
+  katkısı görüldü, mevcut fetcher'ın15 bar filtresiyle canlı akış doğrulanmadı.
+  VST-01–03 açık; finansal formül/warmup değişikliği sessizce yapılmaz.
 - 2026-08-19 itibarıyla, `make ci` akışı backend çalışabilirlik ve smoke
   kontrolünü geçebilecek şekilde stabilize oldu; çevrimdışı deterministik test ve
   veri güvenilirliği açmazları halen izleniyor.
@@ -190,7 +195,7 @@
 - [x] Çevrimdışı market-data/API/teknik hesaplama, patern/sinyal ve RSS/NLP ile
   kontrollü Streamlit, ADR-0005 transport/tanı ve değişken MACD/Bollinger testleri
   ile temel BOS/kombolar ve risk/pozisyon/DayTrader testleri eklendi; toplam
-  backend test sayısı373;97 ML core testi ve17 kontrollü Streamlit testi içerir.
+  backend test sayısı386;97 ML core testi ve17 kontrollü Streamlit testi içerir.
   Momentum17 ve sonraki Stochastic API7 testi dar dilimleri kapattı; genel M1 açık.
   Bu, M1'in bütün kabul kriterlerinin kapandığı anlamına gelmez.
 - [x] On deterministik tarayıcı senaryosu üretim frontend'inde ve Next.js
@@ -199,6 +204,24 @@
 ## 11. AI Handoff
 
 ### Güncel devir — 2026-11-06
+
+- **VWEMA/Supertrend:** [Execution kaydı](docs/20-execution/2026-11-06-vwema-supertrend-tests.md).
+  12 core+1 gerçek API testi; sabit seed sonrası VWEMA alpha/zero-volume/config,
+  gerçek ATR/HL2/gap/yön, ayrı manuel fallback ve gerçek public sinyal/API okuyucuları.
+- **Kanıt:** Hedef27/27 (0.289 s);32 geçerli mutant assertion failure/0 error,
+  restore27/27; tam386 dış socket engelli (28.692 s), asyncio loopback serbest.
+  Üretim/formül/config/ADR/CI/dependency değişmedi; finansal etkinlik iddiası yok.
+  Bağımsız inceleme bulgusuz; reviewer son core12/12'yi doğruladı. Controller65
+  compile/39 belge/11 Boot/9 Accepted ADR/link/diff kontrolünü tamamladı.
+  Sıfır hacim testi yalnız taşıma noktasında biter.
+- **Açık / sonraki:** VST-01 seed lookahead, VST-02 pozitif hacim sadeleşmesi,
+  VST-03 kısa veri fiyat/yön ve seed geçmişi. Bunlar passing beklenti yapılmadı;
+  sonraki dar sözleşme/düzeltme kapsamı. FVG/OB ve legacy tarayıcılar/M1 açık.
+  Chart/browser, canlı sağlayıcı/uzak CI tekrar yok; upstream CDSK validator yokluğu sürer.
+- **Git:** Başlangıçfbac03c, aynı codex dalı; önceki açık commit/push yetkisi
+  sürer. Teslim SHA'sı Git/remote ref'ten izlenir; yeni ADR onayı alınmış sayılmaz.
+
+### Önceki ADR-0009 uygulama devri — 2026-11-06
 
 - **Onay/uygulama:** Somut ADR-0009 “stoch=%K” sorusuna “Sıradaki Adım ile
   devam edelim.”; Accepted kaydedilip uygulandı. API sonuç döngüsünde yalnız
@@ -869,6 +892,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
+| 1.55 | 2026-11-06 | VWEMA/Supertrend13 core/API testi ve32 geçerli mutant;386 tam test geçti. VST-01–03 ayrı açık seed/hacim/kısa veri karşı örnekleri; üretim değişmedi, genel M1 açık. |
 | 1.54 | 2026-11-06 | Somut A sorusuna devam yanıtıyla ADR-0009 Accepted uygulandı;7 yeni HTTP testi/10 geçerli mutant,373 tam test. OS-01 kapandı; sıradaki VWEMA/Supertrend/aktif okuyucular, genel M1 açık. |
 | 1.53 | 2026-11-06 | OS-01 gerçek HTTP500 ve komşu sözleşme kanıtı;31 mevcut test geçti. ADR-0009 skaler stoch=%K Proposed, özel onay bekliyor; runtime aynı ve M1 açık. |
 | 1.52 | 2026-11-06 | Momentum çekirdeğine17 test/34 geçerli mutant;366 backend testi dış socket engelli geçti. Runtime değişmedi; OS-01 Stochastic API okuyucu kusuru açık ve sonraki öncelik, genel M1 açık. |

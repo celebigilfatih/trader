@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — VWEMA/Supertrend geçerli hesaplama ve okuyucu testleri
+
+- 12 yeni core+1 gerçek API testi: sabit başlangıç sonrası VWEMA5/20 alpha,
+  sıfır hacim/config; gerçek ATR/HL2/gap/yön ve ayrı manuel fallback; public
+  sinyal/API okuyucuları, index/girdi ve sınırlı prefix. Üretim değişmedi.
+- Hedef27/27; tam386 backend testi dış socket engelli /28.692 s /OK.
+  32 geçerli transient mutant assertion failure/0 error; restore27/27.
+- VST-01 seed lookahead, VST-02 pozitif hacim sadeleşmesi ve VST-03 kısa veri
+  fiyat/yön/seed tutarsızlığı ayrı karşı örnekler; passing beklenti yapılmadı.
+  Sonraki iş dar sözleşme/düzeltme kapsamı; genel M1 ve diğer okuyucular açık.
+- Backlog/kapanış/milestone/mimari/kalite ve Boot1.55 güncel; yeni ADR/formül/
+  config/CI/dependency kararı yok. Frontend/canlı/uzak CI tekrar koşulmadı.
+  Bağımsız inceleme bulgusuz; son zero-volume kapsamı ardından hedef/mutant/tam
+  paket yeniden geçti.65 compile/CDSK yapı/link/diff kontrolü tamamlandı.
+
 ### 2026-11-06 — ADR-0009 Accepted ve OS-01 düzeltmesi
 
 - Somut `stoch=%K` onay sorusuna “Sıradaki Adım ile devam edelim.” yanıtı bu

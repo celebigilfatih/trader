@@ -8,7 +8,20 @@
   [gereksinimler](../00-product/REQUIREMENTS.md), BL-001/002/003 ve Accepted
   ADR-0004–0009. Constitution Draft olarak kalır.
 
-## Güncel ilerleme — OS-01 uygulandı
+## Güncel ilerleme — VWEMA/Supertrend test dilimi
+
+12 core+1 gerçek API testi eklendi; hedef27/27 ve tam **386 test /28.692 s /OK**,
+dış socket engelli.32 geçerli transient mutant assertion failure/0 error;
+restore27/27. Gerçek analyzer/ta ile yeterli veri ve sabit başlangıç alt kümesi,
+public sinyal ve API okuyucuları sınandı; üretim/formül/config/ADR değişmedi.
+[Plan/kanıt ve VST-01–03](2026-11-06-vwema-supertrend-tests.md).
+
+VWEMA seed lookahead/başlangıç sonrası hacim tanımı ile Supertrend kısa veri
+fiyat/yön/seed davranışı açık kalır; bunlar passing oracle yapılmadı. Sonraki
+iş dar sözleşme/düzeltme kapsamını somutlaştırmak. FVG/OB aktif bağlantıları,
+legacy StockScreener, provenance ve diğer entegrasyon kapıları nedeniyle M1 açık.
+
+## Önceki OS-01 uygulaması
 
 Somut A onay sorusuna verilen “Sıradaki Adım ile devam edelim.” yanıtıyla
 ADR-0009 Accepted kaydedilip uygulandı. API `stoch` seçicisi mevcut `stoch_k`
@@ -49,7 +62,7 @@ kanıtının eksik olduğunu belirtir. Test sayısı bir kabul eşiği değildir
 
 | Mevcut M1 ölçütü | Kanıt | Durum / kalan iş |
 |---|---|---|
-| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 373 backend testi dış socket bağlantıları engelli geçti. Teknik analiz, patern/BOS/kombolar, sinyal, risk/pozisyon, OTT, ML, momentum ve onaylı Stochastic API dilimi için bağımsız beklenen değerler/mutation kayıtları var. | **Kısmi.** OS-01 kapandı; kalan VWEMA/Supertrend/aktif bağlantılar ve legacy `StockScreener` zincirleri açık. P0-01/02. |
+| Ana hesaplamalar deterministik ve dış ağdan ayrılmıştır (REQ-002/003/007, BL-001) | 386 backend testi dış socket bağlantıları engelli geçti. Önceki dilimlere VWEMA/Supertrend geçerli hesaplama, gerçek sinyal/API okuyucu testleri eklendi; bağımsız oracles ve mutation kayıtları var. | **Kısmi.** OS-01 kapandı; VST-01–03 başlangıç/hacim/kısa veri açıklıkları, FVG/OB aktif bağlantıları ve legacy `StockScreener` zincirleri açık. P0-01/02. |
 | Veri ve mock/deneysel kaynaklar açıkça etiketlenir (REQ-005/006, BL-002) | Cockpit analiz/RSI için 10 deterministik tarayıcı senaryosu; legacy haber/ML için 17 kontrollü AppTest. Accepted A metinleri, ADR-0004 zaman/skor ve ADR-0008 gözlem ufku uygulandı. | **Onaylı dilim doğrulandı; genel kapsam kısmi.** Diğer aktif legacy sonuçların kaynak/son bar/deneysel nitelik ve hata sonrası eski sonuç davranışı ekran envanterine bağlanmalı. P0-03. |
 | Entegrasyon hatası görünürdür (REQ-001, BL-003) | OHLCV provider/adaptör ve RSS transport/tanı testleri; partial/failed RSS uyarıları ve cockpit veri yok/503/yeniden deneme senaryoları var. Sentetik fiyat veya başarısız NLP için sahte nötr skor üretilmez. | **Kısmi.** Legacy tarayıcı bazı istisnaları `continue` ile atlar; boş sonuç ile kesinti ayrımı ayrıca sınanmalı. Diğer aktif Yahoo yolları için bütçe/tanı ve okuyucu kapsamı netleşmeli. P0-02/04. |
 
@@ -107,13 +120,13 @@ beklenir. Bilinen bir kusur passing beklenti olarak sabitlenmemelidir.
 
 | Sıra / kayıt | Kapsam | Somut kapanış kanıtı | Karar sınırı |
 |---|---|---|---|
-| **1 — M1-P0-01 / BL-001** | Momentum çekirdek testleri ve OS-01 Accepted ADR-0009 dar API dilimi tamamlandı. Kalan VWEMA, Supertrend ve FVG/OB aktif okuyucu bağlantıları; trend gücü/özet önce aktif kullanım veya gerekçeli N/A açısından sınıflandırılır. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
+| **1 — M1-P0-01 / BL-001** | Momentum/OS-01 ve VWEMA/Supertrend geçerli alt kapsam testleri tamamlandı. VST-01–03 açıklıkları ve FVG/OB aktif okuyucu bağlantıları kalır; trend gücü/özet aktif kullanım veya gerekçeli N/A açısından sınıflandırılır. | Seçili gerçek hesaplayıcıda değişken OHLCV, pencere/warmup ve uygun eşik/yön dönüşü örnekleri; girdiyi koruma ve gerçek okuyucu sözleşmesi. Her alt dilim ayrı kaydedilir; yalnız çağrı sayısını artırmak yeterli değildir. | Mevcut davranışın doğrulaması yeni ADR gerektirmez. Finansal formül, warmup veya geçersiz girdi politikası değişecekse somut karar ve AGENTS onay kapısı uygulanır. |
 | **2 — M1-P0-02 / BL-001/003** | UI'nın gerçekten çağırdığı legacy `StockScreener` yolları; önce RSI, ardından boğa taramaları ve haftalık/aylık performans. | Gerçek analyzer + enjekte OHLCV ile dahil/dışarıda/eşitlik/sıralama; interval-period iletimi; boş/yetersiz veri, bir sembolün hatası ve tüm kaynakların kesintisi. Sağlayıcı ağı ve gerçek sleep kullanılmaz; boş sonuç/kesinti görünürlüğü ayrıca kontrol edilir. | Yeni çıktı alanı veya hata sözleşmesi gerekiyorsa önce somutlaştırılır; mevcut kusur sessizce doğru kabul edilmez. |
 | **3 — M1-P0-03 / BL-002** | Aktif legacy analiz/tarama sonuçlarını onaylı kaynak/deneysel metinler ve hata sonrası durumla eşleştiren ekran envanteri. | Her aktif sonuç için kaynak, veri zamanı, veri niteliği ve eksik/hatalı durumda gösterim kanıtı veya gerekçeli N/A; yanlış “canlı/gerçek” iddiası ve eski sonucun güncel sunulması kalmaz. Bağlanmayan mock yardımcılar ayrı kaydedilir. | Kabul edilmiş metinlerin uygulanması kapsamındadır; yeni ekran/model/metadata sözleşmesi ayrıca onay gerektirebilir. |
 | **4 — M1-P0-04 / BL-003** | OHLCV provider dışındaki aktif Yahoo/SDK çağrılarını ve hata okuyucularını sınıflandırma. | Her aktif yol için mevcut timeout/retry/hata dönüşü ve kullanıcı görünürlüğü; kontrollü başarı/boş/kesinti testi. Kullanılmayan yöntemler gerekçeli N/A. `.info` kullanan yardımcılar ortak OHLCV bütçesi altında diye raporlanmaz. | Yeni SDK bütçe/retry/transport politikası Accepted ADR-0005'in otomatik uzantısı değildir; gerekirse Proposed ADR ve açık onay. Üretim merkezi monitoring bu dilime eklenmez. |
 
-**Hemen sonraki adım:** M1-P0-01 kalan VWEMA/Supertrend hesapları ve aktif
-okuyucu bağlantılarını bağımsız beklenen değerlerle sınamak.
+**Hemen sonraki adım:** VST-01–03 seed/hacim/kısa veri açıklıklarını dar
+sözleşme/düzeltme kararına dönüştürmek; ardından kalan FVG/OB ve legacy tarayıcı bağlantıları.
 Çekirdek testlerinin geçmesi bütün okuyucuların çalıştığını göstermez.
 
 ## Tekrarlanabilirlik ve CI sınırı
@@ -166,3 +179,4 @@ Genel Definition of Done şablonu bu belgeyle topluca işaretlenmez. İlk kapan�
 kontrolü yalnız belgeleri değiştirdi; sonraki momentum dilimi 17 test ekledi.
 Sonraki Accepted ADR-0009 yalnız API alias'ı ve7 HTTP testi ekledi; CI,
 kalıcı veri modeli, bağımlılık ve diğer Accepted ADR'ler değişmedi.
+VWEMA/Supertrend adımı13 test daha ekledi; üretim politikası değiştirilmedi.

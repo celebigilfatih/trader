@@ -11,7 +11,7 @@
 | REQ-007 | Çekirdek hesaplamalar dış ağ olmadan test edilebilmelidir. | CDSK kalite standardı | Deterministik fixture'larla birim test paketi geçer. | Partially verified |
 
 2026-11-06 kanıtı ve kalan aktif yol eksikleri [M1 kapanış kontrolündedir](../20-execution/M1_CLOSEOUT.md).
-373 backend testi dış socket engelli geçti; bu sonuç bütün hesaplama ve legacy
+386 backend testi dış socket engelli geçti; bu sonuç bütün hesaplama ve legacy
 tarama yollarının doğrulandığı anlamına gelmez. Cockpit 10 deterministik browser
 senaryosu önceki checkpoint kanıtıdır; güncel pakette 17 kontrollü legacy AppTest
 vardır. REQ-004'ün önceki zorunlu tarih/skor metni Accepted
@@ -21,3 +21,7 @@ yeni veri sözleşmesi veya ürün kararı alınmadı.
 Momentum dilimi Stochastic/Williams %R/CCI çekirdeğine17 test ekledi; ardından
 Accepted ADR-0009 ile `stoch` skaler %K eşlemesi ve7 HTTP regresyonu OS-01'i
 kapattı. REQ-002/007'nin genel tamamlandığı iddia edilmez; ayrıntı kapanış matrisinde izlenir.
+
+Sonraki VWEMA/Supertrend dilimi13 test ve gerçek API/sinyal okuyucusu ekledi;
+seed/hacim/kısa veri VST-01–03 açıklıkları ayrı kayıtlıdır. Test toplamı bu
+gereksinimlerin veya finansal etkinliğin bütünüyle kapandığı anlamına gelmez.

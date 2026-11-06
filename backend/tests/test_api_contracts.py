@@ -185,6 +185,25 @@ class TestApiContracts(unittest.TestCase):
         self.assertAlmostEqual(payload["data"]["indicators"]["vwema_5"], 120.0)
         self.assertEqual(payload["meta"]["source"], "mock")
 
+    def test_analysis_reads_both_real_vwema_series_after_price_changes(self) -> None:
+        routers.TechnicalAnalyzer = self._orig_analyzer
+        closes = [100.0] * 37 + [121.0, 81.0, 142.0]
+        self._fixture.df["Open"] = closes
+        self._fixture.df["Close"] = closes
+        self._fixture.df["High"] = [value + 1 for value in closes]
+        self._fixture.df["Low"] = [value - 1 for value in closes]
+        self._fixture.df["Volume"] = 1.0
+        response = self.client.get(
+            "/api/v1/analysis/THYAO.IS?indicators=vwema_5,vwema_20",
+            headers=self._auth_headers(),
+        )
+        self.assertEqual(response.status_code, 200)
+        values = response.json()["data"]["indicators"]
+        self.assertEqual(set(values), {"vwema_5", "vwema_20"})
+        # alpha1/3 yields107,295/3,1016/9; alpha2/21 yields102,100,104.
+        self.assertAlmostEqual(values["vwema_5"], 1016 / 9)
+        self.assertAlmostEqual(values["vwema_20"], 104)
+
     def test_rsi_screener_with_real_calculator_includes_boundary(self) -> None:
         routers.TechnicalAnalyzer = self._orig_analyzer
         headers = self._auth_headers()

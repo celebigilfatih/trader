@@ -1,5 +1,24 @@
 # Test Strategy
 
+## VWEMA/Supertrend geçerli alt kapsam — 2026-11-06
+
+Yeni12 core ve1 gerçek API testi; hedef27/27 (0.289 s), tam386 test (28.692 s)
+dış socket engelli geçti.32 geçerli transient mutant assertion failure/0 error;
+restore27/27. Ta/pandas ve analyzer gerçek; yalnız manuel ATR fallback'i için
+dependency exception enjekte edilir. Sabit seed sonrası VWEMA5/20 alpha,
+sıfır hacim taşıma/config, gerçek ATR/gap/HL2 ve ayrı rolling fallback,
+yön/eşitlik/warmup, index/girdi; gerçek public generate_signal ve API scalar
+okuyucuları literal/rasyonel oracles ile sınanır.
+
+VST-01/02/03 yeniden üretilmiş açık davranışlardır; passing test yapılmadı.
+VWEMA prefix testi yalnız aynı sabit başlangıç penceresinden sonraki geçmişi
+kapsar; genel causality iddiası değildir. Supertrend mevcut temel bant/yön
+hesabıdır, canonical trailing standart veya finansal etkinlik doğrulanmaz.
+Doğrudan9 barla pozisyon okuyucusu tanısı, fetcher'ın mevcut15 bar alt sınırını
+değiştirmez veya canlı UI olayı kanıtlamaz. Üretim/CI/dependency/ADR aynı;
+frontend/browser/canlı/uzak CI tekrar yok, upstream validator yokluğu sürer.
+[Plan/kanıt](../20-execution/2026-11-06-vwema-supertrend-tests.md).
+
 ## Accepted ADR-0009 uygulama doğrulaması — 2026-11-06
 
 `test_stochastic_api.py`7 gerçek HTTP regresyonu ekledi: analyzer/ta ve auth
@@ -109,7 +128,7 @@ Bu belge adımında frontend build/browser ve canlı sağlayıcılar tekrar koş
   haliyle yanlış negatif üretebilir).
 - **Unit / offline API:** `make test-backend` veya
   `python3 -m unittest discover -s backend/tests -p 'test_*.py'`.
-  2026-11-06 güncel doğrulaması: 373 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
+  2026-11-06 güncel doğrulaması: 386 test. `test_technical_analysis.py` 17 testle gerçek hesaplayıcıyı
   sabit sentetik OHLCV ile sınar; `test_api_contracts.py` hem sözleşme doubles'ını
   hem gerçek hesaplayıcıyla analiz/RSI akışlarını kapsar. Beklenen değerler
   hesaplayıcının kendi çıktısından türetilmez. RSI mevcut konfigürasyonda 22 dönemdir.
