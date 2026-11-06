@@ -214,6 +214,8 @@
   loopback serbest.15 geçerli transient mutant assertion failure/0 error ile yakalandı.
   Restore hedef53/53;67 compile/39 belge/11 Boot/10 Accepted ADR/91 yerel link ve
   diff kontrolü geçti; upstream CDSK validator başarısı iddia edilmez.
+  Bağımsız son incelemede bulgu yok; incelemeci hedef53/53'ü2.305 s'de yeniden
+  doğruladı. Yürütücünün son tam kapısı412/412 (16.842 s); iki kanıt ayrıdır.
 - **Sınır / sonraki:** VST-01–03 dar dilimi kapandı; FVG/OB ve legacy tarayıcı
   okuyucuları, provenance ve genel M1 açık. Eski optional modeller yeniden eğitim,
   hesap cache'leri süreç yenileme ister; kullanıcı artifact'ı/servisi değiştirilmedi.

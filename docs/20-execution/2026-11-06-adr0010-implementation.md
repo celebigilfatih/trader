@@ -55,8 +55,10 @@ kartın gerçek AST bloğu kontrollü Streamlit AppTest içinde çalıştırıl�
 - [x] Yalnız VWEMA5 okuma/default ve card guard'ını düzelt; aynı AppTest GREEN.
 - [x] Core/API/AppTest ve tam backend dış socket engelli; uygun mutantlar,
   compile/CDSK yapı/link/ADR/diff. Mevcut geçerli13 hesaplama testi aynı kalır.
-- [ ] Bağımsız bütün değişiklik incelemesi; bulguların gereken TDD düzeltmesi;
-  belgeler/Boot güncellemesi ve son commit/push/remote SHA/clean tree doğrulaması.
+- [x] Bağımsız bütün değişiklik incelemesi; bulguların gereken TDD düzeltmesi;
+  belgeler/Boot güncellemesi.
+- Teslim: önceki açık yetkiyle aynı dala commit/push; remote SHA ve clean tree
+  son yanıtta doğrulanır. Nihai teslim SHA'sı git log/remote kaydıdır.
 
 ## Evidence
 
@@ -91,3 +93,31 @@ FVG/OB aktif bağlantıları, legacy StockScreener ve finansal etkinlik açık.
 Restore hedef53/53 (4.287 s).67 Python kaynağı compile,39 zorunlu CDSK dosyası,
 11 Boot bölümü,10 Accepted ADR ve91 değişen-belge yerel bağlantısı doğrulandı;
 git diff --check temiz. Bunlar upstream validator çalıştırıldığı anlamına gelmez.
+
+## Bağımsız son inceleme ve sınır kararları
+
+Fresh-context inceleme b990d44..d88ff30 ve iki tarihsel belge netleştirmesini
+kontrol etti; Critical/Important/Minor bulgu yok. İncelemecinin kendi koşusu
+**53/53 /2.305 s /OK**, dış socket engelli. Son görev kapısı tam paketi yeniden
+**412/412 /16.842 s /OK** doğruladı. Encoded log için helper grep'i binary match
+yazdı; gerçek log sonundaki test sayısı/OK ayrıca okunup doğrulandı.
+
+İncelemecinin kapsam dışında bıraktıkları için yürütücü kararları:
+
+1. Finansal etkinlik/canonical trailing doğrulanmış sayılmaz; onay mevcut temel
+   bant hesabını korur. Yanlış yorumlanırsa kullanıcı kanıtlanmamış yatırım
+   başarısı veya başka bir algoritma uygulandığı varsayımına düşebilir.
+2. Genel M1 kapatılmaz; yalnız VST-01–03 dilimi kapanır. Aksi karar kalan aktif
+   bağlantı/provenance/operasyon boşluklarını üretime hazırmış gibi gizler.
+3. Format1 ve otomatik eski semantik tespiti genişletilmez; onay bu değişikliği
+   içermez. Eski bu özellikli optional modeller yeniden eğitilmezse eski
+   semantiğe dayalı tahmin riski kalır; hiçbir kullanıcı artifact'ı açılmadı.
+4. Canlı sağlayıcı/full-browser/uzak CI/upstream CDSK başarısı iddia edilmez;
+   bu çalışma kontrollü backend/kart kanıtıdır. Bu ortamlara özel entegrasyon
+   kusurları hâlâ mümkün; upstream validator bilinen konumlarda yoktur.
+5. Tam412 koşusu yürütücünün doğrudan kanıtıdır; bağımsız incelemecinin tekrar
+   kapsamı53'tür. Tam pakette ikinci bağımsız koşu varmış gibi sunulmaz;
+   tüm test sonuçlarının bağımsız tekrar güvencesi yoktur.
+
+Ertelenen Minor bulgu yok. Sonraki adım FVG/OB gerçek aktif okuyucu ve legacy
+tarayıcı bağlantılarını mevcut sözleşmeyle doğrulamak; genel M1 açık kalır.

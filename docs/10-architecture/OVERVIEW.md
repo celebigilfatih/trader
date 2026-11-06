@@ -90,10 +90,10 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   eşleyerek OS-01'i kapattı.7 gerçek HTTP testi K≠D,zero/null,mixed/meta ve400/401
   doğrular; dış ad/skaler biçim ve core/legacy seriler korunur.
   [Uygulama kanıtı](../20-execution/2026-11-06-adr0009-implementation.md).
-- VWEMA/Supertrend için13 test geçerli sabit-seed/yeterli veri alt kümesini,
-  gerçek API ve sinyal okuyucularını kapsar. VST-01 VWEMA seed lookahead,
+- Önceki VWEMA/Supertrend13 testi geçerli sabit-seed/yeterli veri alt kümesini,
+  gerçek API ve sinyal okuyucularını kapsadı. O aşamada VST-01 VWEMA seed lookahead,
   VST-02 başlangıç sonrası pozitif hacmin sadeleşmesi ve VST-03 kısa Supertrend
-  fiyat/yön/seed tutarsızlığı açıktır. Mevcut temel bant hesabı canonical
+  fiyat/yön/seed tutarsızlığı açıktı. Mevcut temel bant hesabı canonical
   trailing Supertrend diye doğrulanmadı; [test ve karşı örnek kaydı](../20-execution/2026-11-06-vwema-supertrend-tests.md).
   [ADR-0010](../50-decisions/ADR-0010.md) A paketi **Accepted ve uygulandı**:
   nedensel hacim ağırlığı + sabit Supertrend hazır olma, strict/atomik girdi ve

@@ -15,7 +15,7 @@ anchor hatası mutant sonucu sayılmadı, diskte üretim mutasyonu yapılmadı.
 VST-01–03 dar dilimi kapandı; canonical/finansal etkinlik ve genel M1 açıktır.
 Frontend/canlı/uzak CI tekrar koşulmadı; upstream CDSK validator ortamda yoktur.
 
-## VWEMA/Supertrend geçerli alt kapsam — 2026-11-06
+## Önceki VWEMA/Supertrend geçerli alt kapsam — 2026-11-06
 
 Yeni12 core ve1 gerçek API testi; hedef27/27 (0.289 s), tam386 test (28.692 s)
 dış socket engelli geçti.32 geçerli transient mutant assertion failure/0 error;
@@ -25,7 +25,7 @@ sıfır hacim taşıma/config, gerçek ATR/gap/HL2 ve ayrı rolling fallback,
 yön/eşitlik/warmup, index/girdi; gerçek public generate_signal ve API scalar
 okuyucuları literal/rasyonel oracles ile sınanır.
 
-VST-01/02/03 yeniden üretilmiş açık davranışlardır; passing test yapılmadı.
+O aşamada VST-01/02/03 yeniden üretilmiş açık davranışlardı; passing test yapılmadı.
 VWEMA prefix testi yalnız aynı sabit başlangıç penceresinden sonraki geçmişi
 kapsar; genel causality iddiası değildir. Supertrend mevcut temel bant/yön
 hesabıdır, canonical trailing standart veya finansal etkinlik doğrulanmaz.
