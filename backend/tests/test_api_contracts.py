@@ -204,6 +204,43 @@ class TestApiContracts(unittest.TestCase):
         self.assertAlmostEqual(values["vwema_5"], 1016 / 9)
         self.assertAlmostEqual(values["vwema_20"], 104)
 
+    def test_analysis_vwema_weights_late_volume_for_both_periods(self) -> None:
+        routers.TechnicalAnalyzer = self._orig_analyzer
+        self._fixture.df["Open"] = [100.0] * 39 + [130.0]
+        self._fixture.df["Close"] = [100.0] * 39 + [130.0]
+        self._fixture.df["High"] = [101.0] * 39 + [131.0]
+        self._fixture.df["Low"] = [99.0] * 39 + [129.0]
+        headers = self._auth_headers()
+        for volume, w5, w20 in ((1, 110, 720 / 7), (1000, 21700 / 167, 87300 / 673)):
+            with self.subTest(volume=volume):
+                self._fixture.df["Volume"] = [1.0] * 39 + [float(volume)]
+                response = self.client.get("/api/v1/analysis/THYAO.IS?indicators=vwema_5,vwema_20", headers=headers)
+                self.assertEqual(response.status_code, 200)
+                values = response.json()["data"]["indicators"]
+                self.assertEqual(set(values), {"vwema_5", "vwema_20"})
+                self.assertAlmostEqual(values["vwema_5"], w5)
+                self.assertAlmostEqual(values["vwema_20"], w20)
+
+    def test_analysis_all_zero_volume_vwema_is_null(self) -> None:
+        routers.TechnicalAnalyzer = self._orig_analyzer
+        self._fixture.df["Volume"] = 0.0
+        response = self.client.get("/api/v1/analysis/THYAO.IS?indicators=vwema_5,vwema_20", headers=self._auth_headers())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["indicators"], {"vwema_5": None, "vwema_20": None})
+
+    def test_analysis_supertrend_publishes_price_only_after_eleven_bars(self) -> None:
+        routers.TechnicalAnalyzer = self._orig_analyzer
+        base = self._fixture.df.copy()
+        base["Open"], base["Close"], base["High"], base["Low"] = 100.0, 100.0, 101.0, 99.0
+        headers = self._auth_headers()
+        for count, expected in ((9, None), (10, None), (11, 94.0)):
+            with self.subTest(count=count):
+                self._fixture.df = base.iloc[:count].copy()
+                self._fixture.as_of = self._fixture.df.index[-1].to_pydatetime()
+                response = self.client.get("/api/v1/analysis/THYAO.IS?indicators=supertrend", headers=headers)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["data"]["indicators"], {"supertrend": expected})
+
     def test_rsi_screener_with_real_calculator_includes_boundary(self) -> None:
         routers.TechnicalAnalyzer = self._orig_analyzer
         headers = self._auth_headers()

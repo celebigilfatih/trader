@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import ta
+from numbers import Integral, Real
 from typing import Dict, List, Optional, Tuple
 from .config import INDICATORS_CONFIG
 from .pattern_recognition_advanced import AdvancedPatternRecognition
@@ -85,44 +86,67 @@ class TechnicalAnalyzer:
         
         self.indicators[indicator_name] = vwma
     
+    @staticmethod
+    def _indicator_period(value) -> int:
+        if isinstance(value, (bool, np.bool_)) or not isinstance(value, Integral) or value <= 0:
+            raise ValueError("Indicator period must be a positive integer")
+        return int(value)
+
+    @staticmethod
+    def _indicator_number(value, label: str, allow_zero: bool = False) -> float:
+        if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
+            raise ValueError(f"{label} must contain real numbers")
+        try:
+            number = float(value)
+        except (OverflowError, TypeError, ValueError) as exc:
+            raise ValueError(f"{label} must be finite") from exc
+        if not np.isfinite(number) or number < 0 or (number == 0 and not allow_zero):
+            raise ValueError(f"{label} must be finite and {'nonnegative' if allow_zero else 'positive'}")
+        return number
+
+    def _indicator_values(self, column: str, allow_zero: bool = False) -> np.ndarray:
+        return np.array([self._indicator_number(value, column, allow_zero)
+                         for value in self.data[column]], dtype=float)
+
     def _calculate_vwema(self, indicator_name: str) -> None:
-        """Hacim Ağırlıklı Üssel Hareketli Ortalama hesaplar"""
-        period = INDICATORS_CONFIG[indicator_name]['period']
-        
-        # VWEMA hesaplaması: EMA'yı hacim ile ağırlıklandırma
-        # İlk olarak, close price'ı volume ile çarpıyoruz
-        volume_weighted_price = self.data['Close'] * self.data['Volume']
-        
-        # EMA hesaplama katsayısı
-        multiplier = 2 / (period + 1)
-        
-        # İlk değer olarak VWMA kullan
-        initial_vwma = (volume_weighted_price.iloc[:period].sum() / 
-                       self.data['Volume'].iloc[:period].sum()) if len(self.data) >= period else self.data['Close'].iloc[0]
-        
-        vwema_values = []
-        
-        # EMA hesaplama
-        for i in range(len(self.data)):
-            if i == 0:
-                vwema_values.append(initial_vwma)
+        """ADR-0010 causal EMA(price*volume)/EMA(volume), first positive seed."""
+        period = self._indicator_period(INDICATORS_CONFIG[indicator_name]['period'])
+        close = self._indicator_values('Close')
+        volume = self._indicator_values('Volume', allow_zero=True)
+        try:
+            alpha = 2 / (period + 1)
+        except (OverflowError, ValueError) as exc:
+            raise ValueError("VWEMA smoothing must be representable") from exc
+        if not np.isfinite(alpha) or not 0 < alpha <= 1:
+            raise ValueError("VWEMA smoothing must be representable")
+        decay = 1 - alpha
+        values = np.full(len(close), np.nan, dtype=float)
+        level = None
+        effective_volume = 0.0
+        for i, (price, weight) in enumerate(zip(close, volume)):
+            if weight == 0:
+                if level is not None:
+                    effective_volume *= decay
+                    values[i] = level
+                continue
+            if level is None or alpha == 1:
+                level, effective_volume = price, weight
             else:
-                current_volume = self.data['Volume'].iloc[i]
-                if current_volume > 0:
-                    current_vw_price = volume_weighted_price.iloc[i] / current_volume
-                    current_vwema = (current_vw_price * multiplier) + (vwema_values[-1] * (1 - multiplier))
-                else:
-                    current_vwema = vwema_values[-1]
-                vwema_values.append(current_vwema)
-        
-        # Pandas Series olarak oluştur
-        import pandas as pd
-        vwema_series = pd.Series(vwema_values, index=self.data.index)
-        
-        # NaN değerleri temizle
-        vwema_series = vwema_series.fillna(self.data['Close'])
-        
-        self.indicators[indicator_name] = vwema_series
+                # Normalized masses give the same N/D ratio without price*volume
+                # overflow. Zero-volume bars still decay the denominator state.
+                scale = max(effective_volume, weight)
+                old_mass = decay * (effective_volume / scale)
+                new_mass = alpha * (weight / scale)
+                total_mass = old_mass + new_mass
+                if not np.isfinite(total_mass) or total_mass <= 0:
+                    raise ValueError("VWEMA mass must remain finite and positive")
+                blend = new_mass / total_mass
+                level = price if blend == 1 else level + blend * (price - level)
+                effective_volume = scale * total_mass
+            if not np.isfinite(level) or level <= 0 or not np.isfinite(effective_volume):
+                raise ValueError("VWEMA result must remain finite and positive")
+            values[i] = level
+        self.indicators[indicator_name] = pd.Series(values, index=self.data.index, dtype=float)
     
     def _calculate_rsi(self, indicator_name: str) -> None:
         """RSI hesaplar - Gelişmiş pivot point ve trend çizgisi analizi ile"""
@@ -289,69 +313,45 @@ class TechnicalAnalyzer:
         )
     
     def _calculate_supertrend(self, indicator_name: str) -> None:
-        """SuperTrend indikatörünü hesaplar"""
+        """ADR-0010 readiness with the existing basic-band/direction recurrence."""
         config = INDICATORS_CONFIG[indicator_name]
-        period = config['period']
-        multiplier = config['multiplier']
-        
+        period = self._indicator_period(config['period'])
+        multiplier = self._indicator_number(config['multiplier'], 'Supertrend multiplier')
+        high_values = self._indicator_values('High')
+        low_values = self._indicator_values('Low')
+        close_values = self._indicator_values('Close')
+        if (high_values < low_values).any():
+            raise ValueError("High must be greater than or equal to Low")
+        prices = np.full(len(self.data), np.nan, dtype=float)
+        directions = np.full(len(self.data), np.nan, dtype=float)
+        if len(self.data) <= period:
+            self.indicators['supertrend'] = pd.Series(prices, index=self.data.index, dtype=float)
+            self.indicators['supertrend_trend'] = pd.Series(directions, index=self.data.index, dtype=float)
+            return
+
+        high = pd.Series(high_values, index=self.data.index)
+        low = pd.Series(low_values, index=self.data.index)
+        close = pd.Series(close_values, index=self.data.index)
         try:
-            # ATR hesapla
-            atr = ta.volatility.average_true_range(
-                self.data['High'], self.data['Low'], self.data['Close'], window=period
-            )
-        except:
-            # Eğer ta.volatility çalışmazsa manuel ATR hesapla
-            high_low = self.data['High'] - self.data['Low']
-            high_close = abs(self.data['High'] - self.data['Close'].shift())
-            low_close = abs(self.data['Low'] - self.data['Close'].shift())
-            
+            atr = ta.volatility.average_true_range(high, low, close, window=period)
+        except Exception:
+            high_low = high - low
+            high_close = abs(high - close.shift())
+            low_close = abs(low - close.shift())
             true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
             atr = true_range.rolling(window=period).mean()
-        
-        # HL2 (Typical Price)
-        hl2 = (self.data['High'] + self.data['Low']) / 2
-        
-        # Upper ve Lower Band hesapla
-        upper_band = hl2 + (multiplier * atr)
-        lower_band = hl2 - (multiplier * atr)
-        
-        # SuperTrend hesapla
-        supertrend = pd.Series(index=self.data.index, dtype=float)
-        trend = pd.Series(index=self.data.index, dtype=int)
-        
-        # NaN değerleri temizle
-        upper_band = upper_band.bfill() if hasattr(upper_band, 'bfill') else upper_band
-        lower_band = lower_band.bfill() if hasattr(lower_band, 'bfill') else lower_band
-        
-        # İlk geçerli indeksi bul
-        first_valid_idx = period
-        if first_valid_idx >= len(self.data):
-            first_valid_idx = len(self.data) - 1
-        
-        # İlk değerleri ayarla
-        supertrend.iloc[first_valid_idx] = lower_band.iloc[first_valid_idx]
-        trend.iloc[first_valid_idx] = 1
-        
-        for i in range(first_valid_idx + 1, len(self.data)):
-            # Trend belirleme
-            if pd.isna(supertrend.iloc[i-1]):
-                trend.iloc[i] = 1
-                supertrend.iloc[i] = lower_band.iloc[i]
-            elif self.data['Close'].iloc[i] <= supertrend.iloc[i-1]:
-                trend.iloc[i] = -1
-            elif self.data['Close'].iloc[i] >= supertrend.iloc[i-1]:
-                trend.iloc[i] = 1
-            else:
-                trend.iloc[i] = trend.iloc[i-1]
-            
-            # SuperTrend değeri
-            if trend.iloc[i] == 1:
-                supertrend.iloc[i] = lower_band.iloc[i]
-            else:
-                supertrend.iloc[i] = upper_band.iloc[i]
-        
-        self.indicators['supertrend'] = supertrend
-        self.indicators['supertrend_trend'] = trend
+        midpoint = low_values + (high_values - low_values) / 2
+        with np.errstate(over='ignore', invalid='ignore'):
+            upper = midpoint + multiplier * np.asarray(atr, dtype=float)
+            lower = midpoint - multiplier * np.asarray(atr, dtype=float)
+        if not np.isfinite(upper[period:]).all() or not np.isfinite(lower[period:]).all():
+            raise ValueError("Supertrend bands must remain finite")
+        prices[period], directions[period] = lower[period], 1.0
+        for i in range(period + 1, len(prices)):
+            directions[i] = -1.0 if close_values[i] <= prices[i-1] else 1.0
+            prices[i] = lower[i] if directions[i] == 1 else upper[i]
+        self.indicators['supertrend'] = pd.Series(prices, index=self.data.index, dtype=float)
+        self.indicators['supertrend_trend'] = pd.Series(directions, index=self.data.index, dtype=float)
         
     def _calculate_ott(self, indicator_name: str) -> None:
         """Optimized Trend Tracker (OTT) hesaplar"""

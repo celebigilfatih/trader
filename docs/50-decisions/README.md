@@ -22,4 +22,4 @@
 | [ADR-0007](ADR-0007.md) | ML hedefi ve eğitimden tahmine ortak ön işleme sözleşmesi | Accepted |
 | [ADR-0008](ADR-0008.md) | ML ufuk sınırı, confidence girdisi ve gözlem ufku sunumu | Accepted |
 | [ADR-0009](ADR-0009.md) | Stochastic API seçicisinin skaler %K eşlemesi | Accepted |
-| [ADR-0010](ADR-0010.md) | VWEMA hacim ağırlığı ve Supertrend hazır olma sözleşmesi | Proposed |
+| [ADR-0010](ADR-0010.md) | VWEMA hacim ağırlığı ve Supertrend hazır olma sözleşmesi | Accepted |
