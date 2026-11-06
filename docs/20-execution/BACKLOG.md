@@ -2,6 +2,17 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+OS-01 için [ADR-0009](../50-decisions/ADR-0009.md) **Proposed** hazır:
+`data.indicators.stoch` = son %K (float/null); K/D alanları veya yeni query
+seçicisi eklenmez. K≠D/zero/null/mixed/meta/400/401 kabul ölçütleri
+[tasarım kaydındadır](2026-11-06-stochastic-api-design.md). Özel A onayı bekleniyor;
+genel devam talebi bu önceden tanımlanmamış semantik seçimin onayı sayılmadı.
+Gerçek HTTP `stoch`500 ve komşu yollar yeniden gözlendi; mevcut31 API/momentum
+testi dış socket engelli geçti. Bu belge adımında runtime/test/CI/config değişmedi.
+Sonraki adım özel karar, ardından dar TDD düzeltmesi; OS-01 ve M1 açık.
+
+### Önceki momentum test dilimi
+
 M1-P0-01 Stochastic/Williams %R/CCI çekirdek dilimi tamamlandı: 17 yeni gerçek
 hesaplama testi; 34 geçerli transient mutant assertion failure/0 error. Tam
 366 backend testi dış socket engelli / 28.443 s / OK. Girdi/index/prefix,
@@ -11,8 +22,8 @@ Plan/kanıt [momentum kaydındadır](2026-11-06-momentum-indicator-tests.md).
 **OS-01 — açık P0 okuyucu kusuru:** `analyze_symbol(..., indicators='stoch')`
 gerçek hesaplayıcı + kontrollü provider ile `KeyError('stoch')` verir.
 Üretici `stoch_k/stoch_d`, API okuyucusu seçici `stoch` anahtarını kullanır.
-Bu kusur passing beklenti yapılmadı; sonraki öncelik API çıktı sözleşmesini
-somutlaştırmak, alan/veri sözleşmesi değişecekse somut öneri ve AGENTS onayı.
+Bu kusur passing beklenti yapılmadı; o aşamada gereken sözleşme incelemesi
+ve somut öneri yukarıda tamamlandı, özel onay bekliyor.
 Ardından VWEMA/Supertrend ve diğer aktif okuyucu boşlukları kalır. M1 açık.
 
 ### Önceki M1 kapanış kontrolü

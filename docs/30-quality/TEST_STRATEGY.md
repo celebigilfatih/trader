@@ -1,5 +1,18 @@
 # Test Strategy
 
+## OS-01 sözleşme incelemesi — 2026-11-06
+
+Üretim/test dosyaları değişmeden gerçek FastAPI TestClient + fixture provider
+ile `stoch`500, Williams200(-25), CCI200(null warmup), EMA200; `stoch_k/stoch_d`
+400 ve kimliksiz401 gözlendi. Gerçek analyzer K=75/D=200/3 verdi. Mevcut14 API
+ve17 momentum testi **31/31 /0.237 s /OK**, dış socket engelli (loopback serbest).
+Bu koşu düzeltme kanıtı değildir;500 normatif passing test yapılmadı. Önerilen
+200/%K, zero/null/mixed/meta/400/401 regresyonları onay sonrası yazılacaktır.
+[ADR-0009](../50-decisions/ADR-0009.md) Proposed;
+[tasarım/kabul kaydı](../20-execution/2026-11-06-stochastic-api-design.md).
+Tam366-test kaydı önceki dilime aittir; bu belge adımında frontend/canlı/uzak CI
+ve upstream CDSK tekrar doğrulanmadı. Runtime/manifest/CI değişikliği yoktur.
+
 ## Momentum hesaplama dilimi — 2026-11-06
 
 `test_momentum_indicators.py` 17 gerçek hesaplama testi ekler: K14/D3 ve

@@ -1,6 +1,6 @@
 # BIST Teknik Analiz Uygulaması — Project Boot
 
-- **Document version:** 1.52
+- **Document version:** 1.53
 - **CDSK version:** 0.1.0
 - **Last updated:** 2026-11-06
 
@@ -41,16 +41,18 @@
 - **Version:** Release etiketi yok (`TBD`).
 - **Active sprint / milestone:** M0 CDSK başlangıcı tamamlandı; M1 güvenilirlik
   tabanı In Progress. Güncel kabul kanıtı ve kalan işler M1_CLOSEOUT kaydında.
-- **Current focus:** Stochastic/Williams %R/CCI çekirdek dilimi 17 yeni testle
-  doğrulandı; toplam 366 backend testi. Sonraki öncelik OS-01 Stochastic API
-  anahtar/çıktı sözleşmesini somutlaştırmak; ardından VWEMA/Supertrend ve aktif
-  okuyucu boşlukları. Genel M1 açık; yeni ADR veya runtime değişikliği yok.
+- **Current focus:** OS-01 sözleşme incelemesi tamamlandı; ADR-0009 Proposed,
+  `stoch` skaler/null alanı son %K'ya eşlensin önerisi özel onay bekliyor.
+  Mevcut31 API/momentum testi yeniden geçti; tam366 test önceki dilim kanıtıdır.
+  Runtime değişmedi, OS-01 ve genel M1 açık. Onay sonrası dar API düzeltmesi;
+  ardından VWEMA/Supertrend ve aktif okuyucu boşlukları.
 - **Critical risks:** Finansal çıktının yanlış yorumlanması; mock/gerçek veri
   karışması; dış servis kesintisi; ağ bağımlı ve yetersiz testler; `.next` gibi
   frontend build artefaktı yönetimi; açık veri lisansı/dağıtım modeli olmaması.
 - **Blocking decisions:** Gerçek kullanıcı erişimi operasyon sahipliği,
   destek matrisi ve üretim kapıları. ADR-0004–0008 açık onayları uygulandı;
   UI yayılım kalibrasyonu/finansal etkinlik bu onaylara dahil değildir.
+  ADR-0009 ilk K/D anlam eşlemesi özel karar bekliyor; Accepted sayılmaz.
 - **Last status update:** 2026-11-06
 
 ## 3. Repository Navigation
@@ -95,6 +97,7 @@
 | OTT seed ve yön serisi sözleşmesi | Accepted ve uygulandı | `ADR-0006`, `docs/50-decisions/ADR-0006.md` |
 | ML hedef/ön işleme ve model artifact sözleşmesi | Accepted ve uygulandı | [ADR-0007](docs/50-decisions/ADR-0007.md) |
 | ML ufuk cap, confidence girdisi ve gözlem sunumu | Accepted ve uygulandı | [ADR-0008](docs/50-decisions/ADR-0008.md) |
+| Stochastic API `stoch` seçicisini son %K'ya eşleme | Proposed; özel karar bekliyor | [ADR-0009](docs/50-decisions/ADR-0009.md) |
 | 3D Web Experience profili uygulanmaz | N/A for current scope | `docs/70-experience/3D_WEB_EXPERIENCE.md` |
 
 > Yalnızca en önemli güncel kararları özetle. Kararın tam gerekçesi ve sonuçları
@@ -113,14 +116,14 @@
   onay sorusuna “onaylıyorum” dedi; başka algoritma/version/üretim onayı değildir.
   Sonraki somut ADR-0007 sorusuna “Onaylıyorum.” ile o sözleşme de Accepted oldu.
   Sonraki “onayladım, devam edelim” yanıtı somut ADR-0008'i Accepted yaptı.
-- **Recently completed:** M1 kabul/kanıt matrisi ve ilk momentum dilimi;
-  17 yeni test/34 geçerli mutant ve toplam366 backend testi. Önceki ADR-0008
-  ufuk/helper/gözlem sunumu kapandı;97 ML core/17 controlled UI kayıtları korunur.
+- **Recently completed:** OS-01 kök neden/gerçek HTTP reproducer ve Proposed
+  ADR-0009 alternatif/kabul/rollback kaydı.31 mevcut API/momentum testi yeniden
+  geçti. Önceki17 yeni test/34-mutant/tam366 ve ADR-0008 kayıtları tarihsel kanıttır.
 
 ## 7. Current Priorities
 
-1. M1 kapanış listesini uygulamak: OS-01 Stochastic API okuyucusu için çıktı
-   sözleşmesini netleştirmek; ardından VWEMA/Supertrend ve aktif okuyucu testleri.
+1. M1 kapanış listesini uygulamak: Proposed ADR-0009 A eşlemesine özel karar;
+   onaydan sonra OS-01 TDD düzeltmesi, ardından VWEMA/Supertrend/aktif okuyucu testleri.
    Momentum çekirdeği ve ML-01–08 dar dilimleri kapandı; genel M1/kalibrasyon açık.
 2. Next.js cockpit’de auth, hata yönetimi, boş veri ve retry akışlarını sağlamlaştırmak.
 3. Paper portföy ve karar cockpit’i için write operasyonlarını (ekleme/çıkarma) ve
@@ -194,6 +197,27 @@
 ## 11. AI Handoff
 
 ### Güncel devir — 2026-11-06
+
+- **OS-01 önerisi:** [ADR-0009](docs/50-decisions/ADR-0009.md) Proposed;
+  [tasarım/kabul kaydı](docs/20-execution/2026-11-06-stochastic-api-design.md).
+  `data.indicators.stoch` son %K(float/null) olsun; dış ad/tür korunur, D/yeni
+  alan/query seçicisi eklenmez. K/D anlamı mevcut belgelerde tanımlanmadığından
+  ilk semantik eşleme AGENTS veri modeli kapısı kapsamında özel onaya sunulur.
+- **Yeni kanıt:** Gerçek HTTP+fixture ile stoch500, Williams200(-25), CCI200(null),
+  EMA200; K/D query adları400, kimliksiz401. Gerçek analyzer K75/D200/3;
+  route seçici adıyla seri arar. Mevcut14 API+17 momentum=31 test /0.237 s /OK,
+  dış socket engelli (loopback serbest).500 passing beklenti yapılmadı;
+  tam366/34-mutant önceki dilim kanıtıdır, bu belge adımında tekrar yok.
+  Bağımsız tasarım incelemesi engelleyici bulgusuz; annotation ifadesi düzeltildi.
+  63 compile/39 belge/11 Boot/8 Accepted+1 Proposed ADR ve link/diff kontrolü geçti.
+- **Sonraki / sınır:** A özel onayından sonra gerçek HTTP200/%K red→green,
+  zero/null/mixed/meta/400/401 ve tam backend kontrolleri; sonra kalan çekirdek.
+  Runtime/test/CI/config/manifest/Accepted ADR değişmedi. OS-01/M1 açık;
+  frontend/canlı/uzak CI tekrar yok, upstream CDSK validator ortamda bulunmuyor.
+- **Git:** Başlangıç8dd5ddd, aynı codex dalı; önceki açık commit/push yetkisi
+  belge teslimi için sürer. Bu talep ADR-0009 özel A onayı sayılmadı.
+
+### Önceki momentum test devri — 2026-11-06
 
 - **Momentum dilimi:** [Execution kaydı](docs/20-execution/2026-11-06-momentum-indicator-tests.md).
   Gerçek add_indicator/get_latest zincirinde17 test; K14/D3, Williams14, CCI20,
@@ -823,6 +847,7 @@
 
 | Version | Date | Summary |
 |---|---|---|
+| 1.53 | 2026-11-06 | OS-01 gerçek HTTP500 ve komşu sözleşme kanıtı;31 mevcut test geçti. ADR-0009 skaler stoch=%K Proposed, özel onay bekliyor; runtime aynı ve M1 açık. |
 | 1.52 | 2026-11-06 | Momentum çekirdeğine17 test/34 geçerli mutant;366 backend testi dış socket engelli geçti. Runtime değişmedi; OS-01 Stochastic API okuyucu kusuru açık ve sonraki öncelik, genel M1 açık. |
 | 1.51 | 2026-11-06 | M1 kabul/kanıt matrisi ve sıralı P0 kapanış listesi;349 test dış socket engelli yeniden geçti. Requirement/CI/release belge çelişkileri uyumlandı; sonraki dilim Stochastic/Williams %R/CCI, M1 açık. |
 | 1.50 | 2026-11-06 | ADR-0008 özel onayla uygulandı;18 yeni/349 backend testi,97 ML core/17 controlled UI. Tek cap/helper/gözlem sunumu kapandı; fbc7c43 aynı dala push, genel M1 açık. |

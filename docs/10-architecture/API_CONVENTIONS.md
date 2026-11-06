@@ -33,3 +33,12 @@ interval=..., timeout_seconds=...)` keyword'ünü kabul etmelidir. Gerçek
 `BISTDataFetcher` için yeni keyword isteğe bağlıdır; eski positional/legacy
 çağrılar override vermeden aynı davranışı korur. Bu iç adaptör sözleşmesi
 yeni HTTP endpoint veya response alanı eklemez.
+
+## Stochastic seçicisi — Proposed sözleşme
+
+OS-01: `stoch` seçimi gerçek hesaplayıcıda `stoch_k/stoch_d` üretirken route
+`stoch` anahtarını arar ve HTTP500 verir. Mevcut yanıt seçilen ad başına
+skaler/null biçimindedir; K/D anlamı tanımlanmamıştır.
+[ADR-0009](../50-decisions/ADR-0009.md) Proposed: dış `stoch` anahtarını %K'ya
+eşlemek, D'yi/yeni alanları API'ye eklememek. Özel karar onayı ve uygulaması
+bekleniyor; bu bölüm mevcut çalışan API davranışı iddiası değildir.

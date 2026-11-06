@@ -10,6 +10,12 @@
 
 ## Güncel ilerleme — momentum test dilimi
 
+OS-01 sonraki sözleşme incelemesi tamamlandı: [ADR-0009](../50-decisions/ADR-0009.md)
+**Proposed**, `stoch` altında skaler %K önerir. Gerçek HTTP/fixture akışında
+`stoch`500, Williams/CCI200, yeni olmayan K/D query adları400 ve auth401
+doğrulandı; mevcut31 API/momentum testi geçti. Yeni eşleme uygulanmadı;
+özel A onayı bekleniyor. [Tasarım ve kabul kaydı](2026-11-06-stochastic-api-design.md).
+
 Stochastic/Williams %R/CCI çekirdek dilimi 17 gerçek hesaplama testiyle
 doğrulandı; 34 geçerli bellek içi mutant assertion failure verdi, error yok.
 Tam paket **366 test / 28.443 s / OK**, dış socket engelli; asyncio loopback
@@ -21,9 +27,9 @@ Plan ve ayrıntı [momentum execution kaydındadır](2026-11-06-momentum-indicat
 üretirken API seçici anahtarı okumaktadır. Williams/CCI aynı reproducer'da
 sayısal yanıt verir. Bu, çekirdek hesabın veya API Stochastic entegrasyonunun
 tamamlandığı iddiası değildir. Hatalı API davranışı passing test yapılmadı.
-Sonraki öncelik OS-01 için mevcut API sözleşmesini netleştirmek; alan/veri
-sözleşmesi değişecekse somut öneri ve AGENTS onayı gerekir. Ardından kalan
-VWEMA/Supertrend ve aktif okuyucu bağlantıları izlenir.
+OS-01 sözleşme önerisi ADR-0009'da hazır; özel onaydan sonra dar eşleme ve
+gerçek HTTP regresyonu uygulanır. Ardından kalan VWEMA/Supertrend ve aktif
+okuyucu bağlantıları izlenir.
 
 ## Kabul ölçütü ve kanıt matrisi
 
@@ -95,8 +101,8 @@ beklenir. Bilinen bir kusur passing beklenti olarak sabitlenmemelidir.
 | **3 — M1-P0-03 / BL-002** | Aktif legacy analiz/tarama sonuçlarını onaylı kaynak/deneysel metinler ve hata sonrası durumla eşleştiren ekran envanteri. | Her aktif sonuç için kaynak, veri zamanı, veri niteliği ve eksik/hatalı durumda gösterim kanıtı veya gerekçeli N/A; yanlış “canlı/gerçek” iddiası ve eski sonucun güncel sunulması kalmaz. Bağlanmayan mock yardımcılar ayrı kaydedilir. | Kabul edilmiş metinlerin uygulanması kapsamındadır; yeni ekran/model/metadata sözleşmesi ayrıca onay gerektirebilir. |
 | **4 — M1-P0-04 / BL-003** | OHLCV provider dışındaki aktif Yahoo/SDK çağrılarını ve hata okuyucularını sınıflandırma. | Her aktif yol için mevcut timeout/retry/hata dönüşü ve kullanıcı görünürlüğü; kontrollü başarı/boş/kesinti testi. Kullanılmayan yöntemler gerekçeli N/A. `.info` kullanan yardımcılar ortak OHLCV bütçesi altında diye raporlanmaz. | Yeni SDK bütçe/retry/transport politikası Accepted ADR-0005'in otomatik uzantısı değildir; gerekirse Proposed ADR ve açık onay. Üretim merkezi monitoring bu dilime eklenmez. |
 
-**Hemen sonraki adım:** OS-01 Stochastic API okuyucusunun mevcut sözleşmesini
-somutlaştırmak; ardından M1-P0-01'in kalan VWEMA/Supertrend ve aktif bağlantıları.
+**Hemen sonraki adım:** Proposed ADR-0009'un A eşlemesine açık karar;
+onaylanırsa dar OS-01 uygulaması, ardından kalan VWEMA/Supertrend/aktif bağlantılar.
 Çekirdek testlerinin geçmesi bütün okuyucuların çalıştığını göstermez.
 
 ## Tekrarlanabilirlik ve CI sınırı

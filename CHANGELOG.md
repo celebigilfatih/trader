@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — OS-01 Stochastic API sözleşmesi Proposed
+
+- Kök neden API seçici/seri anahtar eşleşmesidir. Gerçek HTTP/fixture akışında
+  stoch500, Williams/CCI/EMA200, K/D query400, kimliksiz401 yeniden gözlendi;
+  mevcut31 API/momentum testi dış socket engelli geçti.
+- ADR-0009 Proposed: mevcut stoch skaler/null alanı son %K'ya eşlenir; yeni
+  K/D alanı/query adı eklenmez. Somut alternatif/kabul/rollback hazır; özel A
+  onayı beklenir. Runtime/test/CI/manifest ve Accepted ADR'ler değişmedi.
+- Backlog/API konvansiyonları/kapanış/kalite ve Boot1.53 güncellendi. OS-01/M1
+  açık; frontend/canlı/uzak CI tekrar yok, upstream CDSK validator bulunmuyor.
+  Bağımsız tasarım incelemesinde engelleyici bulgu yok; yerel sözlük annotation
+  ifadesi düzeltildi.63 compile/CDSK yapı/link/ADR/diff kontrolü geçti.
+
 ### 2026-11-06 — M1-P0-01 momentum çekirdeği testleri
 
 - Gerçek Stochastic/Williams %R/CCI için17 test: High/Low/Close ve rolling
