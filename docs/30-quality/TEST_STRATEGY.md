@@ -1,5 +1,16 @@
 # Test Strategy
 
+## VST düzeltme sözleşmesi — Proposed, 2026-11-06
+
+Bu yalnız tasarım adımında mevcut27 core/API testi dış socket engelli
+0.256 s'de geçti; VST-01–03 karşı örnekleri güncel runtime'da tekrarlandı.
+Yeni formül henüz uygulanmadı. [ADR-0010](../50-decisions/ADR-0010.md) A özel
+onayından sonra weighted rasyonel oracles/prefix/leading-zero/all-zero/p1,
+Supertrend0..p+1 sınırı/gerçek risk-sinyal/API, invalid-atomic ve eksik kart
+AppTest RED→GREEN gerekir. [Tasarım/kabul kaydı](../20-execution/2026-11-06-vst-correction-design.md).
+Tam386/32-mutant önceki test dilimi kanıtıdır; burada tekrar koşulmadı.
+Frontend/canlı/uzak CI ve upstream CDSK yokluğu ayrı raporlanır; runtime/test aynı.
+
 ## VWEMA/Supertrend geçerli alt kapsam — 2026-11-06
 
 Yeni12 core ve1 gerçek API testi; hedef27/27 (0.289 s), tam386 test (28.692 s)

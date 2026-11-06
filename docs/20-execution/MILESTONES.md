@@ -26,7 +26,8 @@
   17 yeni testle doğrulandı; Accepted ADR-0009 ve7 HTTP testi OS-01 skaler %K
   dilimini kapattı. VWEMA/Supertrend13 test ve gerçek API/sinyal okuyucuları
   geçerli alt kapsamı doğruladı; VST-01–03 başlangıç/hacim/kısa veri sorunları
-  ayrı açık. Sonraki dar sözleşme/düzeltme işi; genel M1 açık. Önceki35 test tarihsel kanıttır.
+  ayrı açık. ADR-0010 A paketi Proposed, özel karar bekliyor; ardından dar
+  düzeltme. Genel M1 açık. Önceki35 test tarihsel kanıttır.
 
 ## Milestone — M2 ürün doğrulama ve çekirdek açılımı
 

@@ -95,6 +95,9 @@ hedefleri henüz tamamlanmış üretim kabiliyeti olarak değerlendirilmez.
   VST-02 başlangıç sonrası pozitif hacmin sadeleşmesi ve VST-03 kısa Supertrend
   fiyat/yön/seed tutarsızlığı açıktır. Mevcut temel bant hesabı canonical
   trailing Supertrend diye doğrulanmadı; [test ve karşı örnek kaydı](../20-execution/2026-11-06-vwema-supertrend-tests.md).
+  Sonraki [ADR-0010](../50-decisions/ADR-0010.md) A paketi, nedensel hacim
+  ağırlığı + sabit Supertrend hazır olma ve eksik kart önerisi olarak **Proposed**;
+  özel karar bekliyor, üretim formülü henüz değiştirilmedi.
 - Ayrı deterministik cockpit modu 10 senaryodur. 17 kontrollü Streamlit AppTest
   legacy haber/ML fonksiyonlarını render eder; tam uygulama/browser kanıtı değildir.
 - BOS mevcut batch hesabında swing için çevredeki gelecek mumları da kullanır;

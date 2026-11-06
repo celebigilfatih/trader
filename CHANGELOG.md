@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### 2026-11-06 — VST-01–03 düzeltme sözleşmesi Proposed
+
+- ADR-0010 A paketi: geçmişe bağlı VWEMA hacim ağırlığı/ilk pozitif seed;
+  Supertrend n<=p eksik fiyat+yön, default indeks10 ilk hazır; input/atomik hata
+  ve VWEMA kartında eksik değerin —/Hesaplanamadı sunumu. Özel karar bekliyor.
+- Alternatif/kabul oracles/reader/model/cache/rollback hazır. Mevcut27 hedef
+  test dış socket engelli0.256 s'de geçti; karşı örnekler tekrarlandı.
+- API/data/mimari, backlog/kapanış/kalite ve Boot1.56 güncellendi. Üretim/test/
+  config/CI/Accepted ADR/model formatı değişmedi; VST-01–03 ve genel M1 açık.
+  Bağımsız tasarım incelemesi engelleyici bulgusuz; eski model yeniden eğitim
+  ifadesi düzeltildi.65 compile/CDSK yapı/link/ADR/diff kontrolü tamamlandı.
+
 ### 2026-11-06 — VWEMA/Supertrend geçerli hesaplama ve okuyucu testleri
 
 - 12 yeni core+1 gerçek API testi: sabit başlangıç sonrası VWEMA5/20 alpha,

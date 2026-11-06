@@ -43,3 +43,11 @@ Karma istekte diğer seçiciler ve metadata korunur; D alanı/query seçicisi
 eklenmez, `stoch_k/stoch_d` query adları400 kalır. Accepted
 [ADR-0009](../50-decisions/ADR-0009.md) uygulaması OS-01 HTTP500 hatasını kapattı;
 [gerçek HTTP regresyon kanıtı](../20-execution/2026-11-06-adr0009-implementation.md).
+
+## VWEMA/Supertrend — Proposed düzeltme sözleşmesi
+
+[ADR-0010](../50-decisions/ADR-0010.md) A önerisi, mevcut vwema_5/vwema_20
+scalar/null adlarını koruyarak matematiği geçmişe bağlı hacim ağırlığına geçirir.
+Supertrend defaultta11 bardan önce fiyat/yön üretmez; API mevcut supertrend
+alanında null verir. Auth/provenance ve query adları korunur. Henüz özel
+onay/uygulama yoktur; bugünkü runtime bu öneriye geçmiş sayılmaz.

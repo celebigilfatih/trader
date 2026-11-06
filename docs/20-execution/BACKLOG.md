@@ -2,6 +2,20 @@
 
 ## Devam ve kaldığımız yer — 2026-11-06
 
+VST-01–03 dar sözleşme tasarımı tamamlandı: [ADR-0010](../50-decisions/ADR-0010.md)
+**Proposed**, özel A paketi onayı bekleniyor. VWEMA ilk pozitif hacim seed'i ve
+ayrı üssel fiyat*hacim/hacim durumları; Supertrend n<=p'de iki NaN alan,
+default ilk hazır indeks10; strict girdi/atomik hata ve eksik VWEMA kartı
+—/Hesaplanamadı. Mevcut ad/config/uzun seri Supertrend korunur; VWEMA sayısal
+çıktısı bilinçli değişir. Model optional özellik/cache/reader etkileri
+[tasarım/kabul kaydındadır](2026-11-06-vst-correction-design.md).
+Mevcut27 hedef test0.256 s'de dış socket engelli geçti; karşı örnekler yeniden
+gözlendi. Üretim/test/CI/config/Accepted ADR değiştirilmedi; VST/M1 açık.
+Sonraki iş A özel kararından sonra dar TDD uygulaması; genel devam isteği
+henüz sunulmamış bu matematik paketinin önceden onayı sayılmadı.
+
+### Önceki VWEMA/Supertrend test dilimi
+
 VWEMA/Supertrend geçerli hesaplama ve okuyucu dilimine13 test eklendi:
 12 gerçek core,1 gerçek API. Hedef27/27 ve tam386 backend testi dış socket
 engelli /28.692 s /OK;32 geçerli transient mutant assertion failure/0 error.

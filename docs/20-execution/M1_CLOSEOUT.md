@@ -8,7 +8,15 @@
   [gereksinimler](../00-product/REQUIREMENTS.md), BL-001/002/003 ve Accepted
   ADR-0004–0009. Constitution Draft olarak kalır.
 
-## Güncel ilerleme — VWEMA/Supertrend test dilimi
+## Güncel ilerleme — VST sözleşmesi Proposed
+
+[ADR-0010](../50-decisions/ADR-0010.md) A önerisi; VWEMA nedensel hacim
+ağırlığı, Supertrend sabit hazır olma ve input/eksik kart sözleşmesi somutlaştı.
+Kabul/reader/cache/model etkileri [tasarım kaydındadır](2026-11-06-vst-correction-design.md).
+Mevcut27 test /0.256 s /OK, dış socket engelli; VST karşı örnekleri yeniden
+gözlendi. Yeni formül uygulanmadı ve özel A onayı bekleniyor. M1 In Progress.
+
+## Önceki VWEMA/Supertrend test dilimi
 
 12 core+1 gerçek API testi eklendi; hedef27/27 ve tam **386 test /28.692 s /OK**,
 dış socket engelli.32 geçerli transient mutant assertion failure/0 error;
@@ -125,8 +133,8 @@ beklenir. Bilinen bir kusur passing beklenti olarak sabitlenmemelidir.
 | **3 — M1-P0-03 / BL-002** | Aktif legacy analiz/tarama sonuçlarını onaylı kaynak/deneysel metinler ve hata sonrası durumla eşleştiren ekran envanteri. | Her aktif sonuç için kaynak, veri zamanı, veri niteliği ve eksik/hatalı durumda gösterim kanıtı veya gerekçeli N/A; yanlış “canlı/gerçek” iddiası ve eski sonucun güncel sunulması kalmaz. Bağlanmayan mock yardımcılar ayrı kaydedilir. | Kabul edilmiş metinlerin uygulanması kapsamındadır; yeni ekran/model/metadata sözleşmesi ayrıca onay gerektirebilir. |
 | **4 — M1-P0-04 / BL-003** | OHLCV provider dışındaki aktif Yahoo/SDK çağrılarını ve hata okuyucularını sınıflandırma. | Her aktif yol için mevcut timeout/retry/hata dönüşü ve kullanıcı görünürlüğü; kontrollü başarı/boş/kesinti testi. Kullanılmayan yöntemler gerekçeli N/A. `.info` kullanan yardımcılar ortak OHLCV bütçesi altında diye raporlanmaz. | Yeni SDK bütçe/retry/transport politikası Accepted ADR-0005'in otomatik uzantısı değildir; gerekirse Proposed ADR ve açık onay. Üretim merkezi monitoring bu dilime eklenmez. |
 
-**Hemen sonraki adım:** VST-01–03 seed/hacim/kısa veri açıklıklarını dar
-sözleşme/düzeltme kararına dönüştürmek; ardından kalan FVG/OB ve legacy tarayıcı bağlantıları.
+**Hemen sonraki adım:** Proposed ADR-0010 A paketine özel karar; onaylanırsa
+VST-01–03 TDD uygulaması, ardından kalan FVG/OB ve legacy tarayıcı bağlantıları.
 Çekirdek testlerinin geçmesi bütün okuyucuların çalıştığını göstermez.
 
 ## Tekrarlanabilirlik ve CI sınırı
